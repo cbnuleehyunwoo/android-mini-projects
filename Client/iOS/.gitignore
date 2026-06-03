@@ -1,0 +1,33 @@
+# Xcode user state
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+
+# Xcode build products
+DerivedData/
+build/
+
+# Swift Package Manager
+.swiftpm/
+.build/
+Package.resolved
+
+# CocoaPods / Carthage local artifacts
+Pods/
+Carthage/Build/
+
+# Fastlane generated artifacts
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output/
+
+# App archives and symbols
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Local secrets/config
+*.mobileprovision
+*.p8
+GoogleService-Info.plist

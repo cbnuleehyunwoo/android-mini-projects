@@ -27,3 +27,16 @@
 keystore.properties
 secrets.properties
 google-services.json
+
+# Xcode / iOS local state
+**/xcuserdata/
+**/*.xcuserstate
+**/*.xcscmblueprint
+**/DerivedData/
+**/.swiftpm/
+**/.build/
+*.ipa
+*.dSYM.zip
+*.dSYM
+*.mobileprovision
+*.p8
