@@ -11,6 +11,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.woowacourse.runpamine.presentation.home.HomeScreen
+import com.woowacourse.runpamine.presentation.home.components.HomeMapSection
 import com.woowacourse.runpamine.ui.theme.RunpamineTypography
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
@@ -20,12 +22,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             RunpamineTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                HomeScreen(
+                    name = "호이"
+                )
             }
         }
     }

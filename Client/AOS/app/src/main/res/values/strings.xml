@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">runpamine</string>
+    <string name="home_greeting">안녕하세요, %s님!</string>
+    <string name="home_greeting_weather">오늘은 뛰기 좋은 날씨네요!</string>
+    <string name="home_no_team_title">참여한 팀이 없어요!</string>
+    <string name="home_no_team_description">팀에 참여하거나 팀을 만들어보세요.</string>
+    <string name="create_team">팀 생성하기</string>
+    <string name="join_team">팀 참가하기</string>
+    <string name="info_team">팀 정보 보기</string>
+    <string name="start">시작</string>
+    <string name="map_my_location">내 위치</string>
+    <string name="map_permission_rationale">주변 지도를 보려면 위치 권한이 필요해요.</string>
+    <string name="map_permission_request">위치 권한 허용하기</string>
 </resources>
