@@ -2,16 +2,17 @@ import SwiftUI
 
 struct RunpamineLogoView: View {
     var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "figure.run")
-                .font(.system(size: 72, weight: .bold))
-                .foregroundStyle(.blue)
-                .frame(width: 90, height: 90)
+        VStack(spacing: 34) {
+            Image("AppLogo")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 109, height: 109)
                 .accessibilityLabel("런파민 로고")
 
-            Text("Runpamine")
+            Text("RUNPAMINE")
                 .font(AppTheme.Typography.splashTitle)
                 .foregroundStyle(AppTheme.Colors.textPrimary)
+                .minimumScaleFactor(0.7)
         }
     }
 }
