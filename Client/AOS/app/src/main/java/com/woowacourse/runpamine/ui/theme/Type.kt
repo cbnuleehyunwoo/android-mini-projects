@@ -64,7 +64,7 @@ object RunpamineTypography {
 
     val Body1 = TextStyle(
         fontFamily = Pretendard,
-        fontSize = 16.sp,
+        fontSize = 18.sp,
         lineHeight = 20.8.sp,
         letterSpacing = (-0.03).em,
         fontWeight = FontWeight.Medium,
