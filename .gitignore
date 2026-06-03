@@ -1,0 +1,29 @@
+# macOS
+.DS_Store
+
+# Android Studio / IntelliJ local state
+**/.idea/
+*.iml
+
+# Gradle / Android build outputs
+**/.gradle/
+**/build/
+**/captures/
+**/.cxx/
+**/.externalNativeBuild/
+*.apk
+*.ap_
+*.aab
+
+# Local machine configuration
+**/local.properties
+
+# Secrets and signing material
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+keystore.properties
+secrets.properties
+google-services.json
