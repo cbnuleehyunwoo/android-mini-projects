@@ -14,6 +14,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.woowacourse.runpamine.presentation.createteam.CreateTeamScreen
 import com.woowacourse.runpamine.presentation.home.HomeScreen
 import com.woowacourse.runpamine.presentation.home.components.HomeMapSection
+import com.woowacourse.runpamine.presentation.invite.InviteTeamScreen
 import com.woowacourse.runpamine.ui.theme.RunpamineTypography
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
@@ -23,7 +24,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             RunpamineTheme {
-                CreateTeamScreen()
+                InviteTeamScreen(
+                    code = "ds3344"
+                )
             }
         }
     }
