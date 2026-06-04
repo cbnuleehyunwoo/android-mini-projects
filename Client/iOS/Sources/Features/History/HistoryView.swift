@@ -328,7 +328,7 @@ private struct RunningRecordCard: View {
                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
 
             VStack(alignment: .leading, spacing: 8) {
-                Text(record.startedAt.formatted(.dateTime.year().month().day().weekday(.wide)))
+                Text(Self.dateFormatter.string(from: record.startedAt))
                     .font(AppTheme.Typography.caption1)
                     .foregroundStyle(Color.gray)
 
@@ -390,4 +390,13 @@ private struct RunningRouteThumbnailView: View {
 
         return RunningMapView.cameraPosition(fitting: coordinates)
     }
+}
+
+private extension RunningRecordCard {
+    static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = "yyyy. MM. dd EEEE"
+        return formatter
+    }()
 }
