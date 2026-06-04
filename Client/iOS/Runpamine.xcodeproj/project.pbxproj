@@ -36,6 +36,15 @@
 		7A100001000000000000001A /* MyPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000011B /* MyPageView.swift */; };
 		7A100001000000000000001B /* MyNicknameChangeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000011C /* MyNicknameChangeView.swift */; };
 		7A100001000000000000001C /* LocalAppStateStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000011D /* LocalAppStateStore.swift */; };
+		7A100001000000000000001D /* RunningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000011E /* RunningView.swift */; };
+		7A100001000000000000001E /* RunningMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000011F /* RunningMapView.swift */; };
+		7A100001000000000000001F /* RunningSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000120 /* RunningSummaryView.swift */; };
+		7A1000010000000000000020 /* MapPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000121 /* MapPlaceholderView.swift */; };
+		7A1000010000000000000021 /* RunningRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000122 /* RunningRecord.swift */; };
+		7A1000010000000000000022 /* RunningMetricFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000123 /* RunningMetricFormatter.swift */; };
+		7A1000010000000000000023 /* RunningHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000124 /* RunningHistoryStore.swift */; };
+		7A1000010000000000000024 /* RunningSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000125 /* RunningSession.swift */; };
+		7A1000010000000000000025 /* RunningTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000126 /* RunningTracker.swift */; };
 		7A1000010000000000000040 /* pretendard_black.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000140 /* pretendard_black.otf */; };
 		7A1000010000000000000041 /* pretendard_bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000141 /* pretendard_bold.otf */; };
 		7A1000010000000000000042 /* pretendard_extra_bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000142 /* pretendard_extra_bold.otf */; };
@@ -78,6 +87,15 @@
 		7A100001000000000000011B /* MyPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyPageView.swift; sourceTree = "<group>"; };
 		7A100001000000000000011C /* MyNicknameChangeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyNicknameChangeView.swift; sourceTree = "<group>"; };
 		7A100001000000000000011D /* LocalAppStateStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalAppStateStore.swift; sourceTree = "<group>"; };
+		7A100001000000000000011E /* RunningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningView.swift; sourceTree = "<group>"; };
+		7A100001000000000000011F /* RunningMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningMapView.swift; sourceTree = "<group>"; };
+		7A1000010000000000000120 /* RunningSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningSummaryView.swift; sourceTree = "<group>"; };
+		7A1000010000000000000121 /* MapPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapPlaceholderView.swift; sourceTree = "<group>"; };
+		7A1000010000000000000122 /* RunningRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningRecord.swift; sourceTree = "<group>"; };
+		7A1000010000000000000123 /* RunningMetricFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningMetricFormatter.swift; sourceTree = "<group>"; };
+		7A1000010000000000000124 /* RunningHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningHistoryStore.swift; sourceTree = "<group>"; };
+		7A1000010000000000000125 /* RunningSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningSession.swift; sourceTree = "<group>"; };
+		7A1000010000000000000126 /* RunningTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningTracker.swift; sourceTree = "<group>"; };
 		7A100001000000000000012F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7A1000010000000000000140 /* pretendard_black.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_black.otf; sourceTree = "<group>"; };
 		7A1000010000000000000141 /* pretendard_bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_bold.otf; sourceTree = "<group>"; };
@@ -145,6 +163,7 @@
 				7A1000010000000000000310 /* Login */,
 				7A1000010000000000000316 /* Signup */,
 				7A1000010000000000000317 /* MyPage */,
+				7A1000010000000000000319 /* Running */,
 				7A1000010000000000000313 /* Home */,
 				7A1000010000000000000314 /* MainTab */,
 			);
@@ -179,6 +198,7 @@
 				7A1000010000000000000114 /* PrimaryButton.swift */,
 				7A1000010000000000000116 /* TopNavigationBar.swift */,
 				7A1000010000000000000119 /* ValidationRuleRow.swift */,
+				7A1000010000000000000121 /* MapPlaceholderView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -206,6 +226,7 @@
 			children = (
 				7A1000010000000000000312 /* Auth */,
 				7A1000010000000000000318 /* Persistence */,
+				7A100001000000000000031A /* Running */,
 				7A1000010000000000000315 /* Team */,
 			);
 			path = Domain;
@@ -272,6 +293,28 @@
 				7A100001000000000000011D /* LocalAppStateStore.swift */,
 			);
 			path = Persistence;
+			sourceTree = "<group>";
+		};
+		7A1000010000000000000319 /* Running */ = {
+			isa = PBXGroup;
+			children = (
+				7A100001000000000000011E /* RunningView.swift */,
+				7A100001000000000000011F /* RunningMapView.swift */,
+				7A1000010000000000000120 /* RunningSummaryView.swift */,
+			);
+			path = Running;
+			sourceTree = "<group>";
+		};
+		7A100001000000000000031A /* Running */ = {
+			isa = PBXGroup;
+			children = (
+				7A1000010000000000000122 /* RunningRecord.swift */,
+				7A1000010000000000000123 /* RunningMetricFormatter.swift */,
+				7A1000010000000000000124 /* RunningHistoryStore.swift */,
+				7A1000010000000000000125 /* RunningSession.swift */,
+				7A1000010000000000000126 /* RunningTracker.swift */,
+			);
+			path = Running;
 			sourceTree = "<group>";
 		};
 		7A1000010000000000000320 /* Resources */ = {
@@ -405,6 +448,15 @@
 				7A100001000000000000001A /* MyPageView.swift in Sources */,
 				7A100001000000000000001B /* MyNicknameChangeView.swift in Sources */,
 				7A100001000000000000001C /* LocalAppStateStore.swift in Sources */,
+				7A100001000000000000001D /* RunningView.swift in Sources */,
+				7A100001000000000000001E /* RunningMapView.swift in Sources */,
+				7A100001000000000000001F /* RunningSummaryView.swift in Sources */,
+				7A1000010000000000000020 /* MapPlaceholderView.swift in Sources */,
+				7A1000010000000000000021 /* RunningRecord.swift in Sources */,
+				7A1000010000000000000022 /* RunningMetricFormatter.swift in Sources */,
+				7A1000010000000000000023 /* RunningHistoryStore.swift in Sources */,
+				7A1000010000000000000024 /* RunningSession.swift in Sources */,
+				7A1000010000000000000025 /* RunningTracker.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

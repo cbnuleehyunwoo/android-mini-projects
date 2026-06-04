@@ -1,0 +1,204 @@
+import CoreLocation
+import Foundation
+
+@MainActor
+final class RunningTracker: NSObject, ObservableObject {
+    enum TrackingState {
+        case idle
+        case requestingPermission
+        case tracking
+        case paused
+        case ended
+        case denied
+    }
+
+    @Published private(set) var trackingState: TrackingState = .idle
+    @Published private(set) var authorizationStatus: CLAuthorizationStatus
+    @Published private(set) var lastError: String?
+    @Published private(set) var lastRecord: RunningRecord?
+    @Published private var session = RunningSession()
+
+    private let manager = CLLocationManager()
+    private let historyStore: RunningHistoryStore
+    private var timer: Timer?
+    private var shouldStartAfterAuthorization = false
+
+    init(historyStore: RunningHistoryStore = RunningHistoryStore()) {
+        self.historyStore = historyStore
+        authorizationStatus = manager.authorizationStatus
+        super.init()
+
+        manager.delegate = self
+        manager.activityType = .fitness
+        manager.desiredAccuracy = kCLLocationAccuracyBest
+        manager.distanceFilter = 5
+        manager.pausesLocationUpdatesAutomatically = false
+        #if os(iOS)
+        manager.showsBackgroundLocationIndicator = true
+        #endif
+    }
+
+    var route: [CLLocationCoordinate2D] {
+        session.route
+    }
+
+    var latestLocation: CLLocation? {
+        session.latestLocation
+    }
+
+    var elapsedTime: TimeInterval {
+        session.elapsedTime
+    }
+
+    var distanceMeters: CLLocationDistance {
+        session.distanceMeters
+    }
+
+    var averagePaceSecondsPerKilometer: TimeInterval? {
+        session.averagePaceSecondsPerKilometer
+    }
+
+    var estimatedCalories: Int {
+        max(0, Int((session.distanceKilometers * 58).rounded()))
+    }
+
+    func start() {
+        lastError = nil
+        lastRecord = nil
+        session.reset()
+        shouldStartAfterAuthorization = true
+
+        switch authorizationStatus {
+        case .notDetermined:
+            trackingState = .requestingPermission
+            manager.requestWhenInUseAuthorization()
+        case .authorizedWhenInUse:
+            manager.requestAlwaysAuthorization()
+            beginLocationUpdates()
+        case .authorizedAlways:
+            beginLocationUpdates()
+        case .denied, .restricted:
+            trackingState = .denied
+            lastError = "위치 권한이 필요합니다. 설정에서 위치 권한을 허용해주세요."
+        @unknown default:
+            trackingState = .denied
+            lastError = "지원하지 않는 위치 권한 상태입니다."
+        }
+    }
+
+    func pause() {
+        guard trackingState == .tracking else { return }
+        manager.stopUpdatingLocation()
+        manager.allowsBackgroundLocationUpdates = false
+        stopElapsedTimer()
+        session.pauseDistanceMeasurement()
+        trackingState = .paused
+    }
+
+    func resume() {
+        guard trackingState == .paused else { return }
+        shouldStartAfterAuthorization = true
+        #if os(iOS)
+        if authorizationStatus == .authorizedWhenInUse {
+            manager.requestAlwaysAuthorization()
+        }
+        #endif
+        beginLocationUpdates()
+    }
+
+    @discardableResult
+    func end() -> RunningRecord? {
+        let endedAt = Date()
+        shouldStartAfterAuthorization = false
+        manager.stopUpdatingLocation()
+        manager.allowsBackgroundLocationUpdates = false
+        stopElapsedTimer()
+
+        let record = session.makeRecord(endedAt: endedAt)
+        if let record {
+            historyStore.prepend(record)
+        }
+        lastRecord = record
+        trackingState = .ended
+        return record
+    }
+
+    private func beginLocationUpdates() {
+        guard CLLocationManager.locationServicesEnabled() else {
+            trackingState = .denied
+            lastError = "위치 서비스가 꺼져 있습니다."
+            return
+        }
+
+        manager.allowsBackgroundLocationUpdates = true
+        manager.startUpdatingLocation()
+        session.markStartedIfNeeded()
+        startElapsedTimer()
+        trackingState = .tracking
+        shouldStartAfterAuthorization = false
+    }
+
+    private func startElapsedTimer() {
+        session.startElapsedTimer()
+        timer?.invalidate()
+        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.session.updateElapsedTime()
+            }
+        }
+    }
+
+    private func stopElapsedTimer() {
+        session.stopElapsedTimer()
+        timer?.invalidate()
+        timer = nil
+    }
+}
+
+extension RunningTracker: CLLocationManagerDelegate {
+    nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        Task { @MainActor in
+            authorizationStatus = manager.authorizationStatus
+
+            if authorizationStatus == .denied || authorizationStatus == .restricted {
+                trackingState = .denied
+                shouldStartAfterAuthorization = false
+                lastError = "위치 권한이 거부되었습니다."
+                return
+            }
+
+            if shouldStartAfterAuthorization,
+               isRunnableAuthorizationStatus(authorizationStatus) {
+                #if os(iOS)
+                if authorizationStatus == .authorizedWhenInUse {
+                    manager.requestAlwaysAuthorization()
+                }
+                #endif
+                beginLocationUpdates()
+            }
+        }
+    }
+
+    nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        Task { @MainActor in
+            guard trackingState == .tracking else { return }
+            for location in locations where location.horizontalAccuracy >= 0 {
+                session.append(location)
+            }
+        }
+    }
+
+    nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        Task { @MainActor in
+            lastError = error.localizedDescription
+        }
+    }
+}
+
+private func isRunnableAuthorizationStatus(_ status: CLAuthorizationStatus) -> Bool {
+    #if os(iOS)
+    return status == .authorizedWhenInUse || status == .authorizedAlways
+    #else
+    return status == .authorizedAlways
+    #endif
+}
