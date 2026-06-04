@@ -4,7 +4,7 @@ import SwiftUI
 struct RunpamineApp: App {
     var body: some Scene {
         WindowGroup {
-            SplashView()
+            RootView(authService: MockAuthService())
         }
     }
 }
