@@ -2,6 +2,7 @@ import SwiftUI
 
 struct RootView: View {
     @State private var route: OnboardingRoute = .splash
+    @State private var acceptedTerms: [TermsAgreement] = []
     private let authService: AuthServiceProtocol
 
     init(authService: AuthServiceProtocol) {
@@ -18,7 +19,14 @@ struct RootView: View {
                     }
                 }
             case .login:
-                LoginView(viewModel: LoginViewModel(authService: authService)) { _ in
+                LoginView(viewModel: LoginViewModel(authService: authService)) { session in
+                    route = session.needsSignup ? .terms : .main
+                }
+            case .terms:
+                TermsAgreementView(viewModel: TermsAgreementViewModel()) {
+                    route = .login
+                } onComplete: { agreements in
+                    acceptedTerms = agreements
                     route = .main
                 }
             case .main:
@@ -32,5 +40,6 @@ struct RootView: View {
 private enum OnboardingRoute {
     case splash
     case login
+    case terms
     case main
 }

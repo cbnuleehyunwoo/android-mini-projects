@@ -31,6 +31,7 @@ enum AppTheme {
         static let splashTitle = font(size: 48, weight: .extraBold)
         static let body2 = font(size: 14, weight: .medium)
         static let caption1 = font(size: 12, weight: .medium)
+        static let button = font(size: 17, weight: .bold)
 
         static func font(size: CGFloat, weight: Weight = .regular) -> Font {
             Font.custom(weight.fontName, size: size)
@@ -40,6 +41,9 @@ enum AppTheme {
     enum Colors {
         static let primary = Color(red: 0.03, green: 0.34, blue: 0.97)
         static let textPrimary = Color(red: 0.07, green: 0.11, blue: 0.17)
+        static let textSecondary = Color(red: 0.42, green: 0.47, blue: 0.55)
+        static let border = Color(red: 0.86, green: 0.89, blue: 0.93)
+        static let surface = Color(red: 0.97, green: 0.98, blue: 0.99)
         static let success = Color(red: 0.00, green: 0.76, blue: 0.48)
         static let danger = Color(red: 1.00, green: 0.23, blue: 0.19)
         static let kakao = Color(red: 1.00, green: 0.88, blue: 0.00)
