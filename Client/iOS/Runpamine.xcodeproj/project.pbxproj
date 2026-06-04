@@ -12,6 +12,13 @@
 		7A1000010000000000000002 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000102 /* SplashView.swift */; };
 		7A1000010000000000000003 /* RunpamineLogoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000103 /* RunpamineLogoView.swift */; };
 		7A1000010000000000000004 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000104 /* AppTheme.swift */; };
+		7A1000010000000000000005 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000105 /* LoginView.swift */; };
+		7A1000010000000000000006 /* LoginViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000106 /* LoginViewModel.swift */; };
+		7A1000010000000000000007 /* KakaoLoginButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000107 /* KakaoLoginButton.swift */; };
+		7A1000010000000000000008 /* AppLogoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000108 /* AppLogoView.swift */; };
+		7A1000010000000000000009 /* AuthModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000109 /* AuthModels.swift */; };
+		7A100001000000000000000A /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000010A /* AuthService.swift */; };
+		7A100001000000000000000B /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000010B /* RootView.swift */; };
 		7A1000010000000000000040 /* pretendard_black.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000140 /* pretendard_black.otf */; };
 		7A1000010000000000000041 /* pretendard_bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000141 /* pretendard_bold.otf */; };
 		7A1000010000000000000042 /* pretendard_extra_bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000142 /* pretendard_extra_bold.otf */; };
@@ -29,6 +36,13 @@
 		7A1000010000000000000102 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 		7A1000010000000000000103 /* RunpamineLogoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunpamineLogoView.swift; sourceTree = "<group>"; };
 		7A1000010000000000000104 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
+		7A1000010000000000000105 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		7A1000010000000000000106 /* LoginViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewModel.swift; sourceTree = "<group>"; };
+		7A1000010000000000000107 /* KakaoLoginButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KakaoLoginButton.swift; sourceTree = "<group>"; };
+		7A1000010000000000000108 /* AppLogoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogoView.swift; sourceTree = "<group>"; };
+		7A1000010000000000000109 /* AuthModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthModels.swift; sourceTree = "<group>"; };
+		7A100001000000000000010A /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
+		7A100001000000000000010B /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		7A1000010000000000000115 /* Runpamine.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Runpamine.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A100001000000000000012F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7A1000010000000000000140 /* pretendard_black.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_black.otf; sourceTree = "<group>"; };
@@ -85,6 +99,7 @@
 			isa = PBXGroup;
 			children = (
 				7A1000010000000000000101 /* RunpamineApp.swift */,
+				7A100001000000000000010B /* RootView.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -93,6 +108,7 @@
 			isa = PBXGroup;
 			children = (
 				7A1000010000000000000307 /* Splash */,
+				7A1000010000000000000310 /* Login */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -101,6 +117,7 @@
 			isa = PBXGroup;
 			children = (
 				7A1000010000000000000308 /* Components */,
+				7A1000010000000000000311 /* Domain */,
 				7A1000010000000000000309 /* Theme */,
 			);
 			path = Shared;
@@ -118,6 +135,7 @@
 			isa = PBXGroup;
 			children = (
 				7A1000010000000000000103 /* RunpamineLogoView.swift */,
+				7A1000010000000000000108 /* AppLogoView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -128,6 +146,33 @@
 				7A1000010000000000000104 /* AppTheme.swift */,
 			);
 			path = Theme;
+			sourceTree = "<group>";
+		};
+		7A1000010000000000000310 /* Login */ = {
+			isa = PBXGroup;
+			children = (
+				7A1000010000000000000105 /* LoginView.swift */,
+				7A1000010000000000000106 /* LoginViewModel.swift */,
+				7A1000010000000000000107 /* KakaoLoginButton.swift */,
+			);
+			path = Login;
+			sourceTree = "<group>";
+		};
+		7A1000010000000000000311 /* Domain */ = {
+			isa = PBXGroup;
+			children = (
+				7A1000010000000000000312 /* Auth */,
+			);
+			path = Domain;
+			sourceTree = "<group>";
+		};
+		7A1000010000000000000312 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				7A1000010000000000000109 /* AuthModels.swift */,
+				7A100001000000000000010A /* AuthService.swift */,
+			);
+			path = Auth;
 			sourceTree = "<group>";
 		};
 		7A1000010000000000000320 /* Resources */ = {
@@ -237,6 +282,13 @@
 				7A1000010000000000000002 /* SplashView.swift in Sources */,
 				7A1000010000000000000003 /* RunpamineLogoView.swift in Sources */,
 				7A1000010000000000000004 /* AppTheme.swift in Sources */,
+				7A1000010000000000000005 /* LoginView.swift in Sources */,
+				7A1000010000000000000006 /* LoginViewModel.swift in Sources */,
+				7A1000010000000000000007 /* KakaoLoginButton.swift in Sources */,
+				7A1000010000000000000008 /* AppLogoView.swift in Sources */,
+				7A1000010000000000000009 /* AuthModels.swift in Sources */,
+				7A100001000000000000000A /* AuthService.swift in Sources */,
+				7A100001000000000000000B /* RootView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
