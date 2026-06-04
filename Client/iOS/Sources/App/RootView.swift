@@ -27,6 +27,12 @@ struct RootView: View {
                     route = .login
                 } onComplete: { agreements in
                     acceptedTerms = agreements
+                    route = .nickname
+                }
+            case .nickname:
+                NicknameSetupView(viewModel: NicknameSetupViewModel(authService: authService, agreements: acceptedTerms)) {
+                    route = .terms
+                } onComplete: {
                     route = .main
                 }
             case .main:
@@ -41,5 +47,6 @@ private enum OnboardingRoute {
     case splash
     case login
     case terms
+    case nickname
     case main
 }
