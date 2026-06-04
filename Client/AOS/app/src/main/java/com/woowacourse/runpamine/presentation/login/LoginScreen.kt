@@ -23,12 +23,13 @@ fun LoginScreen(modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center,
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding((42.5).dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding((42.5).dp),
             verticalArrangement = Arrangement.spacedBy(40.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-        ){
+        ) {
             RunpamineLogo()
 
             Image(

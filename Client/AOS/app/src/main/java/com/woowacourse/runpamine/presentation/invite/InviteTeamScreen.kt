@@ -1,12 +1,9 @@
 package com.woowacourse.runpamine.presentation.invite
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,26 +27,26 @@ fun InviteTeamScreen(
     val clipboardManager = LocalClipboardManager.current
 
     Column(
-        modifier = modifier
+        modifier = modifier,
     ) {
         ScreenTopBar(
-            title = stringResource(R.string.invite_team_bar)
+            title = stringResource(R.string.invite_team_bar),
         )
         Spacer(
-            modifier = Modifier.height(15.dp)
+            modifier = Modifier.height(15.dp),
         )
         InviteTeamHeader(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
         Spacer(
-            modifier = Modifier.height(24.dp)
+            modifier = Modifier.height(24.dp),
         )
         InviteCode(
             code = code,
             modifier = Modifier.align(Alignment.CenterHorizontally),
         )
         Spacer(
-            modifier = Modifier.height(16.dp)
+            modifier = Modifier.height(16.dp),
         )
         CopyCodeButton(
             onClick = {
@@ -65,7 +62,7 @@ fun InviteTeamScreen(
 private fun InviteTeamScreenPreview() {
     RunpamineTheme {
         InviteTeamScreen(
-            code = "ADOM34"
+            code = "ADOM34",
         )
     }
 }

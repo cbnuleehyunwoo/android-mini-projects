@@ -1,12 +1,9 @@
 package com.woowacourse.runpamine.presentation.home.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,23 +26,24 @@ fun HomeTeamSection(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier
-            .background(
-                color = MaterialTheme.colorScheme.primary,
-                shape = RoundedCornerShape(15.dp)
-            )
-            .padding(horizontal = 50.dp, vertical = 20.dp),
-        contentAlignment = Alignment.Center
+        modifier =
+            modifier
+                .background(
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = RoundedCornerShape(15.dp),
+                ).padding(horizontal = 50.dp, vertical = 20.dp),
+        contentAlignment = Alignment.Center,
     ) {
         Column {
             Text(
                 text = teamName,
                 style = MaterialTheme.typography.bodyLarge,
-                color = Color.White
+                color = Color.White,
             )
             Spacer(
-                modifier = Modifier
-                    .height(8.dp)
+                modifier =
+                    Modifier
+                        .height(8.dp),
             )
             ButtonWithIcon(
                 onClick = onClick,
@@ -58,7 +56,7 @@ fun HomeTeamSection(
 @Preview
 @Composable
 private fun HomeTeamSectionPreview() {
-    RunpamineTheme() {
+    RunpamineTheme {
         HomeTeamSection(
             teamName = "팀이름",
             onClick = {},

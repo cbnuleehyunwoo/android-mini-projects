@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 class CreateTeamViewModel : ViewModel() {
-
     private val _uiState = MutableStateFlow(CreateTeamUiState())
     val uiState: StateFlow<CreateTeamUiState> = _uiState.asStateFlow()
 
@@ -24,16 +23,13 @@ class CreateTeamViewModel : ViewModel() {
     }
 
     // 2~6자의 한글, 영문, 숫자만 허용하고 특수문자는 사용할 수 없다.
-    fun isValidTeamName(teamName: String): Boolean =
-        TEAM_NAME_REGEX.matches(teamName)
+    fun isValidTeamName(teamName: String): Boolean = TEAM_NAME_REGEX.matches(teamName)
 
     // 2-6자 이내
-    private fun isLengthValid(teamName: String): Boolean =
-        teamName.length in MIN_LENGTH..MAX_LENGTH
+    private fun isLengthValid(teamName: String): Boolean = teamName.length in MIN_LENGTH..MAX_LENGTH
 
     // 한글, 영문, 숫자만으로 이루어졌는지 (공백·특수문자 불가)
-    private fun hasAllowedCharacters(teamName: String): Boolean =
-        teamName.isNotEmpty() && ALLOWED_CHARACTERS_REGEX.matches(teamName)
+    private fun hasAllowedCharacters(teamName: String): Boolean = teamName.isNotEmpty() && ALLOWED_CHARACTERS_REGEX.matches(teamName)
 
     // 특수문자가 포함되지 않았는지
     private fun hasNoSpecialCharacters(teamName: String): Boolean =

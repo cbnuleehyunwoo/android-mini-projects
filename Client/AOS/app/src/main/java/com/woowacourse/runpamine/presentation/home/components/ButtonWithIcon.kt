@@ -16,22 +16,23 @@ import com.woowacourse.runpamine.ui.theme.Green40
 fun ButtonWithIcon(
     onClick: () -> Unit,
     text: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier
-            .clickable { onClick() },
+        modifier =
+            modifier
+                .clickable { onClick() },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = text,
             style = MaterialTheme.typography.bodyMedium,
-            color = Green40
+            color = Green40,
         )
         Icon(
             imageVector = Icons.Default.KeyboardArrowRight,
             contentDescription = "팀 생성하기",
-            tint = Green40
+            tint = Green40,
         )
     }
 }

@@ -46,10 +46,11 @@ import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
-private val LOCATION_PERMISSIONS = arrayOf(
-    Manifest.permission.ACCESS_FINE_LOCATION,
-    Manifest.permission.ACCESS_COARSE_LOCATION,
-)
+private val LOCATION_PERMISSIONS =
+    arrayOf(
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_COARSE_LOCATION,
+    )
 
 // 위치를 아직 가져오지 못했을 때 보여줄 기본 위치 (서울 시청)
 private val DEFAULT_LOCATION = LatLng(37.5663, 126.9779)
@@ -57,20 +58,19 @@ private const val DEFAULT_ZOOM = 15f
 private const val MY_LOCATION_ZOOM = 16f
 
 @Composable
-fun HomeMapSection(
-    modifier: Modifier = Modifier,
-) {
+fun HomeMapSection(modifier: Modifier = Modifier) {
     val context = LocalContext.current
 
     var hasLocationPermission by remember {
         mutableStateOf(context.hasLocationPermission())
     }
 
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions(),
-    ) { result ->
-        hasLocationPermission = result.values.any { it }
-    }
+    val permissionLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestMultiplePermissions(),
+        ) { result ->
+            hasLocationPermission = result.values.any { it }
+        }
 
     if (hasLocationPermission) {
         LocationMap(modifier = modifier)
@@ -83,15 +83,14 @@ fun HomeMapSection(
 }
 
 @Composable
-private fun LocationMap(
-    modifier: Modifier = Modifier,
-) {
+private fun LocationMap(modifier: Modifier = Modifier) {
     val context = LocalContext.current
 
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(DEFAULT_LOCATION, DEFAULT_ZOOM)
-    }
+    val cameraPositionState =
+        rememberCameraPositionState {
+            position = CameraPosition.fromLatLngZoom(DEFAULT_LOCATION, DEFAULT_ZOOM)
+        }
 
     LaunchedEffect(Unit) {
         val location = context.awaitCurrentLocation()
@@ -106,10 +105,11 @@ private fun LocationMap(
         modifier = modifier,
         cameraPositionState = cameraPositionState,
         properties = MapProperties(isMyLocationEnabled = true),
-        uiSettings = MapUiSettings(
-            myLocationButtonEnabled = true,
-            zoomControlsEnabled = false,
-        ),
+        uiSettings =
+            MapUiSettings(
+                myLocationButtonEnabled = true,
+                zoomControlsEnabled = false,
+            ),
     ) {
         currentLocation?.let { location ->
             Marker(
@@ -126,8 +126,9 @@ private fun LocationPermissionRequest(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(15.dp)),
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(15.dp)),
         contentAlignment = Alignment.Center,
     ) {
         Column(
@@ -157,11 +158,11 @@ private suspend fun Context.awaitCurrentLocation(): LatLng? =
         val client = LocationServices.getFusedLocationProviderClient(this)
         val cancellationSource = CancellationTokenSource()
 
-        client.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cancellationSource.token)
+        client
+            .getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cancellationSource.token)
             .addOnSuccessListener { location ->
                 continuation.resume(location?.let { LatLng(it.latitude, it.longitude) })
-            }
-            .addOnFailureListener {
+            }.addOnFailureListener {
                 continuation.resume(null)
             }
 
@@ -173,9 +174,10 @@ private suspend fun Context.awaitCurrentLocation(): LatLng? =
 private fun HomeMapSectionPreview() {
     RunpamineTheme {
         HomeMapSection(
-            modifier = Modifier
-                .fillMaxSize()
-                .height(300.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .height(300.dp),
         )
     }
 }

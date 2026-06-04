@@ -41,13 +41,14 @@ fun CreateTeamContent(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 24.dp, vertical = 16.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(15.dp),
     ) {
         ScreenTopBar(
-            title = stringResource(R.string.create_team_bar)
+            title = stringResource(R.string.create_team_bar),
         )
         Text(
             text = stringResource(R.string.create_team_header),
