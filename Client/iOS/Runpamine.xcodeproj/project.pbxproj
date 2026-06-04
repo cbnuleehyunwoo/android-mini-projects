@@ -33,6 +33,9 @@
 		7A1000010000000000000017 /* NicknameSetupViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000118 /* NicknameSetupViewModel.swift */; };
 		7A1000010000000000000018 /* ValidationRuleRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000119 /* ValidationRuleRow.swift */; };
 		7A1000010000000000000019 /* NicknameValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000011A /* NicknameValidator.swift */; };
+		7A100001000000000000001A /* MyPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000011B /* MyPageView.swift */; };
+		7A100001000000000000001B /* MyNicknameChangeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000011C /* MyNicknameChangeView.swift */; };
+		7A100001000000000000001C /* LocalAppStateStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000011D /* LocalAppStateStore.swift */; };
 		7A1000010000000000000040 /* pretendard_black.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000140 /* pretendard_black.otf */; };
 		7A1000010000000000000041 /* pretendard_bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000141 /* pretendard_bold.otf */; };
 		7A1000010000000000000042 /* pretendard_extra_bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000142 /* pretendard_extra_bold.otf */; };
@@ -72,6 +75,9 @@
 		7A1000010000000000000118 /* NicknameSetupViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NicknameSetupViewModel.swift; sourceTree = "<group>"; };
 		7A1000010000000000000119 /* ValidationRuleRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidationRuleRow.swift; sourceTree = "<group>"; };
 		7A100001000000000000011A /* NicknameValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NicknameValidator.swift; sourceTree = "<group>"; };
+		7A100001000000000000011B /* MyPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyPageView.swift; sourceTree = "<group>"; };
+		7A100001000000000000011C /* MyNicknameChangeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyNicknameChangeView.swift; sourceTree = "<group>"; };
+		7A100001000000000000011D /* LocalAppStateStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalAppStateStore.swift; sourceTree = "<group>"; };
 		7A100001000000000000012F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7A1000010000000000000140 /* pretendard_black.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_black.otf; sourceTree = "<group>"; };
 		7A1000010000000000000141 /* pretendard_bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_bold.otf; sourceTree = "<group>"; };
@@ -138,6 +144,7 @@
 				7A1000010000000000000307 /* Splash */,
 				7A1000010000000000000310 /* Login */,
 				7A1000010000000000000316 /* Signup */,
+				7A1000010000000000000317 /* MyPage */,
 				7A1000010000000000000313 /* Home */,
 				7A1000010000000000000314 /* MainTab */,
 			);
@@ -198,6 +205,7 @@
 			isa = PBXGroup;
 			children = (
 				7A1000010000000000000312 /* Auth */,
+				7A1000010000000000000318 /* Persistence */,
 				7A1000010000000000000315 /* Team */,
 			);
 			path = Domain;
@@ -247,6 +255,23 @@
 				7A1000010000000000000118 /* NicknameSetupViewModel.swift */,
 			);
 			path = Signup;
+			sourceTree = "<group>";
+		};
+		7A1000010000000000000317 /* MyPage */ = {
+			isa = PBXGroup;
+			children = (
+				7A100001000000000000011B /* MyPageView.swift */,
+				7A100001000000000000011C /* MyNicknameChangeView.swift */,
+			);
+			path = MyPage;
+			sourceTree = "<group>";
+		};
+		7A1000010000000000000318 /* Persistence */ = {
+			isa = PBXGroup;
+			children = (
+				7A100001000000000000011D /* LocalAppStateStore.swift */,
+			);
+			path = Persistence;
 			sourceTree = "<group>";
 		};
 		7A1000010000000000000320 /* Resources */ = {
@@ -377,6 +402,9 @@
 				7A1000010000000000000017 /* NicknameSetupViewModel.swift in Sources */,
 				7A1000010000000000000018 /* ValidationRuleRow.swift in Sources */,
 				7A1000010000000000000019 /* NicknameValidator.swift in Sources */,
+				7A100001000000000000001A /* MyPageView.swift in Sources */,
+				7A100001000000000000001B /* MyNicknameChangeView.swift in Sources */,
+				7A100001000000000000001C /* LocalAppStateStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
