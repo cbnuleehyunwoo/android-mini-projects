@@ -4,9 +4,11 @@ struct RootView: View {
     @State private var route: OnboardingRoute = .splash
     @State private var acceptedTerms: [TermsAgreement] = []
     private let authService: AuthServiceProtocol
+    private let store: LocalAppStateStore
 
-    init(authService: AuthServiceProtocol) {
+    init(authService: AuthServiceProtocol, store: LocalAppStateStore) {
         self.authService = authService
+        self.store = store
     }
 
     var body: some View {
@@ -15,7 +17,7 @@ struct RootView: View {
             case .splash:
                 SplashView {
                     withAnimation(.easeInOut(duration: 0.3)) {
-                        route = .login
+                        route = store.hasCompletedSignup ? .main : .login
                     }
                 }
             case .login:
@@ -36,7 +38,7 @@ struct RootView: View {
                     route = .main
                 }
             case .main:
-                MainTabView()
+                MainTabView(store: store)
             }
         }
         .tint(AppTheme.Colors.primary)
