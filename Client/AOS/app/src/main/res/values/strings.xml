@@ -24,4 +24,8 @@
     <string name="join_team_bar">팀 참가</string>
     <string name="join_team_description">팀 초대 코드를\n입력해주세요</string>
     <string name="join_code_placeholder">초대 코드를 입력해주세요</string>
+    <string name="no_team_header">아직 참여한 팀이 없어요</string>
+    <string name="no_team_description">팀을 만들거나 초대 코드로\n팀에 참가해보세요.</string>
+    <string name="no_team_create_team_button">새 팀을 만들고 팀원을 초대해요</string>
+    <string name="no_team_join_team_button">초대 코드로 팀에 들어가요</string>
 </resources>
