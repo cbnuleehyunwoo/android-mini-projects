@@ -18,7 +18,11 @@ struct RootView: View {
                     }
                 }
             case .login:
-                LoginView(viewModel: LoginViewModel(authService: authService)) { _ in }
+                LoginView(viewModel: LoginViewModel(authService: authService)) { _ in
+                    route = .main
+                }
+            case .main:
+                MainTabView()
             }
         }
         .tint(AppTheme.Colors.primary)
@@ -28,4 +32,5 @@ struct RootView: View {
 private enum OnboardingRoute {
     case splash
     case login
+    case main
 }
