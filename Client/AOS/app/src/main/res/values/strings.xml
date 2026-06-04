@@ -28,4 +28,11 @@
     <string name="no_team_description">팀을 만들거나 초대 코드로\n팀에 참가해보세요.</string>
     <string name="no_team_create_team_button">새 팀을 만들고 팀원을 초대해요</string>
     <string name="no_team_join_team_button">초대 코드로 팀에 들어가요</string>
+    <string name="change_nickname_bar">닉네임 변경</string>
+    <string name="change_nickname_description">사용할 닉네임을\n입력해주세요</string>
+    <string name="change_nickname_placeholder">ㅇㄴㅇㄴㅁㅇㅁ</string>
+    <string name="change_nickname_condition_length">2-10자 이내</string>
+    <string name="change_nickname_condition_characters">한글, 영문, 숫자 사용 가능</string>
+    <string name="change_nickname_condition_special">특수문자 사용 불가</string>
+    <string name="change_nickname_button">변경하기</string>
 </resources>
