@@ -21,4 +21,7 @@
     <string name="invite_code">초대 코드</string>
     <string name="invite_code_description">아래 코드를 공유하면 누구든 팀에 참여할 수 있어요.</string>
     <string name="invite_copy_code">코드 복사</string>
+    <string name="join_team_bar">팀 참가</string>
+    <string name="join_team_description">팀 초대 코드를\n입력해주세요</string>
+    <string name="join_code_placeholder">초대 코드를 입력해주세요</string>
 </resources>
