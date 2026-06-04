@@ -26,8 +26,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -51,19 +51,21 @@ fun MyPageScreen(
         containerColor = Color.White,
     ) { innerPadding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .safeDrawingPadding()
-                .padding(horizontal = 24.dp)
-                .verticalScroll(rememberScrollState()),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .safeDrawingPadding()
+                    .padding(horizontal = 24.dp)
+                    .verticalScroll(rememberScrollState()),
         ) {
             ScreenTopBar(
                 title = "마이페이지",
                 onBackClick = onBackClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(64.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(64.dp),
             )
             Spacer(modifier = Modifier.height(70.dp))
             MyPageProfile(
@@ -127,10 +129,11 @@ private fun MyPageProfile(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
-            modifier = Modifier
-                .size(86.dp)
-                .background(Color(0xFFF9FAFB), CircleShape)
-                .border(2.dp, Color(0xFFE5E7EB), CircleShape),
+            modifier =
+                Modifier
+                    .size(86.dp)
+                    .background(Color(0xFFF9FAFB), CircleShape)
+                    .border(2.dp, Color(0xFFE5E7EB), CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Image(
@@ -183,17 +186,17 @@ private fun MyPageMenuRow(
     onClick: () -> Unit = {},
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(84.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .border(
-                width = 1.dp,
-                color = Color(0xFFEDEFF3),
-                shape = RoundedCornerShape(14.dp),
-            )
-            .clickable(onClick = onClick)
-            .padding(horizontal = 18.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(84.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .border(
+                    width = 1.dp,
+                    color = Color(0xFFEDEFF3),
+                    shape = RoundedCornerShape(14.dp),
+                ).clickable(onClick = onClick)
+                .padding(horizontal = 18.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Image(

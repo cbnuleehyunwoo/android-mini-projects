@@ -28,4 +28,8 @@
     <string name="no_team_description">팀을 만들거나 초대 코드로\n팀에 참가해보세요.</string>
     <string name="no_team_create_team_button">새 팀을 만들고 팀원을 초대해요</string>
     <string name="no_team_join_team_button">초대 코드로 팀에 들어가요</string>
+    <string name="record_title">기록</string>
+    <string name="record_period_week">주</string>
+    <string name="record_period_month">월</string>
+    <string name="record_distance_unit">KM</string>
 </resources>

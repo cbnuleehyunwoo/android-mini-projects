@@ -8,7 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.woowacourse.runpamine.presentation.team.NoTeamScreen
+import com.woowacourse.runpamine.presentation.record.RecordScreen
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 import com.woowacourse.runpamine.ui.theme.RunpamineTypography
 
@@ -18,7 +18,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             RunpamineTheme {
-                NoTeamScreen()
+                RecordScreen()
             }
         }
     }

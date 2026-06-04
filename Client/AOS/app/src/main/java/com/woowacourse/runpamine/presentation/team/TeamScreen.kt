@@ -46,12 +46,13 @@ import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
 @Composable
 fun TeamScreen(modifier: Modifier = Modifier) {
-    val members = listOf(
-        TeamMember(name = "커비커비커비커비커", distance = "12.3", time = "28:35"),
-        TeamMember(name = "호이", distance = "1.1", time = "33:41"),
-        TeamMember(name = "볼트트", distance = "9.2", time = "30:30"),
-        TeamMember(name = "커비커비커비커비커", distance = "10.2", time = "31:58"),
-    )
+    val members =
+        listOf(
+            TeamMember(name = "커비커비커비커비커", distance = "12.3", time = "28:35"),
+            TeamMember(name = "호이", distance = "1.1", time = "33:41"),
+            TeamMember(name = "볼트트", distance = "9.2", time = "30:30"),
+            TeamMember(name = "커비커비커비커비커", distance = "10.2", time = "31:58"),
+        )
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -70,10 +71,11 @@ fun TeamScreen(modifier: Modifier = Modifier) {
             completedMemberCount = 3,
             totalMemberCount = 4,
             members = members,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .safeDrawingPadding(),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .safeDrawingPadding(),
         )
     }
 }
@@ -146,10 +148,11 @@ private fun TeamHeader(
         Text(
             text = teamName,
             modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.headlineLarge.copy(
-                fontSize = 32.sp,
-                lineHeight = 36.sp
-            ),
+            style =
+                MaterialTheme.typography.headlineLarge.copy(
+                    fontSize = 32.sp,
+                    lineHeight = 36.sp,
+                ),
             fontWeight = FontWeight.Black,
             color = Blue40,
             maxLines = 1,
@@ -173,13 +176,14 @@ private fun TeamSummaryCard(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier
-            .height(72.dp)
-            .border(
-                width = 1.2.dp,
-                color = Blue40,
-                shape = RoundedCornerShape(14.dp),
-            ),
+        modifier =
+            modifier
+                .height(72.dp)
+                .border(
+                    width = 1.2.dp,
+                    color = Blue40,
+                    shape = RoundedCornerShape(14.dp),
+                ),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -203,15 +207,15 @@ private fun TeamMemberCard(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(168.dp)
-            .border(
-                width = 1.2.dp,
-                color = Blue40,
-                shape = RoundedCornerShape(18.dp),
-            )
-            .padding(12.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(168.dp)
+                .border(
+                    width = 1.2.dp,
+                    color = Blue40,
+                    shape = RoundedCornerShape(18.dp),
+                ).padding(12.dp),
     ) {
         Text(
             text = member.name,
@@ -256,10 +260,11 @@ private fun DistanceText(
     ) {
         Text(
             text = distance,
-            style = MaterialTheme.typography.headlineLarge.copy(
-                fontSize = 30.sp,
-                lineHeight = 48.sp
-            ),
+            style =
+                MaterialTheme.typography.headlineLarge.copy(
+                    fontSize = 30.sp,
+                    lineHeight = 48.sp,
+                ),
             fontWeight = FontWeight.Black,
             color = Color.Black,
         )
@@ -275,13 +280,12 @@ private fun DistanceText(
 }
 
 @Composable
-private fun RunnerThumbnail(
-    modifier: Modifier = Modifier,
-) {
+private fun RunnerThumbnail(modifier: Modifier = Modifier) {
     Box(
-        modifier = modifier
-            .aspectRatio(1f)
-            .background(Color.Black),
+        modifier =
+            modifier
+                .aspectRatio(1f)
+                .background(Color.Black),
         contentAlignment = Alignment.Center,
     ) {
         Image(
