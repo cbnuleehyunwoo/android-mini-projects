@@ -28,6 +28,9 @@ enum AppTheme {
             }
         }
 
+        static let header1 = font(size: 30, weight: .black)
+        static let title2 = font(size: 20, weight: .semibold)
+        static let body1 = font(size: 16, weight: .medium)
         static let splashTitle = font(size: 48, weight: .extraBold)
         static let body2 = font(size: 14, weight: .medium)
         static let caption1 = font(size: 12, weight: .medium)
@@ -53,6 +56,7 @@ enum AppTheme {
     enum Layout {
         static let horizontalPadding: CGFloat = 32
         static let buttonHeight: CGFloat = 56
+        static let fieldHeight: CGFloat = 68
         static let cornerRadius: CGFloat = 8
     }
 }

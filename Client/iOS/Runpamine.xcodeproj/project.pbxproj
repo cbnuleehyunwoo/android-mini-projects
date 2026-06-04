@@ -29,6 +29,10 @@
 		7A1000010000000000000013 /* AgreementRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000113 /* AgreementRow.swift */; };
 		7A1000010000000000000014 /* PrimaryButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000114 /* PrimaryButton.swift */; };
 		7A1000010000000000000015 /* TopNavigationBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000116 /* TopNavigationBar.swift */; };
+		7A1000010000000000000016 /* NicknameSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000117 /* NicknameSetupView.swift */; };
+		7A1000010000000000000017 /* NicknameSetupViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000118 /* NicknameSetupViewModel.swift */; };
+		7A1000010000000000000018 /* ValidationRuleRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000119 /* ValidationRuleRow.swift */; };
+		7A1000010000000000000019 /* NicknameValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000011A /* NicknameValidator.swift */; };
 		7A1000010000000000000040 /* pretendard_black.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000140 /* pretendard_black.otf */; };
 		7A1000010000000000000041 /* pretendard_bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000141 /* pretendard_bold.otf */; };
 		7A1000010000000000000042 /* pretendard_extra_bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000142 /* pretendard_extra_bold.otf */; };
@@ -64,6 +68,10 @@
 		7A1000010000000000000114 /* PrimaryButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrimaryButton.swift; sourceTree = "<group>"; };
 		7A1000010000000000000115 /* Runpamine.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Runpamine.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A1000010000000000000116 /* TopNavigationBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopNavigationBar.swift; sourceTree = "<group>"; };
+		7A1000010000000000000117 /* NicknameSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NicknameSetupView.swift; sourceTree = "<group>"; };
+		7A1000010000000000000118 /* NicknameSetupViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NicknameSetupViewModel.swift; sourceTree = "<group>"; };
+		7A1000010000000000000119 /* ValidationRuleRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidationRuleRow.swift; sourceTree = "<group>"; };
+		7A100001000000000000011A /* NicknameValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NicknameValidator.swift; sourceTree = "<group>"; };
 		7A100001000000000000012F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7A1000010000000000000140 /* pretendard_black.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_black.otf; sourceTree = "<group>"; };
 		7A1000010000000000000141 /* pretendard_bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_bold.otf; sourceTree = "<group>"; };
@@ -163,6 +171,7 @@
 				7A1000010000000000000113 /* AgreementRow.swift */,
 				7A1000010000000000000114 /* PrimaryButton.swift */,
 				7A1000010000000000000116 /* TopNavigationBar.swift */,
+				7A1000010000000000000119 /* ValidationRuleRow.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -199,6 +208,7 @@
 			children = (
 				7A1000010000000000000109 /* AuthModels.swift */,
 				7A100001000000000000010A /* AuthService.swift */,
+				7A100001000000000000011A /* NicknameValidator.swift */,
 			);
 			path = Auth;
 			sourceTree = "<group>";
@@ -233,6 +243,8 @@
 			children = (
 				7A1000010000000000000111 /* TermsAgreementView.swift */,
 				7A1000010000000000000112 /* TermsAgreementViewModel.swift */,
+				7A1000010000000000000117 /* NicknameSetupView.swift */,
+				7A1000010000000000000118 /* NicknameSetupViewModel.swift */,
 			);
 			path = Signup;
 			sourceTree = "<group>";
@@ -361,6 +373,10 @@
 				7A1000010000000000000013 /* AgreementRow.swift in Sources */,
 				7A1000010000000000000014 /* PrimaryButton.swift in Sources */,
 				7A1000010000000000000015 /* TopNavigationBar.swift in Sources */,
+				7A1000010000000000000016 /* NicknameSetupView.swift in Sources */,
+				7A1000010000000000000017 /* NicknameSetupViewModel.swift in Sources */,
+				7A1000010000000000000018 /* ValidationRuleRow.swift in Sources */,
+				7A1000010000000000000019 /* NicknameValidator.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
