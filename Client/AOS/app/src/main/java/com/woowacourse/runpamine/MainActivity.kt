@@ -8,7 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.woowacourse.runpamine.presentation.invite.InviteTeamScreen
+import com.woowacourse.runpamine.presentation.join.JoinScreen
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 import com.woowacourse.runpamine.ui.theme.RunpamineTypography
 
@@ -18,9 +18,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             RunpamineTheme {
-                InviteTeamScreen(
-                    code = "ds3344",
-                )
+                JoinScreen()
             }
         }
     }
