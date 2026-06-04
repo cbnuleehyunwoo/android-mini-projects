@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,7 +23,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier
+        modifier = modifier,
     ) {
         HomeHeader(
             name = name,
@@ -32,18 +31,19 @@ fun HomeScreen(
         HomeNoTeamSection(
             onCreate = {},
             onJoin = {},
-            modifier = Modifier.padding(horizontal = 24.dp)
+            modifier = Modifier.padding(horizontal = 24.dp),
         )
         Spacer(modifier = Modifier.height(10.dp))
         Box(
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         ) {
             HomeMapSection(modifier = Modifier.fillMaxSize())
             StartButton(
                 onClick = {},
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 24.dp)
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 24.dp),
             )
         }
     }
@@ -54,7 +54,7 @@ fun HomeScreen(
 private fun HomeScreenPreview() {
     RunpamineTheme {
         HomeScreen(
-            name = "호이"
+            name = "호이",
         )
     }
 }

@@ -24,14 +24,15 @@ fun StartButton(
         onClick = onClick,
         modifier = modifier.requiredSize(100.dp),
         shape = CircleShape,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary
-        ),
+        colors =
+            ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+            ),
     ) {
         Text(
             text = stringResource(R.string.start),
             style = MaterialTheme.typography.headlineSmall,
-            color = Color.White
+            color = Color.White,
         )
     }
 }
@@ -41,7 +42,7 @@ fun StartButton(
 private fun StartButtonPreview() {
     RunpamineTheme {
         StartButton(
-            onClick = {}
+            onClick = {},
         )
     }
 }

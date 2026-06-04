@@ -22,7 +22,7 @@ fun RunpamineLogo(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Icon(
             painter = painterResource(R.drawable.ic_app_logo),
@@ -35,7 +35,7 @@ fun RunpamineLogo(modifier: Modifier = Modifier) {
             text = "Runpamine",
             fontSize = 48.sp,
             fontWeight = FontWeight.ExtraBold,
-            fontFamily = Pretendard
+            fontFamily = Pretendard,
         )
     }
 }

@@ -12,13 +12,11 @@ import androidx.compose.ui.unit.dp
 import com.woowacourse.runpamine.R
 
 @Composable
-fun InviteTeamHeader(
-    modifier: Modifier = Modifier,
-) {
+fun InviteTeamHeader(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(6.dp)
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Text(
             text = stringResource(R.string.invite_code),

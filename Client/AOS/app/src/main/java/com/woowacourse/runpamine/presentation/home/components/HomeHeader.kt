@@ -28,22 +28,23 @@ import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 fun HomeHeader(
     name: String,
     modifier: Modifier = Modifier,
-)  {
+) {
     Row(
-        modifier = modifier
-            .padding(24.dp),
+        modifier =
+            modifier
+                .padding(24.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         DefaultProfileImage()
         GreetMessage(
             name = name,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
         Icon(
             imageVector = Icons.Default.Person,
             contentDescription = "마이페이지 이동",
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size(24.dp),
         )
     }
 }
@@ -55,33 +56,32 @@ private fun GreetMessage(
 ) {
     Column(
         verticalArrangement = Arrangement.Center,
-        modifier = modifier
+        modifier = modifier,
     ) {
         Text(
             text = stringResource(R.string.home_greeting, name),
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyMedium,
         )
         Text(
             text = stringResource(R.string.home_greeting_weather),
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyMedium,
         )
     }
 }
 
 @Composable
-private fun DefaultProfileImage(
-    modifier: Modifier = Modifier,
-) {
+private fun DefaultProfileImage(modifier: Modifier = Modifier) {
     Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(15.dp))
-            .background(MaterialTheme.colorScheme.primary)
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(15.dp))
+                .background(MaterialTheme.colorScheme.primary),
     ) {
         Icon(
             imageVector = Icons.Default.Person,
             contentDescription = "프로필 사진",
             tint = Color.White,
-            modifier = Modifier.size(40.dp)
+            modifier = Modifier.size(40.dp),
         )
     }
 }
@@ -89,9 +89,9 @@ private fun DefaultProfileImage(
 @Preview(showBackground = true, widthDp = 400)
 @Composable
 private fun HomeHeaderPreview() {
-    RunpamineTheme() {
+    RunpamineTheme {
         HomeHeader(
-            name = "호이"
+            name = "호이",
         )
     }
 }

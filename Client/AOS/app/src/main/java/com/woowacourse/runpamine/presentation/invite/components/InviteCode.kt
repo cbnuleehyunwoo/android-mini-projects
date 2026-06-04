@@ -40,12 +40,13 @@ private fun CodeBox(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier
-            .size(width = 48.dp, height = 56.dp)
-            .background(
-                color = Gray40.copy(alpha = 0.1f),
-                shape = RoundedCornerShape(8.dp),
-            ),
+        modifier =
+            modifier
+                .size(width = 48.dp, height = 56.dp)
+                .background(
+                    color = Gray40.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(8.dp),
+                ),
         contentAlignment = Alignment.Center,
     ) {
         Text(

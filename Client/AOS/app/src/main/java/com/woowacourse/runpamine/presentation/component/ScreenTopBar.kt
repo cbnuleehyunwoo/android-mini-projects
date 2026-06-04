@@ -36,10 +36,11 @@ fun ScreenTopBar(
             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
             contentDescription = "뒤로가기",
             tint = Color.Black,
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .size(24.dp)
-                .clickable(onClick = onBackClick),
+            modifier =
+                Modifier
+                    .align(Alignment.CenterStart)
+                    .size(24.dp)
+                    .clickable(onClick = onBackClick),
         )
     }
 }
@@ -49,7 +50,7 @@ fun ScreenTopBar(
 private fun ScreenTopBarPreview() {
     RunpamineTheme {
         ScreenTopBar(
-            title = "팀 생성"
+            title = "팀 생성",
         )
     }
 }

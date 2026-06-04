@@ -2,7 +2,6 @@ package com.woowacourse.runpamine.presentation.component
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
@@ -39,13 +38,14 @@ fun ValidatableTextField(
             singleLine = singleLine,
             shape = RoundedCornerShape(12.dp),
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.primary,
-                errorBorderColor = Red40,
-                cursorColor = MaterialTheme.colorScheme.primary,
-                errorCursorColor = Red40,
-            ),
+            colors =
+                OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.primary,
+                    errorBorderColor = Red40,
+                    cursorColor = MaterialTheme.colorScheme.primary,
+                    errorCursorColor = Red40,
+                ),
         )
     }
 }
