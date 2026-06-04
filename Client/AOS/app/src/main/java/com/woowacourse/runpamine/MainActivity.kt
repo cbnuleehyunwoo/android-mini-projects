@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.woowacourse.runpamine.presentation.createteam.CreateTeamScreen
 import com.woowacourse.runpamine.presentation.home.HomeScreen
 import com.woowacourse.runpamine.presentation.home.components.HomeMapSection
 import com.woowacourse.runpamine.ui.theme.RunpamineTypography
@@ -22,9 +23,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             RunpamineTheme {
-                HomeScreen(
-                    name = "호이"
-                )
+                CreateTeamScreen()
             }
         }
     }
