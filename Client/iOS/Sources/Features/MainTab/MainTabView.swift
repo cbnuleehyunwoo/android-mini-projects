@@ -5,6 +5,7 @@ struct MainTabView: View {
     @State private var presentedAction: HomeAction?
     @State private var team: RunningTeam?
     @State private var isShowingMyPage = false
+    @State private var isRunning = false
     @State private var nickname: String
     private let store: LocalAppStateStore
 
@@ -25,7 +26,7 @@ struct MainTabView: View {
                     } onOpenMyPage: {
                         isShowingMyPage = true
                     } onStartRunning: {
-                        presentedAction = .running
+                        isRunning = true
                     }
                 case .team, .history:
                     Color.white
@@ -45,6 +46,9 @@ struct MainTabView: View {
                 nickname = updatedNickname
             }
         }
+        .runpamineFullScreenCover(isPresented: $isRunning) {
+            RunningView()
+        }
     }
 }
 
@@ -57,7 +61,6 @@ enum MainTab {
 private enum HomeAction: Identifiable {
     case createTeam
     case joinTeam
-    case running
 
     var id: Self { self }
 
@@ -67,9 +70,21 @@ private enum HomeAction: Identifiable {
             return "팀 생성"
         case .joinTeam:
             return "팀 참가"
-        case .running:
-            return "러닝 시작"
         }
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func runpamineFullScreenCover<Content: View>(
+        isPresented: Binding<Bool>,
+        @ViewBuilder content: @escaping () -> Content
+    ) -> some View {
+        #if os(iOS)
+        fullScreenCover(isPresented: isPresented, content: content)
+        #else
+        sheet(isPresented: isPresented, content: content)
+        #endif
     }
 }
 
