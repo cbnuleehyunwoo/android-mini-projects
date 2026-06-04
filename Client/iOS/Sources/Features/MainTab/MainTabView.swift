@@ -28,8 +28,10 @@ struct MainTabView: View {
                     } onStartRunning: {
                         isRunning = true
                     }
-                case .team, .history:
+                case .team:
                     Color.white
+                case .history:
+                    HistoryView()
                 }
             }
             .safeAreaInset(edge: .bottom) {

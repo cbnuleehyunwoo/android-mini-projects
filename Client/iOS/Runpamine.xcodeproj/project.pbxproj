@@ -45,6 +45,7 @@
 		7A1000010000000000000023 /* RunningHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000124 /* RunningHistoryStore.swift */; };
 		7A1000010000000000000024 /* RunningSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000125 /* RunningSession.swift */; };
 		7A1000010000000000000025 /* RunningTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000126 /* RunningTracker.swift */; };
+		7A1000010000000000000026 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000127 /* HistoryView.swift */; };
 		7A1000010000000000000040 /* pretendard_black.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000140 /* pretendard_black.otf */; };
 		7A1000010000000000000041 /* pretendard_bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000141 /* pretendard_bold.otf */; };
 		7A1000010000000000000042 /* pretendard_extra_bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000142 /* pretendard_extra_bold.otf */; };
@@ -96,6 +97,7 @@
 		7A1000010000000000000124 /* RunningHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningHistoryStore.swift; sourceTree = "<group>"; };
 		7A1000010000000000000125 /* RunningSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningSession.swift; sourceTree = "<group>"; };
 		7A1000010000000000000126 /* RunningTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningTracker.swift; sourceTree = "<group>"; };
+		7A1000010000000000000127 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
 		7A100001000000000000012F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7A1000010000000000000140 /* pretendard_black.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_black.otf; sourceTree = "<group>"; };
 		7A1000010000000000000141 /* pretendard_bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_bold.otf; sourceTree = "<group>"; };
@@ -164,6 +166,7 @@
 				7A1000010000000000000316 /* Signup */,
 				7A1000010000000000000317 /* MyPage */,
 				7A1000010000000000000319 /* Running */,
+				7A100001000000000000031B /* History */,
 				7A1000010000000000000313 /* Home */,
 				7A1000010000000000000314 /* MainTab */,
 			);
@@ -317,6 +320,14 @@
 			path = Running;
 			sourceTree = "<group>";
 		};
+		7A100001000000000000031B /* History */ = {
+			isa = PBXGroup;
+			children = (
+				7A1000010000000000000127 /* HistoryView.swift */,
+			);
+			path = History;
+			sourceTree = "<group>";
+		};
 		7A1000010000000000000320 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
@@ -457,6 +468,7 @@
 				7A1000010000000000000023 /* RunningHistoryStore.swift in Sources */,
 				7A1000010000000000000024 /* RunningSession.swift in Sources */,
 				7A1000010000000000000025 /* RunningTracker.swift in Sources */,
+				7A1000010000000000000026 /* HistoryView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
