@@ -6,6 +6,7 @@ struct MainTabView: View {
     @State private var team: RunningTeam?
     @State private var isShowingMyPage = false
     @State private var isRunning = false
+    @State private var isShowingInvite = false
     @State private var nickname: String
     private let teamService: TeamServiceProtocol
     private let store: LocalAppStateStore
@@ -32,7 +33,19 @@ struct MainTabView: View {
                         isRunning = true
                     }
                 case .team:
-                    Color.white
+                    TeamDashboardView(
+                        team: team,
+                        nickname: nickname,
+                        onCreateTeam: {
+                            presentedAction = .createTeam
+                        },
+                        onJoinTeam: {
+                            presentedAction = .joinTeam
+                        },
+                        onInvite: {
+                            isShowingInvite = true
+                        }
+                    )
                 case .history:
                     HistoryView()
                 }
@@ -60,6 +73,9 @@ struct MainTabView: View {
         }
         .runpamineFullScreenCover(isPresented: $isRunning) {
             RunningView()
+        }
+        .runpamineFullScreenCover(isPresented: $isShowingInvite) {
+            InviteMemberView(inviteCode: team?.inviteCode ?? "")
         }
     }
 
