@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,7 +37,9 @@ fun JoinScreen(
     var code by remember { mutableStateOf("") }
 
     Column(
-        modifier = modifier,
+        modifier =
+            modifier
+                .padding(horizontal = 24.dp, vertical = 14.dp),
     ) {
         ScreenTopBar(
             title = stringResource(R.string.join_team_bar),
@@ -51,6 +54,9 @@ fun JoinScreen(
             fontWeight = FontWeight.Bold,
             color = Color.Black,
             lineHeight = 40.sp,
+        )
+        Spacer(
+            modifier = Modifier.height(15.dp),
         )
         ValidatableTextField(
             value = code,
