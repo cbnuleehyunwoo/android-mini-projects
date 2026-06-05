@@ -15,7 +15,11 @@ import com.woowacourse.runpamine.presentation.team.components.NoTeamIcon
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
 @Composable
-fun NoTeamScreen(modifier: Modifier = Modifier) {
+fun NoTeamScreen(
+    onJoinTeamClick: () -> Unit,
+    onCreateTeamClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.Center,
@@ -33,6 +37,9 @@ fun NoTeamScreen(modifier: Modifier = Modifier) {
 @Composable
 private fun NoTeamScreenPreview() {
     RunpamineTheme {
-        NoTeamScreen()
+        NoTeamScreen(
+            onJoinTeamClick = {},
+            onCreateTeamClick = {},
+        )
     }
 }

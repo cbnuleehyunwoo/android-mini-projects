@@ -1,6 +1,7 @@
 package com.woowacourse.runpamine.presentation.home.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +28,7 @@ import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 @Composable
 fun HomeHeader(
     name: String,
+    onMyPageClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -44,7 +46,10 @@ fun HomeHeader(
         Icon(
             imageVector = Icons.Default.Person,
             contentDescription = "마이페이지 이동",
-            modifier = Modifier.size(24.dp),
+            modifier =
+                Modifier
+                    .size(24.dp)
+                    .clickable { onMyPageClick() },
         )
     }
 }
@@ -92,6 +97,7 @@ private fun HomeHeaderPreview() {
     RunpamineTheme {
         HomeHeader(
             name = "호이",
+            onMyPageClick = {},
         )
     }
 }

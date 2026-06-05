@@ -58,18 +58,20 @@ fun ChangeNicknameScreen(
         containerColor = Color.White,
     ) { innerPadding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .safeDrawingPadding()
-                .padding(horizontal = 24.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .safeDrawingPadding()
+                    .padding(horizontal = 24.dp),
         ) {
             ScreenTopBar(
                 title = stringResource(R.string.change_nickname_bar),
                 onBackClick = onBackClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(64.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(64.dp),
             )
             Spacer(modifier = Modifier.height(15.dp))
             Text(
@@ -110,9 +112,10 @@ fun ChangeNicknameScreen(
             BottomButton(
                 text = stringResource(R.string.change_nickname_button),
                 onClick = {},
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 24.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 24.dp),
             )
         }
     }
@@ -146,11 +149,12 @@ private fun NicknameTextField(
         singleLine = true,
         shape = RoundedCornerShape(12.dp),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = Blue40,
-            unfocusedBorderColor = Blue40,
-            cursorColor = Blue40,
-        ),
+        colors =
+            OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Blue40,
+                unfocusedBorderColor = Blue40,
+                cursorColor = Blue40,
+            ),
     )
 }
 
@@ -162,12 +166,13 @@ private fun NicknameCondition(
     neutral: Boolean = false,
     positiveWhenNeutral: Boolean = true,
 ) {
-    val conditionColor = when {
-        neutral && positiveWhenNeutral -> Green40
-        neutral -> Red40
-        valid -> Green40
-        else -> Red40
-    }
+    val conditionColor =
+        when {
+            neutral && positiveWhenNeutral -> Green40
+            neutral -> Red40
+            valid -> Green40
+            else -> Red40
+        }
     val mark = if (conditionColor == Green40) "✓" else "×"
 
     Row(

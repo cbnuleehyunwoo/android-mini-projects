@@ -12,6 +12,8 @@ import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
 @Composable
 fun CreateTeamScreen(
+    onCreateSuccess: (String) -> Unit,
+    onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: CreateTeamViewModel = viewModel(),
 ) {
@@ -25,6 +27,7 @@ fun CreateTeamScreen(
         onTeamNameChange = viewModel::updateTeamName,
         validator = viewModel::isValidTeamName,
         onCreateClick = {},
+        onBackClick = onBackClick,
         modifier = modifier,
     )
 }
@@ -40,6 +43,7 @@ private fun CreateTeamScreenPreview() {
             hasNoSpecialCharacters = true,
             onTeamNameChange = {},
             validator = { true },
+            onBackClick = {},
             onCreateClick = {},
         )
     }
@@ -57,6 +61,7 @@ private fun CreateTeamScreenErrorPreview() {
             onTeamNameChange = {},
             validator = { false },
             onCreateClick = {},
+            onBackClick = {},
         )
     }
 }

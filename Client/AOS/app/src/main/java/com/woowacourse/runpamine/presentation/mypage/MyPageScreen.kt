@@ -43,8 +43,9 @@ import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
 @Composable
 fun MyPageScreen(
+    onChangeNicknameClick: () -> Unit,
+    onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
-    onBackClick: () -> Unit = {},
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -80,6 +81,7 @@ fun MyPageScreen(
                     iconResId = R.drawable.ic_edit,
                     title = "닉네임 변경",
                     description = "닉네임을 변경할 수 있습니다.",
+                    onClick = onChangeNicknameClick,
                 )
                 MyPageMenuRow(
                     iconResId = R.drawable.ic_logout,
@@ -234,6 +236,9 @@ private fun MyPageMenuRow(
 @Composable
 private fun MyPageScreenPreview() {
     RunpamineTheme {
-        MyPageScreen()
+        MyPageScreen(
+            onChangeNicknameClick = {},
+            onBackClick = {},
+        )
     }
 }

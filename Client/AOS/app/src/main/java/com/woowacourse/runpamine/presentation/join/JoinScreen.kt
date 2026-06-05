@@ -29,7 +29,10 @@ private const val JOIN_CODE_MAX_LENGTH = 6
 private val JOIN_CODE_REGEX = Regex("^[a-zA-Z0-9]*$")
 
 @Composable
-fun JoinScreen(modifier: Modifier = Modifier) {
+fun JoinScreen(
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     var code by remember { mutableStateOf("") }
 
     Column(
@@ -37,6 +40,7 @@ fun JoinScreen(modifier: Modifier = Modifier) {
     ) {
         ScreenTopBar(
             title = stringResource(R.string.join_team_bar),
+            onBackClick = onBackClick,
         )
         Spacer(
             modifier = Modifier.height(15.dp),
@@ -72,6 +76,8 @@ fun JoinScreen(modifier: Modifier = Modifier) {
 @Composable
 private fun JoinScreenPreview() {
     RunpamineTheme {
-        JoinScreen()
+        JoinScreen(
+            onBackClick = {},
+        )
     }
 }

@@ -21,16 +21,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.woowacourse.runpamine.R
+import com.woowacourse.runpamine.presentation.navigation.AppRoute
 import com.woowacourse.runpamine.ui.theme.Blue40
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
 enum class RunpamineBottomTab(
     val label: String,
     val iconResId: Int,
+    val route: String,
 ) {
-    Home(label = "홈", iconResId = R.drawable.ic_home),
-    Team(label = "팀", iconResId = R.drawable.ic_team),
-    History(label = "기록", iconResId = R.drawable.ic_record),
+    Home(label = "홈", iconResId = R.drawable.ic_home, route = AppRoute.Home.route),
+    Team(label = "팀", iconResId = R.drawable.ic_team, route = AppRoute.Team.route),
+    History(label = "기록", iconResId = R.drawable.ic_record, route = AppRoute.Record.route),
 }
 
 @Composable

@@ -22,6 +22,7 @@ import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 @Composable
 fun InviteTeamScreen(
     code: String,
+    onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val clipboardManager = LocalClipboardManager.current
@@ -31,6 +32,7 @@ fun InviteTeamScreen(
     ) {
         ScreenTopBar(
             title = stringResource(R.string.invite_team_bar),
+            onBackClick = onBackClick,
         )
         Spacer(
             modifier = Modifier.height(15.dp),
@@ -63,6 +65,7 @@ private fun InviteTeamScreenPreview() {
     RunpamineTheme {
         InviteTeamScreen(
             code = "ADOM34",
+            onBackClick = {},
         )
     }
 }

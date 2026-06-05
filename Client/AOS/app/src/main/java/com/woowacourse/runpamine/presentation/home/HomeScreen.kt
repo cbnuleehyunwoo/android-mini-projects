@@ -20,6 +20,10 @@ import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 @Composable
 fun HomeScreen(
     name: String,
+    onCreateTeamClick: () -> Unit,
+    onMyPageClick: () -> Unit,
+    onJoinTeamClick: () -> Unit,
+    onStartClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -27,10 +31,11 @@ fun HomeScreen(
     ) {
         HomeHeader(
             name = name,
+            onMyPageClick = onMyPageClick,
         )
         HomeNoTeamSection(
-            onCreate = {},
-            onJoin = {},
+            onCreate = onCreateTeamClick,
+            onJoin = onJoinTeamClick,
             modifier = Modifier.padding(horizontal = 24.dp),
         )
         Spacer(modifier = Modifier.height(10.dp))
@@ -39,7 +44,7 @@ fun HomeScreen(
         ) {
             HomeMapSection(modifier = Modifier.fillMaxSize())
             StartButton(
-                onClick = {},
+                onClick = onStartClick,
                 modifier =
                     Modifier
                         .align(Alignment.BottomCenter)
@@ -55,6 +60,10 @@ private fun HomeScreenPreview() {
     RunpamineTheme {
         HomeScreen(
             name = "호이",
+            onCreateTeamClick = {},
+            onJoinTeamClick = {},
+            onStartClick = {},
+            onMyPageClick = {},
         )
     }
 }
