@@ -17,11 +17,7 @@ class LocalOnlyRunSyncRepository(
                 id = session.id,
                 distanceMeters = session.distanceMeters,
                 durationSeconds = session.durationSeconds,
-                averagePaceSecondsPerKm =
-                    averagePaceSecondsPerKm(
-                        distanceMeters = session.distanceMeters,
-                        durationSeconds = session.durationSeconds,
-                    ),
+                averagePaceSecondsPerKm = session.averagePaceSecondsPerKm,
                 calories = session.calories,
             ),
         )
@@ -31,16 +27,4 @@ class LocalOnlyRunSyncRepository(
         localDataSource.findPendingSessions().map { session ->
             syncRun(session.id)
         }
-
-    private fun averagePaceSecondsPerKm(
-        distanceMeters: Int,
-        durationSeconds: Long,
-    ): Int {
-        if (distanceMeters <= 0) return 0
-        return (durationSeconds / (distanceMeters / METERS_PER_KILOMETER)).toInt()
-    }
-
-    private companion object {
-        const val METERS_PER_KILOMETER = 1_000.0
-    }
 }

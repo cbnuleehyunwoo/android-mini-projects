@@ -8,6 +8,7 @@ data class RunSession(
     val endedAt: Instant? = null,
     val distanceMeters: Int = 0,
     val durationSeconds: Long = 0,
+    val averagePaceSecondsPerKm: Int = 0,
     val calories: Int = 0,
     val syncStatus: RunSyncStatus = RunSyncStatus.LOCAL_ONLY,
 )

@@ -13,6 +13,7 @@ data class RunSessionEntity(
     val endedAtEpochMillis: Long?,
     val distanceMeters: Int,
     val durationSeconds: Long,
+    val averagePaceSecondsPerKm: Int,
     val calories: Int,
     val syncStatus: RunSyncStatus,
 )
@@ -24,6 +25,7 @@ fun RunSessionEntity.toDomain(): RunSession =
         endedAt = endedAtEpochMillis?.let(Instant::ofEpochMilli),
         distanceMeters = distanceMeters,
         durationSeconds = durationSeconds,
+        averagePaceSecondsPerKm = averagePaceSecondsPerKm,
         calories = calories,
         syncStatus = syncStatus,
     )
@@ -35,6 +37,7 @@ fun RunSession.toEntity(): RunSessionEntity =
         endedAtEpochMillis = endedAt?.toEpochMilli(),
         distanceMeters = distanceMeters,
         durationSeconds = durationSeconds,
+        averagePaceSecondsPerKm = averagePaceSecondsPerKm,
         calories = calories,
         syncStatus = syncStatus,
     )

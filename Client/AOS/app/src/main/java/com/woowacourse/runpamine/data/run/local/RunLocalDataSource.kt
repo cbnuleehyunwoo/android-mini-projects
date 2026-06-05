@@ -12,6 +12,7 @@ interface RunLocalDataSource {
         point: RunPoint,
         distanceMeters: Int,
         durationSeconds: Long,
+        averagePaceSecondsPerKm: Int,
         calories: Int,
     )
 

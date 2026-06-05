@@ -40,6 +40,7 @@ interface RunDao {
         SET endedAtEpochMillis = :endedAtEpochMillis,
             distanceMeters = :distanceMeters,
             durationSeconds = :durationSeconds,
+            averagePaceSecondsPerKm = :averagePaceSecondsPerKm,
             calories = :calories,
             syncStatus = :syncStatus
         WHERE id = :sessionId
@@ -50,6 +51,7 @@ interface RunDao {
         endedAtEpochMillis: Long,
         distanceMeters: Int,
         durationSeconds: Long,
+        averagePaceSecondsPerKm: Int,
         calories: Int,
         syncStatus: RunSyncStatus = RunSyncStatus.LOCAL_ONLY,
     )
@@ -59,6 +61,7 @@ interface RunDao {
         UPDATE run_sessions
         SET distanceMeters = :distanceMeters,
             durationSeconds = :durationSeconds,
+            averagePaceSecondsPerKm = :averagePaceSecondsPerKm,
             calories = :calories
         WHERE id = :sessionId
         """,
@@ -67,6 +70,7 @@ interface RunDao {
         sessionId: String,
         distanceMeters: Int,
         durationSeconds: Long,
+        averagePaceSecondsPerKm: Int,
         calories: Int,
     )
 
@@ -91,6 +95,7 @@ interface RunDao {
         point: RunPointEntity,
         distanceMeters: Int,
         durationSeconds: Long,
+        averagePaceSecondsPerKm: Int,
         calories: Int,
     ) {
         insertPoint(point)
@@ -98,6 +103,7 @@ interface RunDao {
             sessionId = point.sessionId,
             distanceMeters = distanceMeters,
             durationSeconds = durationSeconds,
+            averagePaceSecondsPerKm = averagePaceSecondsPerKm,
             calories = calories,
         )
     }

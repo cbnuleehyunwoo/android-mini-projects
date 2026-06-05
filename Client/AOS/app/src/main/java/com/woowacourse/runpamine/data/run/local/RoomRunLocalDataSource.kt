@@ -17,12 +17,14 @@ class RoomRunLocalDataSource(
         point: RunPoint,
         distanceMeters: Int,
         durationSeconds: Long,
+        averagePaceSecondsPerKm: Int,
         calories: Int,
     ) {
         runDao.insertPointAndMetrics(
             point = point.toEntity(),
             distanceMeters = distanceMeters,
             durationSeconds = durationSeconds,
+            averagePaceSecondsPerKm = averagePaceSecondsPerKm,
             calories = calories,
         )
     }
@@ -48,6 +50,7 @@ class RoomRunLocalDataSource(
             endedAtEpochMillis = requireNotNull(session.endedAt).toEpochMilli(),
             distanceMeters = session.distanceMeters,
             durationSeconds = session.durationSeconds,
+            averagePaceSecondsPerKm = session.averagePaceSecondsPerKm,
             calories = session.calories,
             syncStatus = status,
         )

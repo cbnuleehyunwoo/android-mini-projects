@@ -22,7 +22,8 @@ class RunpamineContainer(
                 context.applicationContext,
                 RunDatabase::class.java,
                 "runpamine-runs.db",
-            ).build()
+            ).addMigrations(RunDatabase.MIGRATION_1_2)
+            .build()
     }
 
     private val runLocalDataSource: RunLocalDataSource by lazy {

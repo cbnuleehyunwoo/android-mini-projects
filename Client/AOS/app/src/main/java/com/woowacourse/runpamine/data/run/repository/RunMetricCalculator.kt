@@ -34,6 +34,14 @@ class RunMetricCalculator {
         return (distanceKm * CALORIES_PER_KILOMETER).roundToInt()
     }
 
+    fun averagePaceSecondsPerKm(
+        distanceMeters: Int,
+        durationSeconds: Long,
+    ): Int {
+        if (distanceMeters <= 0) return 0
+        return (durationSeconds / (distanceMeters / METERS_PER_KILOMETER)).roundToInt()
+    }
+
     private companion object {
         const val METERS_PER_KILOMETER = 1_000.0
         const val CALORIES_PER_KILOMETER = 60

@@ -49,10 +49,16 @@ class DefaultRunTrackingRepository(
             trackingJob = null
 
             val endedAt = now()
+            val durationSeconds = metricCalculator.durationSeconds(activeSession.startedAt, endedAt)
             val finishedSession =
                 activeSession.copy(
                     endedAt = endedAt,
-                    durationSeconds = metricCalculator.durationSeconds(activeSession.startedAt, endedAt),
+                    durationSeconds = durationSeconds,
+                    averagePaceSecondsPerKm =
+                        metricCalculator.averagePaceSecondsPerKm(
+                            distanceMeters = activeSession.distanceMeters,
+                            durationSeconds = durationSeconds,
+                        ),
                     calories = metricCalculator.calories(activeSession.distanceMeters),
                 )
             localDataSource.finishSession(finishedSession)
@@ -89,6 +95,11 @@ class DefaultRunTrackingRepository(
                 distanceMeters += lastPoint?.let { metricCalculator.distanceBetweenMeters(it, point) } ?: 0
 
                 val durationSeconds = metricCalculator.durationSeconds(currentSession.startedAt, point.recordedAt)
+                val averagePaceSecondsPerKm =
+                    metricCalculator.averagePaceSecondsPerKm(
+                        distanceMeters = distanceMeters,
+                        durationSeconds = durationSeconds,
+                    )
                 val calories = metricCalculator.calories(distanceMeters)
 
                 withContext(dispatcher) {
@@ -96,6 +107,7 @@ class DefaultRunTrackingRepository(
                         point = point,
                         distanceMeters = distanceMeters,
                         durationSeconds = durationSeconds,
+                        averagePaceSecondsPerKm = averagePaceSecondsPerKm,
                         calories = calories,
                     )
                 }
@@ -104,6 +116,7 @@ class DefaultRunTrackingRepository(
                     currentSession.copy(
                         distanceMeters = distanceMeters,
                         durationSeconds = durationSeconds,
+                        averagePaceSecondsPerKm = averagePaceSecondsPerKm,
                         calories = calories,
                     )
                 lastPoint = point

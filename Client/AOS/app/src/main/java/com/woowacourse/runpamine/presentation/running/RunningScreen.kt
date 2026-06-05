@@ -134,7 +134,7 @@ private fun RunningScreenContent(
                 RunningMetricCard(
                     iconResId = R.drawable.ic_pace,
                     title = stringResource(R.string.running_pace),
-                    value = session.paceText(elapsedSeconds),
+                    value = session.paceText(),
                     unit = "/km",
                     modifier = Modifier.weight(1f),
                 )
@@ -168,11 +168,11 @@ private fun Long.elapsedTimeText(): String {
     return "%02d:%02d".format(minutes, seconds)
 }
 
-private fun RunSession?.paceText(elapsedSeconds: Long): String {
+private fun RunSession?.paceText(): String {
     val session = this ?: return "0'00\""
-    if (session.distanceMeters <= 0) return "0'00\""
+    if (session.averagePaceSecondsPerKm <= 0) return "0'00\""
 
-    val paceSeconds = (elapsedSeconds / (session.distanceMeters / 1_000.0)).toLong()
+    val paceSeconds = session.averagePaceSecondsPerKm.toLong()
     val minutes = paceSeconds / SECONDS_PER_MINUTE
     val seconds = paceSeconds % SECONDS_PER_MINUTE
     return "%d'%02d\"".format(minutes, seconds)
