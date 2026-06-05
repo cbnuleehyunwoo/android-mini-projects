@@ -25,7 +25,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -39,13 +38,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.woowacourse.runpamine.R
-import com.woowacourse.runpamine.presentation.component.RunpamineBottomBar
-import com.woowacourse.runpamine.presentation.component.RunpamineBottomTab
 import com.woowacourse.runpamine.ui.theme.Blue40
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
 @Composable
-fun TeamScreen(modifier: Modifier = Modifier) {
+fun TeamScreen(
+    onInviteClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val members =
         listOf(
             TeamMember(name = "커비커비커비커비커", distance = "12.3", time = "28:35"),
@@ -54,30 +54,19 @@ fun TeamScreen(modifier: Modifier = Modifier) {
             TeamMember(name = "커비커비커비커비커", distance = "10.2", time = "31:58"),
         )
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        bottomBar = {
-            RunpamineBottomBar(
-                selectedTab = RunpamineBottomTab.Team,
-                onTabClick = {},
-            )
-        },
-        containerColor = Color.White,
-    ) { innerPadding ->
-        TeamContent(
-            teamName = "볼트 멋쟁이",
-            date = "2026년 6월 2일 - 화요일",
-            totalDistance = "324 km",
-            completedMemberCount = 3,
-            totalMemberCount = 4,
-            members = members,
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .safeDrawingPadding(),
-        )
-    }
+    TeamContent(
+        teamName = "볼트 멋쟁이",
+        date = "2026년 6월 2일 - 화요일",
+        totalDistance = "324 km",
+        completedMemberCount = 3,
+        totalMemberCount = 4,
+        members = members,
+        onAddClick = onInviteClick,
+        modifier =
+            modifier
+                .fillMaxSize()
+                .safeDrawingPadding(),
+    )
 }
 
 @Composable
@@ -88,6 +77,7 @@ private fun TeamContent(
     completedMemberCount: Int,
     totalMemberCount: Int,
     members: List<TeamMember>,
+    onAddClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -98,7 +88,7 @@ private fun TeamContent(
         item {
             TeamHeader(
                 teamName = teamName,
-                onAddClick = {},
+                onAddClick = onAddClick,
             )
         }
 
@@ -307,6 +297,8 @@ private data class TeamMember(
 @Composable
 private fun TeamScreenPreview() {
     RunpamineTheme {
-        TeamScreen()
+        TeamScreen(
+            onInviteClick = {},
+        )
     }
 }

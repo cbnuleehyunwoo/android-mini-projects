@@ -47,11 +47,12 @@ fun RunningScreen(
         containerColor = Color.White,
     ) { innerPadding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .safeDrawingPadding()
-                .padding(horizontal = 24.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .safeDrawingPadding()
+                    .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(modifier = Modifier.weight(1f))
@@ -257,20 +258,19 @@ private fun RunningControlButton(
     borderColor: Color? = null,
 ) {
     Row(
-        modifier = modifier
-            .background(containerColor, RoundedCornerShape(10.dp))
-            .then(
-                if (borderColor == null) {
-                    Modifier
-                } else {
-                    Modifier.border(1.dp, borderColor, RoundedCornerShape(10.dp))
-                },
-            )
-            .clickable(
-                role = Role.Button,
-                onClick = onClick,
-            )
-            .padding(horizontal = 18.dp, vertical = 18.dp),
+        modifier =
+            modifier
+                .background(containerColor, RoundedCornerShape(10.dp))
+                .then(
+                    if (borderColor == null) {
+                        Modifier
+                    } else {
+                        Modifier.border(1.dp, borderColor, RoundedCornerShape(10.dp))
+                    },
+                ).clickable(
+                    role = Role.Button,
+                    onClick = onClick,
+                ).padding(horizontal = 18.dp, vertical = 18.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {

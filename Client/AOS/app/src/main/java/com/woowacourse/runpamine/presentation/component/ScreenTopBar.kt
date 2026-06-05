@@ -20,8 +20,8 @@ import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 @Composable
 fun ScreenTopBar(
     title: String,
+    onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
-    onBackClick: () -> Unit = {},
 ) {
     Box(
         modifier = modifier.fillMaxWidth(),
@@ -51,6 +51,7 @@ private fun ScreenTopBarPreview() {
     RunpamineTheme {
         ScreenTopBar(
             title = "팀 생성",
+            onBackClick = {},
         )
     }
 }

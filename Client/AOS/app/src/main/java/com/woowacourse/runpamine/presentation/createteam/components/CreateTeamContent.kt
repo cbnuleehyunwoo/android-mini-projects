@@ -38,6 +38,7 @@ fun CreateTeamContent(
     onTeamNameChange: (String) -> Unit,
     validator: (String) -> Boolean,
     onCreateClick: () -> Unit,
+    onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -49,6 +50,7 @@ fun CreateTeamContent(
     ) {
         ScreenTopBar(
             title = stringResource(R.string.create_team_bar),
+            onBackClick = onBackClick,
         )
         Text(
             text = stringResource(R.string.create_team_header),
