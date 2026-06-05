@@ -40,10 +40,11 @@ fun RunpamineBottomBar(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .navigationBarsPadding()
-            .height(80.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .height(80.dp),
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -67,12 +68,13 @@ private fun RunpamineBottomBarItem(
     val color = if (selected) Blue40 else Color(0xFF8B8B8B)
 
     Column(
-        modifier = modifier
-            .size(width = 72.dp, height = 64.dp)
-            .clickable(
-                role = Role.Tab,
-                onClick = onClick,
-            ),
+        modifier =
+            modifier
+                .size(width = 72.dp, height = 64.dp)
+                .clickable(
+                    role = Role.Tab,
+                    onClick = onClick,
+                ),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
