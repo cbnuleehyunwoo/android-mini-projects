@@ -7,11 +7,14 @@ struct MainTabView: View {
     @State private var isShowingMyPage = false
     @State private var isRunning = false
     @State private var nickname: String
+    private let teamService: TeamServiceProtocol
     private let store: LocalAppStateStore
 
     init(store: LocalAppStateStore) {
         self.store = store
+        teamService = MockTeamService(store: store)
         _nickname = State(initialValue: store.nickname)
+        _team = State(initialValue: store.loadTeam())
     }
 
     var body: some View {
@@ -38,10 +41,17 @@ struct MainTabView: View {
                 AppTabBar(selectedTab: $selectedTab)
             }
         }
-        .sheet(item: $presentedAction) { action in
-            Text(action.title)
-                .font(AppTheme.Typography.font(size: 20, weight: .bold))
-                .presentationDetents([.medium])
+        .runpamineFullScreenCover(item: $presentedAction) { action in
+            switch action {
+            case .createTeam:
+                TeamCreateView(viewModel: TeamCreateViewModel(teamService: teamService)) { createdTeam in
+                    handleTeamUpdated(createdTeam)
+                }
+            case .joinTeam:
+                TeamJoinView(viewModel: TeamJoinViewModel(teamService: teamService)) { joinedTeam in
+                    handleTeamUpdated(joinedTeam)
+                }
+            }
         }
         .sheet(isPresented: $isShowingMyPage) {
             MyPageView(store: store) { updatedNickname in
@@ -51,6 +61,12 @@ struct MainTabView: View {
         .runpamineFullScreenCover(isPresented: $isRunning) {
             RunningView()
         }
+    }
+
+    private func handleTeamUpdated(_ updatedTeam: RunningTeam) {
+        team = updatedTeam
+        selectedTab = .team
+        presentedAction = nil
     }
 }
 
@@ -65,15 +81,6 @@ private enum HomeAction: Identifiable {
     case joinTeam
 
     var id: Self { self }
-
-    var title: String {
-        switch self {
-        case .createTeam:
-            return "팀 생성"
-        case .joinTeam:
-            return "팀 참가"
-        }
-    }
 }
 
 private extension View {
@@ -86,6 +93,18 @@ private extension View {
         fullScreenCover(isPresented: isPresented, content: content)
         #else
         sheet(isPresented: isPresented, content: content)
+        #endif
+    }
+
+    @ViewBuilder
+    func runpamineFullScreenCover<Item: Identifiable, Content: View>(
+        item: Binding<Item?>,
+        @ViewBuilder content: @escaping (Item) -> Content
+    ) -> some View {
+        #if os(iOS)
+        fullScreenCover(item: item, content: content)
+        #else
+        sheet(item: item, content: content)
         #endif
     }
 }
