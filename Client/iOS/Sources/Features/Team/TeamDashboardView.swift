@@ -232,12 +232,10 @@ private struct TeamMemberRunCard: View {
                     .frame(width: 80, height: 80)
                     .clipped()
 
-                VStack(spacing: 10) {
-                    TeamRunMetricRow(systemImage: "shoeprints.fill", label: "거리", value: member.distanceText)
-                    TeamRunMetricRow(systemImage: "clock", label: "시간", value: member.timeText)
-                    TeamRunMetricRow(systemImage: "speedometer", label: "페이스", value: member.paceText)
-                }
-                .padding(.leading, 10)
+                Spacer()
+                    .frame(width: 14)
+
+                TeamRunMetricsBlock(member: member)
 
                 Spacer(minLength: 0)
 
@@ -254,34 +252,55 @@ private struct TeamMemberRunCard: View {
     }
 }
 
+private struct TeamRunMetricsBlock: View {
+    let member: TeamMemberCardModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            TeamRunMetricRow(systemImage: "shoeprints.fill", label: "거리", value: member.distanceText)
+            TeamRunMetricRow(systemImage: "clock", label: "시간", value: member.timeText)
+            TeamRunMetricRow(systemImage: "speedometer", label: "페이스", value: member.paceText)
+        }
+        .frame(width: 136, alignment: .leading)
+    }
+}
+
 private struct TeamRunMetricRow: View {
     let systemImage: String
     let label: String
     let value: String
 
     var body: some View {
-        HStack(spacing: 6) {
-            Image(systemName: systemImage)
-                .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(.black)
-                .frame(width: 22, height: 20, alignment: .leading)
+        HStack(spacing: 0) {
+            TeamRunMetricIcon(systemImage: systemImage)
 
             Text(label)
                 .font(AppTheme.Typography.font(size: 14, weight: .medium))
                 .foregroundStyle(Color(red: 0.58, green: 0.64, blue: 0.72))
                 .lineLimit(1)
-                .frame(width: 40, alignment: .leading)
-
-            Spacer(minLength: 4)
+                .frame(width: 48, alignment: .leading)
 
             Text(value)
                 .font(AppTheme.Typography.font(size: 14, weight: .black))
                 .foregroundStyle(AppTheme.Colors.textPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.72)
-                .fixedSize(horizontal: true, vertical: false)
+                .frame(width: 64, alignment: .leading)
         }
-        .frame(width: 130)
+        .frame(width: 136, height: 20, alignment: .leading)
+    }
+}
+
+private struct TeamRunMetricIcon: View {
+    let systemImage: String
+
+    var body: some View {
+        Image(systemName: systemImage)
+            .resizable()
+            .scaledToFit()
+            .foregroundStyle(.black)
+            .frame(width: 18, height: 18, alignment: .leading)
+            .frame(width: 24, height: 20, alignment: .leading)
     }
 }
 
@@ -308,4 +327,39 @@ private struct TeamCaloriesBadge: View {
         }
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
+}
+
+#Preview("팀 기록 화면") {
+    TeamDashboardView(
+        team: RunningTeam(
+            id: UUID(),
+            name: "런파민",
+            distanceKilometers: 324,
+            memberCount: 1,
+            memberLimit: 4,
+            inviteCode: "RUN200"
+        ),
+        nickname: "커비",
+        onCreateTeam: {},
+        onJoinTeam: {},
+        onInvite: {}
+    )
+}
+
+#Preview("팀원 기록 카드") {
+    TeamMemberRunCard(
+        member: TeamMemberCardModel(
+            id: "member-preview",
+            name: "커비",
+            imageName: "encho",
+            distanceText: "12.0 km",
+            timeText: "10:00",
+            paceText: "0'50\"/km",
+            caloriesText: "200"
+        )
+    )
+    .padding(20)
+    .frame(width: 390)
+    .background(Color(red: 0.96, green: 0.96, blue: 0.96))
+    .previewLayout(.sizeThatFits)
 }
