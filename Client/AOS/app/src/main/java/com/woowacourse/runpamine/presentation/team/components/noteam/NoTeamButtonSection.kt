@@ -1,7 +1,8 @@
-package com.woowacourse.runpamine.presentation.team.components
+package com.woowacourse.runpamine.presentation.team.components.noteam
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,25 +28,37 @@ import com.woowacourse.runpamine.R
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
 @Composable
-fun NoTeamButtonSection(modifier: Modifier = Modifier) {
+fun NoTeamButtonSection(
+    onCreate: () -> Unit,
+    onJoin: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        CreateTeamButton()
-        JoinTeamButton()
+        CreateTeamButton(
+            onClick = onCreate,
+        )
+        JoinTeamButton(
+            onClick = onJoin,
+        )
     }
 }
 
 @Composable
-private fun CreateTeamButton(modifier: Modifier = Modifier) {
+private fun CreateTeamButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Box(
         modifier =
             modifier
                 .background(
                     color = MaterialTheme.colorScheme.primary,
                     shape = RoundedCornerShape(24.dp),
-                ).fillMaxWidth(),
+                ).clickable { onClick() }
+                .fillMaxWidth(),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -87,7 +100,10 @@ private fun CreateTeamButton(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun JoinTeamButton(modifier: Modifier = Modifier) {
+private fun JoinTeamButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Box(
         modifier =
             modifier
@@ -139,6 +155,8 @@ private fun NoTeamButtonSectionPreview() {
     RunpamineTheme {
         NoTeamButtonSection(
             modifier = Modifier.fillMaxWidth(),
+            onJoin = {},
+            onCreate = {},
         )
     }
 }
