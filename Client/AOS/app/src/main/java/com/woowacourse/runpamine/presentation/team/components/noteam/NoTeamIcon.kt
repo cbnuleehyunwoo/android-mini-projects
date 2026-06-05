@@ -1,4 +1,4 @@
-package com.woowacourse.runpamine.presentation.team.components
+package com.woowacourse.runpamine.presentation.team.components.noteam
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box

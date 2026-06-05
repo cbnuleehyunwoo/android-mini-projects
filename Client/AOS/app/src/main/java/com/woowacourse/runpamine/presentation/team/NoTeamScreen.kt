@@ -9,9 +9,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.woowacourse.runpamine.presentation.team.components.NoTeamButtonSection
-import com.woowacourse.runpamine.presentation.team.components.NoTeamHeader
-import com.woowacourse.runpamine.presentation.team.components.NoTeamIcon
+import com.woowacourse.runpamine.presentation.team.components.noteam.NoTeamButtonSection
+import com.woowacourse.runpamine.presentation.team.components.noteam.NoTeamHeader
+import com.woowacourse.runpamine.presentation.team.components.noteam.NoTeamIcon
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
 @Composable
@@ -29,7 +29,10 @@ fun NoTeamScreen(
         Spacer(modifier = Modifier.height(10.dp))
         NoTeamHeader()
         Spacer(modifier = Modifier.height(10.dp))
-        NoTeamButtonSection()
+        NoTeamButtonSection(
+            onCreate = onCreateTeamClick,
+            onJoin = onJoinTeamClick,
+        )
     }
 }
 
