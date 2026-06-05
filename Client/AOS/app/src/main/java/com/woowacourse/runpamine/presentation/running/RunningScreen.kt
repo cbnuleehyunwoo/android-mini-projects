@@ -1,5 +1,11 @@
 package com.woowacourse.runpamine.presentation.running
 
+import android.Manifest
+import android.app.Application
+import android.content.Context
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -22,10 +28,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -33,11 +42,66 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.woowacourse.runpamine.R
+import com.woowacourse.runpamine.di.runpamineContainer
+import com.woowacourse.runpamine.domain.run.RunSession
+import com.woowacourse.runpamine.presentation.running.viewmodel.RunTrackingViewModel
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
 @Composable
 fun RunningScreen(
+    modifier: Modifier = Modifier,
+    onPauseClick: () -> Unit = {},
+    onStopCompleted: () -> Unit = {},
+) {
+    val context = LocalContext.current
+    val container = context.runpamineContainer
+    val viewModel: RunTrackingViewModel =
+        viewModel(
+            factory =
+                RunTrackingViewModel.Factory(
+                    application = context.applicationContext as Application,
+                    runTrackingRepository = container.runTrackingRepository,
+                    runSyncRepository = container.runSyncRepository,
+                ),
+        )
+    val state by viewModel.currentRunState.collectAsStateWithLifecycle()
+    val locationPermissionLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestMultiplePermissions(),
+        ) { permissions ->
+            if (permissions.hasLocationPermission()) {
+                viewModel.startRun()
+            }
+        }
+
+    LaunchedEffect(Unit) {
+        if (context.hasLocationPermission()) {
+            viewModel.startRun()
+        } else {
+            locationPermissionLauncher.launch(LOCATION_PERMISSIONS)
+        }
+    }
+
+    RunningScreenContent(
+        session = state.session,
+        elapsedSeconds = state.elapsedSeconds,
+        modifier = modifier,
+        onPauseClick = onPauseClick,
+        onStopClick = {
+            viewModel.stopRun()
+            onStopCompleted()
+        },
+    )
+}
+
+@Composable
+private fun RunningScreenContent(
+    session: RunSession?,
+    elapsedSeconds: Long,
     modifier: Modifier = Modifier,
     onPauseClick: () -> Unit = {},
     onStopClick: () -> Unit = {},
@@ -57,11 +121,11 @@ fun RunningScreen(
         ) {
             Spacer(modifier = Modifier.weight(1f))
             RunningDistance(
-                distance = "5.20",
+                distance = session.distanceText(),
                 modifier = Modifier.fillMaxWidth(),
             )
             Spacer(modifier = Modifier.height(22.dp))
-            RunningTime(time = "28:45")
+            RunningTime(time = elapsedSeconds.elapsedTimeText())
             Spacer(modifier = Modifier.height(28.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -70,14 +134,14 @@ fun RunningScreen(
                 RunningMetricCard(
                     iconResId = R.drawable.ic_pace,
                     title = stringResource(R.string.running_pace),
-                    value = "5'30\"",
+                    value = session.paceText(),
                     unit = "/km",
                     modifier = Modifier.weight(1f),
                 )
                 RunningMetricCard(
                     iconResId = R.drawable.ic_kcal,
                     title = stringResource(R.string.running_kcal),
-                    value = "505",
+                    value = (session?.calories ?: 0).toString(),
                     unit = "kcal",
                     modifier = Modifier.weight(1f),
                 )
@@ -92,6 +156,45 @@ fun RunningScreen(
         }
     }
 }
+
+private fun RunSession?.distanceText(): String {
+    val distanceKm = (this?.distanceMeters ?: 0) / 1_000.0
+    return String.format("%.2f", distanceKm)
+}
+
+private fun Long.elapsedTimeText(): String {
+    val minutes = this / SECONDS_PER_MINUTE
+    val seconds = this % SECONDS_PER_MINUTE
+    return "%02d:%02d".format(minutes, seconds)
+}
+
+private fun RunSession?.paceText(): String {
+    val session = this ?: return "0'00\""
+    if (session.averagePaceSecondsPerKm <= 0) return "0'00\""
+
+    val paceSeconds = session.averagePaceSecondsPerKm.toLong()
+    val minutes = paceSeconds / SECONDS_PER_MINUTE
+    val seconds = paceSeconds % SECONDS_PER_MINUTE
+    return "%d'%02d\"".format(minutes, seconds)
+}
+
+private const val SECONDS_PER_MINUTE = 60
+
+private val LOCATION_PERMISSIONS =
+    arrayOf(
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_COARSE_LOCATION,
+    )
+
+private fun Context.hasLocationPermission(): Boolean =
+    LOCATION_PERMISSIONS.any { permission ->
+        ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
+    }
+
+private fun Map<String, Boolean>.hasLocationPermission(): Boolean =
+    LOCATION_PERMISSIONS.any { permission ->
+        this[permission] == true
+    }
 
 @Composable
 private fun RunningDistance(
@@ -294,6 +397,16 @@ private fun RunningControlButton(
 @Composable
 private fun RunningScreenPreview() {
     RunpamineTheme {
-        RunningScreen()
+        RunningScreenContent(
+            session =
+                RunSession(
+                    id = "preview",
+                    startedAt = java.time.Instant.now(),
+                    distanceMeters = 5_200,
+                    durationSeconds = 1_725,
+                    calories = 505,
+                ),
+            elapsedSeconds = 1_725,
+        )
     }
 }

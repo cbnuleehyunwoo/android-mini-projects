@@ -16,6 +16,7 @@ import com.woowacourse.runpamine.presentation.join.JoinScreen
 import com.woowacourse.runpamine.presentation.mypage.MyPageScreen
 import com.woowacourse.runpamine.presentation.nickname.ChangeNicknameScreen
 import com.woowacourse.runpamine.presentation.record.RecordScreen
+import com.woowacourse.runpamine.presentation.running.RunningScreen
 import com.woowacourse.runpamine.presentation.team.TeamScreen
 
 @Composable
@@ -41,7 +42,9 @@ fun NavHost(
                 onJoinTeamClick = {
                     navController.navigate(AppRoute.JoinTeam.route)
                 },
-                onStartClick = {},
+                onStartClick = {
+                    navController.navigate(AppRoute.Running.route)
+                },
                 onMyPageClick = {
                     navController.navigate(AppRoute.MyPage.route)
                 },
@@ -58,6 +61,14 @@ fun NavHost(
 
         composable(AppRoute.Record.route) {
             RecordScreen()
+        }
+
+        composable(AppRoute.Running.route) {
+            RunningScreen(
+                onStopCompleted = {
+                    navController.popBackStack()
+                },
+            )
         }
 
         composable(AppRoute.CreateTeam.route) {

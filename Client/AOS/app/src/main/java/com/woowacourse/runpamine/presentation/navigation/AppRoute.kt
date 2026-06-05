@@ -23,6 +23,10 @@ sealed interface AppRoute {
         override val route = "record"
     }
 
+    data object Running : AppRoute {
+        override val route = "running"
+    }
+
     data object MyPage : AppRoute {
         override val route = "my_page"
     }
