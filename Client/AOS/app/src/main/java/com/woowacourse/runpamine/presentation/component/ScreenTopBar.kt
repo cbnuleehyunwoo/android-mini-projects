@@ -24,12 +24,14 @@ fun ScreenTopBar(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier.fillMaxWidth(),
+        modifier =
+            modifier
+                .fillMaxWidth(),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = title,
-            style = MaterialTheme.typography.displayLarge,
+            style = MaterialTheme.typography.bodyLarge,
             color = Color.Black,
         )
         Icon(
