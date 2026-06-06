@@ -84,6 +84,7 @@ struct NicknameSetupView: View {
             .padding(.horizontal, AppTheme.Layout.horizontalPadding)
         }
         .background(Color.white)
+        .runpamineBackSwipe(onBack: onBack)
         .onAppear {
             isNicknameFocused = true
         }

@@ -67,6 +67,9 @@ struct MyPageView: View {
             }
         }
         .background(Color.white)
+        .runpamineBackSwipe {
+            dismiss()
+        }
         .sheet(isPresented: $isChangingNickname) {
             MyNicknameChangeView(store: store) { nextNickname in
                 nickname = nextNickname

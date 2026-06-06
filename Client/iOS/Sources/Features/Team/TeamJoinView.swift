@@ -72,6 +72,9 @@ struct TeamJoinView: View {
             .padding(.horizontal, AppTheme.Layout.horizontalPadding)
         }
         .background(Color.white)
+        .runpamineBackSwipe {
+            dismiss()
+        }
         .onAppear {
             isCodeFocused = true
         }

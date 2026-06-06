@@ -75,6 +75,9 @@ struct MyNicknameChangeView: View {
             .padding(.horizontal, AppTheme.Layout.horizontalPadding)
         }
         .background(Color.white)
+        .runpamineBackSwipe {
+            dismiss()
+        }
         .onAppear {
             isFocused = true
         }
