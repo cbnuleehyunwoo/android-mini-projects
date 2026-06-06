@@ -17,23 +17,14 @@ struct RunningSummaryView: View {
             }
 
             VStack(spacing: 20) {
-                Label("시간", systemImage: "stopwatch")
-                    .font(AppTheme.Typography.body2)
-                    .foregroundStyle(.black)
-                    .padding(.top, 64)
-
-                Text(RunningMetricFormatter.duration(record.elapsedTime))
-                    .font(AppTheme.Typography.font(size: 31, weight: .black))
-                    .foregroundStyle(.black)
-
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 2) {
+                    SummaryMetric(title: "시간", value: RunningMetricFormatter.duration(record.elapsedTime), suffix: "", icon: "stopwatch")
                     SummaryMetric(title: "거리", value: RunningMetricFormatter.distanceKilometers(record.distanceMeters), suffix: "km", icon: "speedometer")
-                    SummaryMetric(title: "칼로리", value: "\(record.estimatedCalories)", suffix: "kcal", icon: "flame")
                     SummaryMetric(title: "페이스", value: RunningMetricFormatter.pace(record.averagePaceSecondsPerKilometer), suffix: "/km", icon: "speedometer")
                     SummaryMetric(title: "칼로리", value: "\(record.estimatedCalories)", suffix: "kcal", icon: "flame")
                 }
                 .padding(.horizontal, 22)
-                .padding(.top, 26)
+                .padding(.top, 110)
 
                 Spacer()
 
@@ -64,9 +55,11 @@ private struct SummaryMetric: View {
                 Text(value)
                     .font(AppTheme.Typography.font(size: 27, weight: .black))
                     .foregroundStyle(.black)
-                Text(suffix)
-                    .font(AppTheme.Typography.font(size: 12, weight: .black))
-                    .foregroundStyle(.black)
+                if !suffix.isEmpty {
+                    Text(suffix)
+                        .font(AppTheme.Typography.font(size: 12, weight: .black))
+                        .foregroundStyle(.black)
+                }
             }
         }
         .padding(.horizontal, 24)
@@ -76,4 +69,17 @@ private struct SummaryMetric: View {
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .shadow(color: .black.opacity(0.06), radius: 12, x: 0, y: 6)
     }
+}
+
+#Preview("러닝 요약 화면") {
+    RunningSummaryView(
+        record: RunningRecord(
+            startedAt: Date().addingTimeInterval(-1_725),
+            endedAt: Date(),
+            elapsedTime: 1_725,
+            distanceMeters: 5_000,
+            route: []
+        ),
+        onDone: {}
+    )
 }
