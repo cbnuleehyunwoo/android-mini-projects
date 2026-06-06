@@ -308,16 +308,18 @@ private struct TeamCaloriesBadge: View {
     let caloriesText: String
 
     var body: some View {
-        VStack(spacing: 3) {
+        VStack(spacing: 1) {
             Image(systemName: "flame")
-                .font(.system(size: 28, weight: .regular))
+                .font(.system(size: 23, weight: .regular))
 
             Text(caloriesText)
-                .font(AppTheme.Typography.font(size: 30, weight: .black))
+                .font(AppTheme.Typography.font(size: 28, weight: .black))
 
             Text("kcal")
-                .font(AppTheme.Typography.font(size: 14, weight: .medium))
+                .font(AppTheme.Typography.font(size: 13, weight: .medium))
         }
+        .padding(.horizontal, 3)
+        .padding(.vertical, 6.5)
         .foregroundStyle(Color(red: 0.93, green: 0.33, blue: 0.05))
         .frame(width: 70, height: 90)
         .background(Color(red: 1.0, green: 0.95, blue: 0.91))
