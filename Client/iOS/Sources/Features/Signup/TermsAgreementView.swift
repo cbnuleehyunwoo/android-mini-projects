@@ -79,6 +79,7 @@ struct TermsAgreementView: View {
             .padding(.horizontal, AppTheme.Layout.horizontalPadding)
         }
         .background(Color.white)
+        .runpamineBackSwipe(onBack: onBack)
     }
 }
 

@@ -29,3 +29,26 @@ struct TopNavigationBar: View {
         .frame(height: 60)
     }
 }
+
+extension View {
+    @ViewBuilder
+    func runpamineBackSwipe(onBack: @escaping () -> Void) -> some View {
+        #if os(iOS)
+        overlay(alignment: .leading) {
+            Color.clear
+                .frame(width: 32)
+                .contentShape(Rectangle())
+                .gesture(
+                    DragGesture(minimumDistance: 20, coordinateSpace: .global)
+                        .onEnded { value in
+                            guard value.translation.width > 70,
+                                  abs(value.translation.height) < 80 else { return }
+                            onBack()
+                        }
+                )
+        }
+        #else
+        self
+        #endif
+    }
+}

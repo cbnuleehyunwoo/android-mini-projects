@@ -56,5 +56,8 @@ struct InviteMemberView: View {
             .padding(.horizontal, 16)
         }
         .background(Color.white)
+        .runpamineBackSwipe {
+            dismiss()
+        }
     }
 }

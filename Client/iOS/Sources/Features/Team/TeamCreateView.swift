@@ -77,6 +77,9 @@ struct TeamCreateView: View {
             .padding(.horizontal, AppTheme.Layout.horizontalPadding)
         }
         .background(Color.white)
+        .runpamineBackSwipe {
+            dismiss()
+        }
         .onAppear {
             isNameFocused = true
         }
