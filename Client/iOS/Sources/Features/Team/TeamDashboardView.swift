@@ -6,6 +6,7 @@ struct TeamDashboardView: View {
     let onCreateTeam: () -> Void
     let onJoinTeam: () -> Void
     let onInvite: () -> Void
+    @State private var records: [RunningRecord] = RunningHistoryStore().load()
 
     var body: some View {
         if team == nil {
@@ -44,8 +45,8 @@ struct TeamDashboardView: View {
                     .padding(.top, 10)
 
                 HStack(spacing: 8) {
-                    metricCard(value: "\(Int(team?.distanceKilometers ?? 0)) km", label: "팀 총 거리")
-                    metricCard(value: "\(team?.memberCount ?? 0) / \(team?.memberLimit ?? 0)", label: "완료 / 전체")
+                    metricCard(value: teamDistanceText, label: "팀 총 거리")
+                    metricCard(value: "\(completedMemberCount) / \(memberCards.count)", label: "완료 / 전체")
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 20)
@@ -61,6 +62,9 @@ struct TeamDashboardView: View {
             }
         }
         .background(Color.white)
+        .onAppear {
+            records = RunningHistoryStore().load()
+        }
     }
 
     private func metricCard(value: String, label: String) -> some View {
@@ -81,19 +85,23 @@ struct TeamDashboardView: View {
 
     private var memberCards: [TeamMemberCardModel] {
         [
-            TeamMemberCardModel(
+            TeamMemberCardModel.runningMember(
                 id: "member-primary",
                 name: nickname,
                 imageName: "encho",
-                distanceText: "12.0 km",
-                timeText: "10:00",
-                paceText: "0'50\"/km",
-                caloriesText: "200"
+                records: records
             ),
-            TeamMemberCardModel.emptyBurger(index: 1),
-            TeamMemberCardModel.emptyBurger(index: 2),
-            TeamMemberCardModel.emptyBurger(index: 3)
+            TeamMemberCardModel.emptyBurger(index: 1)
         ]
+    }
+
+    private var teamDistanceText: String {
+        let totalDistance = records.reduce(0) { $0 + $1.distanceKilometers }
+        return "\(totalDistance.formatted(.number.precision(.fractionLength(1)))) km"
+    }
+
+    private var completedMemberCount: Int {
+        memberCards.filter(\.hasRunRecord).count
     }
 }
 
@@ -202,6 +210,31 @@ private struct TeamMemberCardModel: Identifiable {
     let timeText: String
     let paceText: String
     let caloriesText: String
+    let hasRunRecord: Bool
+
+    static func runningMember(
+        id: String,
+        name: String,
+        imageName: String,
+        records: [RunningRecord]
+    ) -> TeamMemberCardModel {
+        let totalDistanceMeters = records.reduce(0) { $0 + $1.distanceMeters }
+        let totalElapsedTime = records.reduce(0) { $0 + $1.elapsedTime }
+        let totalCalories = records.reduce(0) { $0 + $1.estimatedCalories }
+        let totalDistanceKilometers = totalDistanceMeters / 1_000
+        let averagePace = totalDistanceKilometers > 0.01 ? totalElapsedTime / totalDistanceKilometers : nil
+
+        return TeamMemberCardModel(
+            id: id,
+            name: name,
+            imageName: imageName,
+            distanceText: "\(totalDistanceKilometers.formatted(.number.precision(.fractionLength(1)))) km",
+            timeText: totalElapsedTime > 0 ? RunningMetricFormatter.duration(totalElapsedTime) : "--:--",
+            paceText: "\(RunningMetricFormatter.pace(averagePace))/km",
+            caloriesText: "\(totalCalories)",
+            hasRunRecord: !records.isEmpty
+        )
+    }
 
     static func emptyBurger(index: Int) -> TeamMemberCardModel {
         TeamMemberCardModel(
@@ -211,7 +244,8 @@ private struct TeamMemberCardModel: Identifiable {
             distanceText: "0.0 km",
             timeText: "--:--",
             paceText: "0'00\"/km",
-            caloriesText: "0"
+            caloriesText: "0",
+            hasRunRecord: false
         )
     }
 }
@@ -357,7 +391,8 @@ private struct TeamCaloriesBadge: View {
             distanceText: "12.0 km",
             timeText: "10:00",
             paceText: "0'50\"/km",
-            caloriesText: "200"
+            caloriesText: "200",
+            hasRunRecord: true
         )
     )
     .padding(20)
