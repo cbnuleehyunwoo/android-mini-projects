@@ -6,15 +6,9 @@ struct RunningSummaryView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if record.routeCoordinates.count >= 2 {
-                RunningMapView(route: record.routeCoordinates, latestLocation: nil)
-                    .frame(height: 330)
-                    .clipped()
-            } else {
-                MapPlaceholderView()
-                    .frame(height: 330)
-                    .overlay(Color.black.opacity(0.6))
-            }
+            RunningMapView(route: record.routeCoordinates, latestLocation: nil)
+                .frame(height: 330)
+                .clipped()
 
             VStack(spacing: 20) {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 2) {
