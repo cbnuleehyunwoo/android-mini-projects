@@ -20,10 +20,12 @@ fun BottomButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     Button(
         onClick = onClick,
         modifier = modifier,
+        enabled = enabled,
         shape = RoundedCornerShape(8.dp),
         colors =
             ButtonDefaults.buttonColors(

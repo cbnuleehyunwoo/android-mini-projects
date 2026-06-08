@@ -19,11 +19,15 @@ import com.woowacourse.runpamine.data.run.local.RunLocalDataSource
 import com.woowacourse.runpamine.data.run.repository.DefaultRunTrackingRepository
 import com.woowacourse.runpamine.data.run.repository.LocalOnlyRunSyncRepository
 import com.woowacourse.runpamine.data.run.tracker.AndroidLocationTracker
+import com.woowacourse.runpamine.data.team.remote.ApiTeamRemoteDataSource
+import com.woowacourse.runpamine.data.team.remote.TeamRemoteDataSource
+import com.woowacourse.runpamine.data.team.repository.DefaultTeamRepository
 import com.woowacourse.runpamine.domain.auth.AuthRepository
 import com.woowacourse.runpamine.domain.profile.ProfileRepository
 import com.woowacourse.runpamine.domain.run.LocationTracker
 import com.woowacourse.runpamine.domain.run.RunSyncRepository
 import com.woowacourse.runpamine.domain.run.RunTrackingRepository
+import com.woowacourse.runpamine.domain.team.TeamRepository
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
 
@@ -71,6 +75,17 @@ class RunpamineContainer(
         DefaultProfileRepository(
             authRepository = authRepository,
             remoteDataSource = profileRemoteDataSource,
+        )
+    }
+
+    private val teamRemoteDataSource: TeamRemoteDataSource by lazy {
+        ApiTeamRemoteDataSource(BuildConfig.BASE_URL)
+    }
+
+    val teamRepository: TeamRepository by lazy {
+        DefaultTeamRepository(
+            authRepository = authRepository,
+            remoteDataSource = teamRemoteDataSource,
         )
     }
 

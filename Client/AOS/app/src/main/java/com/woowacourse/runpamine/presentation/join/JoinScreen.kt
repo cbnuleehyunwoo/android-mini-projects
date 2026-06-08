@@ -7,35 +7,61 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.woowacourse.runpamine.R
+import com.woowacourse.runpamine.di.runpamineContainer
 import com.woowacourse.runpamine.presentation.component.BottomButton
 import com.woowacourse.runpamine.presentation.component.ScreenTopBar
 import com.woowacourse.runpamine.presentation.component.ValidatableTextField
+import com.woowacourse.runpamine.ui.theme.Red40
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
-
-// 팀 참가 코드: 영문, 숫자로 최대 6글자
-private const val JOIN_CODE_MAX_LENGTH = 6
-private val JOIN_CODE_REGEX = Regex("^[a-zA-Z0-9]*$")
 
 @Composable
 fun JoinScreen(
     onBackClick: () -> Unit,
+    onJoinSuccess: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var code by remember { mutableStateOf("") }
+    val container = LocalContext.current.runpamineContainer
+    val viewModel: JoinViewModel =
+        viewModel(
+            factory = JoinViewModel.Factory(container.teamRepository),
+        )
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    LaunchedEffect(uiState.isJoined) {
+        if (uiState.isJoined) onJoinSuccess()
+    }
+
+    JoinContent(
+        uiState = uiState,
+        onCodeChange = viewModel::updateCode,
+        onJoinClick = viewModel::joinTeam,
+        onBackClick = onBackClick,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun JoinContent(
+    uiState: JoinUiState,
+    onCodeChange: (String) -> Unit,
+    onJoinClick: () -> Unit,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier =
             modifier
@@ -59,21 +85,26 @@ fun JoinScreen(
             modifier = Modifier.height(15.dp),
         )
         ValidatableTextField(
-            value = code,
-            onValueChange = { input ->
-                if (input.length <= JOIN_CODE_MAX_LENGTH && JOIN_CODE_REGEX.matches(input)) {
-                    code = input
-                }
-            },
+            value = uiState.code,
+            onValueChange = onCodeChange,
             placeholder = stringResource(R.string.join_code_placeholder),
             keyboardType = KeyboardType.Ascii,
             modifier = Modifier.fillMaxWidth(),
         )
+        uiState.errorMessage?.let { message ->
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = message,
+                color = Red40,
+                fontSize = 13.sp,
+            )
+        }
         Spacer(modifier = Modifier.weight(1f))
         BottomButton(
             text = stringResource(R.string.join_team),
-            onClick = {},
+            onClick = onJoinClick,
             modifier = Modifier.fillMaxWidth(),
+            enabled = !uiState.isLoading && uiState.code.length == JOIN_CODE_MAX_LENGTH,
         )
     }
 }
@@ -82,7 +113,10 @@ fun JoinScreen(
 @Composable
 private fun JoinScreenPreview() {
     RunpamineTheme {
-        JoinScreen(
+        JoinContent(
+            uiState = JoinUiState(),
+            onCodeChange = {},
+            onJoinClick = {},
             onBackClick = {},
         )
     }

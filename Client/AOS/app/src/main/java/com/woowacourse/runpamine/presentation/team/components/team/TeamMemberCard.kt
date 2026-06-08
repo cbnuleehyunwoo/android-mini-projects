@@ -87,10 +87,12 @@ private fun TeamMemberPreview() {
         TeamMemberCard(
             member =
                 TeamMember(
-                    id = 1L,
+                    id = "1",
                     name = "커비커비커비커비커비",
-                    distance = "12.3",
+                    distance = "12.3 km",
                     time = "28:35",
+                    pace = "2'19\"",
+                    calories = "344",
                 ),
             distance = "12.3km",
             time = "22:32",

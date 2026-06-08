@@ -1,0 +1,16 @@
+package com.woowacourse.runpamine.presentation.team.viewmodel
+
+import com.woowacourse.runpamine.presentation.team.model.TeamMember
+
+data class TeamUiState(
+    val hasTeam: Boolean = false,
+    val teamName: String = "",
+    val joinCode: String = "",
+    val date: String = "",
+    val totalDistance: String = "",
+    val completedMemberCount: Int = 0,
+    val totalMemberCount: Int = 0,
+    val members: List<TeamMember> = emptyList(),
+    val isLoading: Boolean = true,
+    val errorMessage: String? = null,
+)

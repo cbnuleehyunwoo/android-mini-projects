@@ -74,8 +74,14 @@ fun NavHost(
 
         composable(AppRoute.Team.route) {
             TeamScreen(
-                onInviteClick = {
-                    navController.navigate(AppRoute.InviteTeam.route)
+                onInviteClick = { joinCode ->
+                    navController.navigate(AppRoute.InviteTeam.createRoute(joinCode))
+                },
+                onCreateTeamClick = {
+                    navController.navigate(AppRoute.CreateTeam.route)
+                },
+                onJoinTeamClick = {
+                    navController.navigate(AppRoute.JoinTeam.route)
                 },
             )
         }
@@ -95,7 +101,11 @@ fun NavHost(
         composable(AppRoute.CreateTeam.route) {
             CreateTeamScreen(
                 onCreateSuccess = { code ->
-                    navController.navigate(AppRoute.InviteTeam.createRoute(code))
+                    navController.navigate(AppRoute.InviteTeam.createRoute(code)) {
+                        popUpTo(AppRoute.CreateTeam.route) {
+                            inclusive = true
+                        }
+                    }
                 },
                 onBackClick = navController::popBackStack,
             )
@@ -104,6 +114,13 @@ fun NavHost(
         composable(AppRoute.JoinTeam.route) {
             JoinScreen(
                 onBackClick = navController::popBackStack,
+                onJoinSuccess = {
+                    navController.navigate(AppRoute.Home.route) {
+                        popUpTo(AppRoute.JoinTeam.route) {
+                            inclusive = true
+                        }
+                    }
+                },
             )
         }
 
