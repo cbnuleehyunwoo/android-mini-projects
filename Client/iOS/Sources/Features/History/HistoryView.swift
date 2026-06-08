@@ -5,6 +5,7 @@ struct HistoryView: View {
     @State private var selectedPeriod: HistoryPeriod = .week
     @State private var displayedMonth = Date()
     @State private var records: [RunningRecord] = RunningHistoryStore().load()
+    @State private var selectedRecord: RunningRecord?
 
     private let calendar = Calendar.current
 
@@ -44,7 +45,12 @@ struct HistoryView: View {
                         emptyState
                     } else {
                         ForEach(selectedRecords) { record in
-                            RunningRecordCard(record: record)
+                            Button {
+                                selectedRecord = record
+                            } label: {
+                                RunningRecordCard(record: record)
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
                 }
@@ -56,6 +62,11 @@ struct HistoryView: View {
         .background(Color.white)
         .onAppear {
             records = RunningHistoryStore().load()
+        }
+        .runpamineFullScreenCover(item: $selectedRecord) { record in
+            RunningSummaryView(record: record) {
+                selectedRecord = nil
+            }
         }
     }
 
@@ -422,4 +433,18 @@ private extension RunningRecordCard {
         formatter.dateFormat = "yyyy. MM. dd EEEE"
         return formatter
     }()
+}
+
+private extension View {
+    @ViewBuilder
+    func runpamineFullScreenCover<Item: Identifiable, Content: View>(
+        item: Binding<Item?>,
+        @ViewBuilder content: @escaping (Item) -> Content
+    ) -> some View {
+        #if os(iOS)
+        fullScreenCover(item: item, content: content)
+        #else
+        sheet(item: item, content: content)
+        #endif
+    }
 }
