@@ -5,10 +5,19 @@ struct MyPageView: View {
     @State private var isChangingNickname = false
     @State private var nickname: String
     private let store: LocalAppStateStore
+    private let profileService: ProfileServiceProtocol
+    private let accessToken: String?
     private let onNicknameChanged: (String) -> Void
 
-    init(store: LocalAppStateStore, onNicknameChanged: @escaping (String) -> Void = { _ in }) {
+    init(
+        store: LocalAppStateStore,
+        profileService: ProfileServiceProtocol = MockProfileService(),
+        accessToken: String? = nil,
+        onNicknameChanged: @escaping (String) -> Void = { _ in }
+    ) {
         self.store = store
+        self.profileService = profileService
+        self.accessToken = accessToken
         self.onNicknameChanged = onNicknameChanged
         _nickname = State(initialValue: store.nickname)
     }
@@ -71,7 +80,7 @@ struct MyPageView: View {
             dismiss()
         }
         .sheet(isPresented: $isChangingNickname) {
-            MyNicknameChangeView(store: store) { nextNickname in
+            MyNicknameChangeView(store: store, profileService: profileService, accessToken: accessToken) { nextNickname in
                 nickname = nextNickname
                 onNicknameChanged(nextNickname)
                 isChangingNickname = false

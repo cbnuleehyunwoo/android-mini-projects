@@ -3,12 +3,23 @@ import SwiftUI
 struct MyNicknameChangeView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var nickname: String
+    @State private var isLoading = false
+    @State private var errorMessage: String?
     @FocusState private var isFocused: Bool
     private let store: LocalAppStateStore
+    private let profileService: ProfileServiceProtocol
+    private let accessToken: String?
     let onChanged: (String) -> Void
 
-    init(store: LocalAppStateStore, onChanged: @escaping (String) -> Void) {
+    init(
+        store: LocalAppStateStore,
+        profileService: ProfileServiceProtocol = MockProfileService(),
+        accessToken: String? = nil,
+        onChanged: @escaping (String) -> Void
+    ) {
         self.store = store
+        self.profileService = profileService
+        self.accessToken = accessToken
         self.onChanged = onChanged
         _nickname = State(initialValue: store.nickname)
     }
@@ -64,11 +75,26 @@ struct MyNicknameChangeView: View {
                 .padding(.top, 18)
                 .padding(.leading, 8)
 
+                if let errorMessage {
+                    Text(errorMessage)
+                        .font(AppTheme.Typography.caption1)
+                        .foregroundStyle(AppTheme.Colors.danger)
+                        .padding(.top, 14)
+                        .padding(.leading, 8)
+                }
+
                 Spacer()
 
-                PrimaryButton(title: "변경하기", isDisabled: !canSubmit) {
-                    store.saveNickname(trimmedNickname)
-                    onChanged(trimmedNickname)
+                PrimaryButton(title: "변경하기", isDisabled: !canSubmit || isLoading) {
+                    Task {
+                        await submit()
+                    }
+                }
+                .overlay {
+                    if isLoading {
+                        ProgressView()
+                            .tint(.white)
+                    }
                 }
                 .padding(.bottom, 34)
             }
@@ -81,6 +107,30 @@ struct MyNicknameChangeView: View {
         .onAppear {
             isFocused = true
         }
+    }
+
+    @MainActor
+    private func submit() async {
+        guard canSubmit, !isLoading else { return }
+
+        isLoading = true
+        errorMessage = nil
+
+        do {
+            if let accessToken {
+                _ = try await profileService.updateMyProfile(
+                    form: ProfileMutationForm(nickname: trimmedNickname),
+                    accessToken: accessToken
+                )
+            }
+
+            store.saveNickname(trimmedNickname)
+            onChanged(trimmedNickname)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+
+        isLoading = false
     }
 }
 
