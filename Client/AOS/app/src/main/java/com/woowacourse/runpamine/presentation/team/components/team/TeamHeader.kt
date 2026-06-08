@@ -35,7 +35,7 @@ fun TeamHeader(
             modifier = Modifier.weight(1f),
             style =
                 MaterialTheme.typography.headlineLarge.copy(
-                    fontSize = 32.sp,
+                    fontSize = 26.sp,
                     lineHeight = 36.sp,
                 ),
             fontWeight = FontWeight.Black,
@@ -48,7 +48,7 @@ fun TeamHeader(
                 imageVector = Icons.Default.Add,
                 contentDescription = "팀원 추가",
                 tint = Blue40,
-                modifier = Modifier.size(40.dp),
+                modifier = Modifier.size(36.dp),
             )
         }
     }

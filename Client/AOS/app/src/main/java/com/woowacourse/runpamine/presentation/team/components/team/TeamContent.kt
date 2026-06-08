@@ -46,7 +46,7 @@ fun TeamContent(
             Text(
                 text = date,
                 modifier = Modifier.fillMaxWidth(),
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.ExtraBold,
                 color = Color.Black,
                 textAlign = TextAlign.Center,

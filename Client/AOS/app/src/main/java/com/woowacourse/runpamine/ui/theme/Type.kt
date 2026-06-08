@@ -35,7 +35,7 @@ object RunpamineTypography {
     val Header2 =
         TextStyle(
             fontFamily = Pretendard,
-            fontSize = 24.sp,
+            fontSize = 22.sp,
             lineHeight = 40.32.sp,
             letterSpacing = (-0.02).em,
             fontWeight = FontWeight.Bold,
