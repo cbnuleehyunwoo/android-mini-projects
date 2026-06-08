@@ -29,9 +29,10 @@ struct TeamDashboardView: View {
                     Spacer()
 
                     Button(action: onInvite) {
-                        Image(systemName: "plus")
-                            .font(.system(size: 32, weight: .medium))
-                            .foregroundStyle(AppTheme.Colors.primary)
+                        Image("icon_plus")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 36, height: 36)
                             .frame(width: 48, height: 48)
                     }
                     .accessibilityLabel("팀원 초대")
@@ -291,22 +292,22 @@ private struct TeamRunMetricsBlock: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            TeamRunMetricRow(systemImage: "shoeprints.fill", label: "거리", value: member.distanceText)
-            TeamRunMetricRow(systemImage: "clock", label: "시간", value: member.timeText)
-            TeamRunMetricRow(systemImage: "speedometer", label: "페이스", value: member.paceText)
+            TeamRunMetricRow(icon: "icon_footprint", label: "거리", value: member.distanceText)
+            TeamRunMetricRow(icon: "icon_metric_time", label: "시간", value: member.timeText)
+            TeamRunMetricRow(icon: "icon_metric_pace", label: "페이스", value: member.paceText)
         }
         .frame(width: 136, alignment: .leading)
     }
 }
 
 private struct TeamRunMetricRow: View {
-    let systemImage: String
+    let icon: String
     let label: String
     let value: String
 
     var body: some View {
         HStack(spacing: 0) {
-            TeamRunMetricIcon(systemImage: systemImage)
+            TeamRunMetricIcon(icon: icon)
 
             Text(label)
                 .font(AppTheme.Typography.font(size: 14, weight: .medium))
@@ -326,11 +327,12 @@ private struct TeamRunMetricRow: View {
 }
 
 private struct TeamRunMetricIcon: View {
-    let systemImage: String
+    let icon: String
 
     var body: some View {
-        Image(systemName: systemImage)
+        Image(icon)
             .resizable()
+            .renderingMode(.template)
             .scaledToFit()
             .foregroundStyle(.black)
             .frame(width: 18, height: 18, alignment: .leading)
@@ -343,8 +345,12 @@ private struct TeamCaloriesBadge: View {
 
     var body: some View {
         VStack(spacing: 1) {
-            Image(systemName: "flame")
-                .font(.system(size: 23, weight: .regular))
+            Image("icon_metric_kcal")
+                .resizable()
+                .renderingMode(.template)
+                .scaledToFit()
+                .foregroundStyle(Color(red: 0.93, green: 0.33, blue: 0.05))
+                .frame(width: 23, height: 23)
 
             Text(caloriesText)
                 .font(AppTheme.Typography.font(size: 28, weight: .black))

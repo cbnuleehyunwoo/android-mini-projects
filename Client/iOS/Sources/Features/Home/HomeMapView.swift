@@ -35,14 +35,14 @@ struct HomeMapView: View {
             }
 
             VStack(spacing: 10) {
-                mapControl("location") {
+                mapControl(assetIcon: "icon_locate_fix") {
                     locationProvider.requestLocation()
                     centerOnUser()
                 }
-                mapControl("plus.magnifyingglass") {
+                mapControl(systemIcon: "plus.magnifyingglass") {
                     zoom(by: 0.55)
                 }
-                mapControl("minus.magnifyingglass") {
+                mapControl(systemIcon: "minus.magnifyingglass") {
                     zoom(by: 1.65)
                 }
             }
@@ -51,15 +51,25 @@ struct HomeMapView: View {
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
-    private func mapControl(_ icon: String, action: @escaping () -> Void) -> some View {
+    private func mapControl(systemIcon: String? = nil, assetIcon: String? = nil, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: icon)
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(AppTheme.Colors.textPrimary)
-                .frame(width: 38, height: 38)
-                .background(Color.white)
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                .shadow(color: .black.opacity(0.10), radius: 5, x: 0, y: 2)
+            Group {
+                if let assetIcon {
+                    Image(assetIcon)
+                        .resizable()
+                        .renderingMode(.original)
+                        .scaledToFit()
+                        .frame(width: 20, height: 20)
+                } else if let systemIcon {
+                    Image(systemName: systemIcon)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(AppTheme.Colors.textPrimary)
+                }
+            }
+            .frame(width: 38, height: 38)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .shadow(color: .black.opacity(0.10), radius: 5, x: 0, y: 2)
         }
     }
 

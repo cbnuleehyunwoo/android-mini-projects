@@ -35,9 +35,15 @@ struct RunningView: View {
                 Spacer()
 
                 VStack(spacing: 14) {
-                    Text("거리")
-                        .font(AppTheme.Typography.body2)
-                        .foregroundStyle(.black)
+                    HStack(spacing: 6) {
+                        Image("icon_footprint")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 16, height: 16)
+                        Text("거리")
+                    }
+                    .font(AppTheme.Typography.body2)
+                    .foregroundStyle(.black)
 
                     HStack(alignment: .lastTextBaseline, spacing: 7) {
                         Text(RunningMetricFormatter.distanceKilometers(tracker.distanceMeters))
@@ -48,9 +54,15 @@ struct RunningView: View {
                             .foregroundStyle(Color.gray)
                     }
 
-                    Label("시간", systemImage: "stopwatch")
-                        .font(AppTheme.Typography.font(size: 13, weight: .medium))
-                        .foregroundStyle(.black)
+                    HStack(spacing: 4) {
+                        Image("icon_metric_time")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 16, height: 16)
+                        Text("시간")
+                    }
+                    .font(AppTheme.Typography.font(size: 13, weight: .medium))
+                    .foregroundStyle(.black)
                         .padding(.top, 8)
 
                     Text(RunningMetricFormatter.duration(tracker.elapsedTime))
@@ -58,8 +70,8 @@ struct RunningView: View {
                         .foregroundStyle(.black)
 
                     HStack(spacing: 14) {
-                        RunningMetricCard(title: "페이스", value: RunningMetricFormatter.pace(tracker.averagePaceSecondsPerKilometer), suffix: "/km", icon: "speedometer")
-                        RunningMetricCard(title: "칼로리", value: "\(tracker.estimatedCalories)", suffix: "kcal", icon: "flame")
+                        RunningMetricCard(title: "페이스", value: RunningMetricFormatter.pace(tracker.averagePaceSecondsPerKilometer), suffix: "/km", icon: "icon_metric_pace")
+                        RunningMetricCard(title: "칼로리", value: "\(tracker.estimatedCalories)", suffix: "kcal", icon: "icon_metric_kcal")
                     }
                     .padding(.horizontal, 24)
                     .padding(.top, 8)
@@ -127,9 +139,15 @@ private struct RunningMetricCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label(title, systemImage: icon)
-                .font(AppTheme.Typography.font(size: 13, weight: .medium))
-                .foregroundStyle(AppTheme.Colors.textPrimary)
+            HStack(spacing: 6) {
+                Image(icon)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 16, height: 16)
+                Text(title)
+                    .font(AppTheme.Typography.font(size: 13, weight: .medium))
+                    .foregroundStyle(AppTheme.Colors.textPrimary)
+            }
             HStack(alignment: .lastTextBaseline, spacing: 3) {
                 Text(value)
                     .font(AppTheme.Typography.font(size: 28, weight: .black))

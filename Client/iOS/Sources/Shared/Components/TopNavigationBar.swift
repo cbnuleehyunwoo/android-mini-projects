@@ -7,9 +7,12 @@ struct TopNavigationBar: View {
     var body: some View {
         HStack {
             Button(action: onBack) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 23, weight: .semibold))
+                Image("icon_back")
+                    .resizable()
+                    .renderingMode(.template)
+                    .scaledToFit()
                     .foregroundStyle(AppTheme.Colors.textPrimary)
+                    .frame(width: 24, height: 24)
                     .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
             }

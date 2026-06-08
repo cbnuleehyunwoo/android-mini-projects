@@ -200,9 +200,12 @@ private struct MonthCalendarView: View {
         VStack(spacing: 26) {
             HStack(spacing: 16) {
                 Button(action: onPreviousMonth) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 20, weight: .bold))
+                    Image("icon_back")
+                        .resizable()
+                        .renderingMode(.template)
+                        .scaledToFit()
                         .foregroundStyle(Color(red: 0.45, green: 0.53, blue: 0.64))
+                        .frame(width: 20, height: 20)
                 }
                 .buttonStyle(.plain)
 
@@ -211,9 +214,13 @@ private struct MonthCalendarView: View {
                     .foregroundStyle(AppTheme.Colors.textPrimary)
 
                 Button(action: onNextMonth) {
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 20, weight: .bold))
+                    Image("icon_back")
+                        .resizable()
+                        .renderingMode(.template)
+                        .scaledToFit()
                         .foregroundStyle(Color(red: 0.45, green: 0.53, blue: 0.64))
+                        .frame(width: 20, height: 20)
+                        .rotationEffect(.degrees(180))
                 }
                 .buttonStyle(.plain)
             }
@@ -337,8 +344,14 @@ private struct RunningRecordCard: View {
                     .foregroundStyle(.black)
 
                 HStack(spacing: 16) {
-                    Label(RunningMetricFormatter.duration(record.elapsedTime), systemImage: "clock")
-                    Label("\(RunningMetricFormatter.pace(record.averagePaceSecondsPerKilometer))/km", systemImage: "speedometer")
+                    runningMetricLabel(
+                        icon: "icon_metric_time",
+                        text: RunningMetricFormatter.duration(record.elapsedTime)
+                    )
+                    runningMetricLabel(
+                        icon: "icon_metric_pace",
+                        text: "\(RunningMetricFormatter.pace(record.averagePaceSecondsPerKilometer))/km"
+                    )
                 }
                 .font(AppTheme.Typography.font(size: 15, weight: .semibold))
                 .foregroundStyle(Color.gray)
@@ -351,6 +364,16 @@ private struct RunningRecordCard: View {
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .shadow(color: .black.opacity(0.08), radius: 16, x: 0, y: 8)
+    }
+
+    private func runningMetricLabel(icon: String, text: String) -> some View {
+        HStack(spacing: 4) {
+            Image(icon)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 16, height: 16)
+            Text(text)
+        }
     }
 }
 
