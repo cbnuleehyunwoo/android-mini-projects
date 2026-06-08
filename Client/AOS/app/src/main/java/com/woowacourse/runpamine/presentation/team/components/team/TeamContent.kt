@@ -73,7 +73,13 @@ fun TeamContent(
             items = members,
             key = { it.id },
         ) { member ->
-            TeamMemberCard(member = member)
+            TeamMemberCard(
+                member = member,
+                calories = "0",
+                distance = "${member.distance}km",
+                time = member.time,
+                pace = "-",
+            )
         }
     }
 }
