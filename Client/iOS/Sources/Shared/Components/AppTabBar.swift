@@ -5,30 +5,38 @@ struct AppTabBar: View {
 
     var body: some View {
         HStack {
-            tabButton(.home, title: "홈", icon: "house")
+            tabButton(.home, title: "홈", assetIcon: "icon_home")
             Spacer()
-            tabButton(.team, title: "팀", icon: "person.3")
+            tabButton(.team, title: "팀", assetIcon: "icon_team")
             Spacer()
-            tabButton(.history, title: "기록", icon: "clock.arrow.circlepath")
+            tabButton(.history, title: "기록", assetIcon: "icon_history")
         }
         .padding(.horizontal, 30)
         .padding(.top, 10)
         .padding(.bottom, 8)
-        .background(Color.white)
+        .background(Color.white.ignoresSafeArea(.container, edges: .bottom))
     }
 
-    private func tabButton(_ tab: MainTab, title: String, icon: String) -> some View {
+    private func tabButton(_ tab: MainTab, title: String, systemIcon: String? = nil, assetIcon: String? = nil) -> some View {
         Button {
             selectedTab = tab
         } label: {
-            VStack(spacing: 3) {
-                Image(systemName: icon)
-                    .font(.system(size: 24, weight: .semibold))
+            VStack(spacing: 12) {
+                if let assetIcon {
+                    Image(assetIcon)
+                        .resizable()
+                        .renderingMode(.template)
+                        .scaledToFit()
+                        .frame(width: 36, height: 36)
+                } else if let systemIcon {
+                    Image(systemName: systemIcon)
+                        .font(.system(size: 36, weight: .semibold))
+                }
                 Text(title)
-                    .font(AppTheme.Typography.font(size: 11, weight: .medium))
+                    .font(AppTheme.Typography.font(size: 16, weight: .medium))
             }
             .foregroundStyle(selectedTab == tab ? AppTheme.Colors.primary : Color.gray)
-            .frame(width: 56, height: 46)
+            .frame(width: 74, height: 86)
         }
     }
 }
