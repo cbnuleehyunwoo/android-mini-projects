@@ -13,6 +13,7 @@ import com.woowacourse.runpamine.presentation.createteam.CreateTeamScreen
 import com.woowacourse.runpamine.presentation.home.HomeScreen
 import com.woowacourse.runpamine.presentation.invite.InviteTeamScreen
 import com.woowacourse.runpamine.presentation.join.JoinScreen
+import com.woowacourse.runpamine.presentation.login.LoginScreen
 import com.woowacourse.runpamine.presentation.mypage.MyPageScreen
 import com.woowacourse.runpamine.presentation.nickname.ChangeNicknameScreen
 import com.woowacourse.runpamine.presentation.record.RecordScreen
@@ -26,13 +27,25 @@ fun NavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = AppRoute.Home.route,
+        startDestination = AppRoute.Login.route,
         modifier = modifier,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
         popExitTransition = { ExitTransition.None },
     ) {
+        composable(AppRoute.Login.route) {
+            LoginScreen(
+                onLoginSuccess = {
+                    navController.navigate(AppRoute.Home.route) {
+                        popUpTo(AppRoute.Login.route) {
+                            inclusive = true
+                        }
+                    }
+                },
+            )
+        }
+
         composable(AppRoute.Home.route) {
             HomeScreen(
                 name = "호이",
