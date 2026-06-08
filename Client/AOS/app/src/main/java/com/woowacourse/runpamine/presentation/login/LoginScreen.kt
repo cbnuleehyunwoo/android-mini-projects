@@ -26,13 +26,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.woowacourse.runpamine.R
 import com.woowacourse.runpamine.di.runpamineContainer
 import com.woowacourse.runpamine.presentation.component.RunpamineLogo
+import com.woowacourse.runpamine.presentation.login.viewmodel.LoginDestination
 import com.woowacourse.runpamine.presentation.login.viewmodel.LoginUiState
 import com.woowacourse.runpamine.presentation.login.viewmodel.LoginViewModel
 
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
-    onLoginSuccess: () -> Unit = {},
+    onLoginSuccess: (LoginDestination) -> Unit = {},
 ) {
     val context = LocalContext.current
     val container = context.runpamineContainer
@@ -41,14 +42,16 @@ fun LoginScreen(
             factory =
                 LoginViewModel.Factory(
                     authRepository = container.authRepository,
+                    profileRepository = container.profileRepository,
                     googleAuthCredentialDataSource = container.googleAuthCredentialDataSource,
                 ),
         )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(uiState.isLoggedIn) {
-        if (uiState.isLoggedIn) {
-            onLoginSuccess()
+    LaunchedEffect(uiState.destination) {
+        uiState.destination?.let { destination ->
+            viewModel.onDestinationHandled()
+            onLoginSuccess(destination)
         }
     }
 

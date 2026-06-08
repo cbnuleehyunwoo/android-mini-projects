@@ -14,6 +14,7 @@ import com.woowacourse.runpamine.presentation.home.HomeScreen
 import com.woowacourse.runpamine.presentation.invite.InviteTeamScreen
 import com.woowacourse.runpamine.presentation.join.JoinScreen
 import com.woowacourse.runpamine.presentation.login.LoginScreen
+import com.woowacourse.runpamine.presentation.login.viewmodel.LoginDestination
 import com.woowacourse.runpamine.presentation.mypage.MyPageScreen
 import com.woowacourse.runpamine.presentation.nickname.ChangeNicknameScreen
 import com.woowacourse.runpamine.presentation.record.RecordScreen
@@ -36,8 +37,13 @@ fun NavHost(
     ) {
         composable(AppRoute.Login.route) {
             LoginScreen(
-                onLoginSuccess = {
-                    navController.navigate(AppRoute.Home.route) {
+                onLoginSuccess = { destination ->
+                    val route =
+                        when (destination) {
+                            LoginDestination.NICKNAME -> AppRoute.ChangeNickname.route
+                            LoginDestination.HOME -> AppRoute.Home.route
+                        }
+                    navController.navigate(route) {
                         popUpTo(AppRoute.Login.route) {
                             inclusive = true
                         }
@@ -48,7 +54,6 @@ fun NavHost(
 
         composable(AppRoute.Home.route) {
             HomeScreen(
-                name = "호이",
                 onCreateTeamClick = {
                     navController.navigate(AppRoute.CreateTeam.route)
                 },
@@ -60,6 +65,9 @@ fun NavHost(
                 },
                 onMyPageClick = {
                     navController.navigate(AppRoute.MyPage.route)
+                },
+                onTeamClick = {
+                    navController.navigate(AppRoute.Team.route)
                 },
             )
         }
@@ -111,6 +119,13 @@ fun NavHost(
         composable(AppRoute.ChangeNickname.route) {
             ChangeNicknameScreen(
                 onBackClick = navController::popBackStack,
+                onCompleted = {
+                    navController.navigate(AppRoute.Home.route) {
+                        popUpTo(AppRoute.ChangeNickname.route) {
+                            inclusive = true
+                        }
+                    }
+                },
             )
         }
 
