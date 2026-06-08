@@ -19,10 +19,8 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,25 +32,59 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.woowacourse.runpamine.R
+import com.woowacourse.runpamine.di.runpamineContainer
 import com.woowacourse.runpamine.presentation.component.BottomButton
 import com.woowacourse.runpamine.presentation.component.ScreenTopBar
+import com.woowacourse.runpamine.presentation.nickname.viewmodel.NICKNAME_MAX_LENGTH
+import com.woowacourse.runpamine.presentation.nickname.viewmodel.NICKNAME_MIN_LENGTH
+import com.woowacourse.runpamine.presentation.nickname.viewmodel.NICKNAME_REGEX
+import com.woowacourse.runpamine.presentation.nickname.viewmodel.NicknameUiState
+import com.woowacourse.runpamine.presentation.nickname.viewmodel.NicknameViewModel
 import com.woowacourse.runpamine.ui.theme.Blue40
 import com.woowacourse.runpamine.ui.theme.Green40
 import com.woowacourse.runpamine.ui.theme.Red40
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
-private const val NICKNAME_MIN_LENGTH = 2
-private const val NICKNAME_MAX_LENGTH = 10
-private val NICKNAME_REGEX = Regex("^[가-힣a-zA-Z0-9]*$")
-
 @Composable
 fun ChangeNicknameScreen(
     modifier: Modifier = Modifier,
     onBackClick: () -> Unit = {},
+    onCompleted: () -> Unit = {},
 ) {
-    var nickname by remember { mutableStateOf("") }
+    val container = androidx.compose.ui.platform.LocalContext.current.runpamineContainer
+    val viewModel: NicknameViewModel =
+        viewModel(
+            factory = NicknameViewModel.Factory(container.profileRepository),
+        )
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    LaunchedEffect(uiState.isCompleted) {
+        if (uiState.isCompleted) {
+            viewModel.onCompletedHandled()
+            onCompleted()
+        }
+    }
+
+    ChangeNicknameContent(
+        uiState = uiState,
+        onNicknameChange = viewModel::updateNickname,
+        onSubmitClick = viewModel::createProfile,
+        onBackClick = onBackClick,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun ChangeNicknameContent(
+    uiState: NicknameUiState,
+    onNicknameChange: (String) -> Unit,
+    onSubmitClick: () -> Unit,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = Color.White,
@@ -82,36 +114,45 @@ fun ChangeNicknameScreen(
             )
             Spacer(modifier = Modifier.height(28.dp))
             NicknameTextField(
-                value = nickname,
-                onValueChange = { input ->
-                    if (input.length <= NICKNAME_MAX_LENGTH && NICKNAME_REGEX.matches(input)) {
-                        nickname = input
-                    }
-                },
+                value = uiState.nickname,
+                onValueChange = onNicknameChange,
                 modifier = Modifier.fillMaxWidth(),
             )
             Spacer(modifier = Modifier.height(24.dp))
             NicknameCondition(
                 text = stringResource(R.string.change_nickname_condition_length),
-                valid = nickname.length in NICKNAME_MIN_LENGTH..NICKNAME_MAX_LENGTH,
-                neutral = nickname.isEmpty(),
+                valid = uiState.nickname.length in NICKNAME_MIN_LENGTH..NICKNAME_MAX_LENGTH,
+                neutral = uiState.nickname.isEmpty(),
             )
             Spacer(modifier = Modifier.height(14.dp))
             NicknameCondition(
                 text = stringResource(R.string.change_nickname_condition_characters),
-                valid = nickname.isEmpty() || NICKNAME_REGEX.matches(nickname),
+                valid = uiState.nickname.isEmpty() || NICKNAME_REGEX.matches(uiState.nickname),
             )
             Spacer(modifier = Modifier.height(14.dp))
             NicknameCondition(
                 text = stringResource(R.string.change_nickname_condition_special),
                 valid = false,
-                neutral = nickname.isEmpty() || NICKNAME_REGEX.matches(nickname),
+                neutral = uiState.nickname.isEmpty() || NICKNAME_REGEX.matches(uiState.nickname),
                 positiveWhenNeutral = false,
             )
+            uiState.errorMessage?.let { message ->
+                Spacer(modifier = Modifier.height(14.dp))
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Red40,
+                )
+            }
             Spacer(modifier = Modifier.weight(1f))
             BottomButton(
-                text = stringResource(R.string.change_nickname_button),
-                onClick = {},
+                text =
+                    if (uiState.isLoading) {
+                        "설정 중..."
+                    } else {
+                        stringResource(R.string.change_nickname_button)
+                    },
+                onClick = onSubmitClick,
                 modifier =
                     Modifier
                         .fillMaxWidth()
@@ -197,6 +238,11 @@ private fun NicknameCondition(
 @Composable
 private fun ChangeNicknameScreenPreview() {
     RunpamineTheme {
-        ChangeNicknameScreen()
+        ChangeNicknameContent(
+            uiState = NicknameUiState(),
+            onNicknameChange = {},
+            onSubmitClick = {},
+            onBackClick = {},
+        )
     }
 }

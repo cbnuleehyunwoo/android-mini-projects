@@ -10,6 +10,9 @@ import com.woowacourse.runpamine.data.auth.remote.AuthRemoteDataSource
 import com.woowacourse.runpamine.data.auth.remote.SupabaseAuthRemoteDataSource
 import com.woowacourse.runpamine.data.auth.repository.DefaultAuthRepository
 import com.woowacourse.runpamine.data.auth.repository.MissingAuthConfigurationRepository
+import com.woowacourse.runpamine.data.profile.remote.ApiProfileRemoteDataSource
+import com.woowacourse.runpamine.data.profile.remote.ProfileRemoteDataSource
+import com.woowacourse.runpamine.data.profile.repository.DefaultProfileRepository
 import com.woowacourse.runpamine.data.run.local.RoomRunLocalDataSource
 import com.woowacourse.runpamine.data.run.local.RunDatabase
 import com.woowacourse.runpamine.data.run.local.RunLocalDataSource
@@ -17,6 +20,7 @@ import com.woowacourse.runpamine.data.run.repository.DefaultRunTrackingRepositor
 import com.woowacourse.runpamine.data.run.repository.LocalOnlyRunSyncRepository
 import com.woowacourse.runpamine.data.run.tracker.AndroidLocationTracker
 import com.woowacourse.runpamine.domain.auth.AuthRepository
+import com.woowacourse.runpamine.domain.profile.ProfileRepository
 import com.woowacourse.runpamine.domain.run.LocationTracker
 import com.woowacourse.runpamine.domain.run.RunSyncRepository
 import com.woowacourse.runpamine.domain.run.RunTrackingRepository
@@ -57,6 +61,17 @@ class RunpamineContainer(
         } else {
             MissingAuthConfigurationRepository(missingKeys)
         }
+    }
+
+    private val profileRemoteDataSource: ProfileRemoteDataSource by lazy {
+        ApiProfileRemoteDataSource(BuildConfig.BASE_URL)
+    }
+
+    val profileRepository: ProfileRepository by lazy {
+        DefaultProfileRepository(
+            authRepository = authRepository,
+            remoteDataSource = profileRemoteDataSource,
+        )
     }
 
     private val database: RunDatabase by lazy {
