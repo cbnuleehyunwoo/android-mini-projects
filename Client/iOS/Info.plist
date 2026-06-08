@@ -16,6 +16,29 @@
 	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundlePackageType</key>
 	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>runpamine</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.218936780568-amfro0n7bdqcrvp3cqsca1c4rdofm4mm</string>
+			</array>
+		</dict>
+	</array>
+	<key>GIDClientID</key>
+	<string>218936780568-amfro0n7bdqcrvp3cqsca1c4rdofm4mm.apps.googleusercontent.com</string>
+	<key>GIDServerClientID</key>
+	<string>218936780568-gget6j62mchc2301fpnato1fqq71j6q7.apps.googleusercontent.com</string>
+	<key>SupabaseAnonKey</key>
+	<string>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJicXVjYXd3b2N3eXVxbnNkZ3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzODI2MzMsImV4cCI6MjA5NTk1ODYzM30.S9odkE0bK1iFa0kdt2yaob7nX-78h0h63MiYTDiqND4</string>
+	<key>SupabaseURL</key>
+	<string>https://rbqucawwocwyuqnsdgtv.supabase.co</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>

@@ -1,3 +1,4 @@
+import GoogleSignIn
 import SwiftUI
 
 @main
@@ -6,7 +7,10 @@ struct RunpamineApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView(authService: MockAuthService(store: store), store: store)
+            RootView(authService: SupabaseAuthService(store: store), store: store)
+                .onOpenURL { url in
+                    GIDSignIn.sharedInstance.handle(url)
+                }
         }
     }
 }

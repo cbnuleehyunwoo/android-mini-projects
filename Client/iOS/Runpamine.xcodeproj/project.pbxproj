@@ -7,14 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		7A1000010000000000000049 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000149 /* Assets.xcassets */; };
 		7A1000010000000000000001 /* RunpamineApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000101 /* RunpamineApp.swift */; };
 		7A1000010000000000000002 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000102 /* SplashView.swift */; };
 		7A1000010000000000000003 /* RunpamineLogoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000103 /* RunpamineLogoView.swift */; };
 		7A1000010000000000000004 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000104 /* AppTheme.swift */; };
 		7A1000010000000000000005 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000105 /* LoginView.swift */; };
 		7A1000010000000000000006 /* LoginViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000106 /* LoginViewModel.swift */; };
-		7A1000010000000000000007 /* KakaoLoginButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000107 /* KakaoLoginButton.swift */; };
+		7A1000010000000000000007 /* GoogleLoginButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000107 /* GoogleLoginButton.swift */; };
 		7A1000010000000000000008 /* AppLogoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000108 /* AppLogoView.swift */; };
 		7A1000010000000000000009 /* AuthModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000109 /* AuthModels.swift */; };
 		7A100001000000000000000A /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000010A /* AuthService.swift */; };
@@ -63,19 +62,21 @@
 		7A1000010000000000000046 /* pretendard_regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000146 /* pretendard_regular.otf */; };
 		7A1000010000000000000047 /* pretendard_semi_bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000147 /* pretendard_semi_bold.otf */; };
 		7A1000010000000000000048 /* pretendard_thin.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000148 /* pretendard_thin.otf */; };
+		7A1000010000000000000049 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000149 /* Assets.xcassets */; };
 		7A100001000000000000004A /* bk.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000150 /* bk.png */; };
 		7A100001000000000000004B /* encho.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000151 /* encho.png */; };
+		7A100001000000000000004C /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 7A1000010000000000000901 /* Supabase */; };
+		7A100001000000000000004D /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 7A1000010000000000000903 /* GoogleSignIn */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		7A1000010000000000000149 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7A1000010000000000000101 /* RunpamineApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunpamineApp.swift; sourceTree = "<group>"; };
 		7A1000010000000000000102 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 		7A1000010000000000000103 /* RunpamineLogoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunpamineLogoView.swift; sourceTree = "<group>"; };
 		7A1000010000000000000104 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		7A1000010000000000000105 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		7A1000010000000000000106 /* LoginViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewModel.swift; sourceTree = "<group>"; };
-		7A1000010000000000000107 /* KakaoLoginButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KakaoLoginButton.swift; sourceTree = "<group>"; };
+		7A1000010000000000000107 /* GoogleLoginButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleLoginButton.swift; sourceTree = "<group>"; };
 		7A1000010000000000000108 /* AppLogoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogoView.swift; sourceTree = "<group>"; };
 		7A1000010000000000000109 /* AuthModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthModels.swift; sourceTree = "<group>"; };
 		7A100001000000000000010A /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
@@ -114,9 +115,9 @@
 		7A100001000000000000012B /* TeamJoinViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamJoinViewModel.swift; sourceTree = "<group>"; };
 		7A100001000000000000012C /* TeamNameValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamNameValidator.swift; sourceTree = "<group>"; };
 		7A100001000000000000012D /* TeamService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamService.swift; sourceTree = "<group>"; };
+		7A100001000000000000012F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7A1000010000000000000130 /* TeamDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamDashboardView.swift; sourceTree = "<group>"; };
 		7A1000010000000000000131 /* InviteMemberView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteMemberView.swift; sourceTree = "<group>"; };
-		7A100001000000000000012F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7A1000010000000000000140 /* pretendard_black.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_black.otf; sourceTree = "<group>"; };
 		7A1000010000000000000141 /* pretendard_bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_bold.otf; sourceTree = "<group>"; };
 		7A1000010000000000000142 /* pretendard_extra_bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_extra_bold.otf; sourceTree = "<group>"; };
@@ -126,6 +127,7 @@
 		7A1000010000000000000146 /* pretendard_regular.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_regular.otf; sourceTree = "<group>"; };
 		7A1000010000000000000147 /* pretendard_semi_bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_semi_bold.otf; sourceTree = "<group>"; };
 		7A1000010000000000000148 /* pretendard_thin.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_thin.otf; sourceTree = "<group>"; };
+		7A1000010000000000000149 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7A1000010000000000000150 /* bk.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = bk.png; sourceTree = SOURCE_ROOT; };
 		7A1000010000000000000151 /* encho.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = encho.png; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
@@ -135,6 +137,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7A100001000000000000004C /* Supabase in Frameworks */,
+				7A100001000000000000004D /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -240,7 +244,7 @@
 			children = (
 				7A1000010000000000000105 /* LoginView.swift */,
 				7A1000010000000000000106 /* LoginViewModel.swift */,
-				7A1000010000000000000107 /* KakaoLoginButton.swift */,
+				7A1000010000000000000107 /* GoogleLoginButton.swift */,
 			);
 			path = Login;
 			sourceTree = "<group>";
@@ -407,6 +411,10 @@
 			dependencies = (
 			);
 			name = Runpamine;
+			packageProductDependencies = (
+				7A1000010000000000000901 /* Supabase */,
+				7A1000010000000000000903 /* GoogleSignIn */,
+			);
 			productName = Runpamine;
 			productReference = 7A1000010000000000000115 /* Runpamine.app */;
 			productType = "com.apple.product-type.application";
@@ -435,6 +443,10 @@
 				Base,
 			);
 			mainGroup = 7A1000010000000000000301;
+			packageReferences = (
+				7A1000010000000000000902 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				7A1000010000000000000904 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+			);
 			productRefGroup = 7A1000010000000000000303 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -477,7 +489,7 @@
 				7A1000010000000000000004 /* AppTheme.swift in Sources */,
 				7A1000010000000000000005 /* LoginView.swift in Sources */,
 				7A1000010000000000000006 /* LoginViewModel.swift in Sources */,
-				7A1000010000000000000007 /* KakaoLoginButton.swift in Sources */,
+				7A1000010000000000000007 /* GoogleLoginButton.swift in Sources */,
 				7A1000010000000000000008 /* AppLogoView.swift in Sources */,
 				7A1000010000000000000009 /* AuthModels.swift in Sources */,
 				7A100001000000000000000A /* AuthService.swift in Sources */,
@@ -645,7 +657,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = QCJ9DG44VD;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Info.plist;
@@ -675,7 +687,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = QCJ9DG44VD;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Info.plist;
@@ -720,6 +732,38 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		7A1000010000000000000902 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.46.0;
+			};
+		};
+		7A1000010000000000000904 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		7A1000010000000000000901 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7A1000010000000000000902 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+		7A1000010000000000000903 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7A1000010000000000000904 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 7A1000010000000000000501 /* Project object */;
 }
