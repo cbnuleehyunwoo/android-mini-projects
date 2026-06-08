@@ -26,9 +26,9 @@ struct LoginView: View {
                 }
                 .padding(.bottom, 50)
 
-                KakaoLoginButton(isLoading: viewModel.isLoading) {
+                GoogleLoginButton(isLoading: viewModel.isLoading) {
                     Task {
-                        await viewModel.loginWithKakao()
+                        await viewModel.loginWithGoogle()
                         if let session = viewModel.session {
                             onLoginCompleted(session)
                         }

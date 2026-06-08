@@ -27,6 +27,9 @@ enum TermsAgreementID: String, CaseIterable, Codable {
 enum AuthError: LocalizedError, Equatable {
     case cancelled
     case invalidNickname
+    case missingGoogleConfiguration
+    case missingGoogleIDToken
+    case missingSupabaseConfiguration
     case unavailable
 
     var errorDescription: String? {
@@ -35,6 +38,12 @@ enum AuthError: LocalizedError, Equatable {
             return "로그인이 취소되었어요."
         case .invalidNickname:
             return "닉네임을 다시 확인해주세요."
+        case .missingGoogleConfiguration:
+            return "Google 로그인 설정을 확인해주세요."
+        case .missingGoogleIDToken:
+            return "Google 로그인 정보를 가져오지 못했어요."
+        case .missingSupabaseConfiguration:
+            return "Supabase 로그인 설정을 확인해주세요."
         case .unavailable:
             return "잠시 후 다시 시도해주세요."
         }

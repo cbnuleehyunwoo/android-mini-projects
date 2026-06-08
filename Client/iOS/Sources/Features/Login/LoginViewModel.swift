@@ -13,14 +13,14 @@ final class LoginViewModel: ObservableObject {
         self.authService = authService
     }
 
-    func loginWithKakao() async {
+    func loginWithGoogle() async {
         guard !isLoading else { return }
 
         isLoading = true
         errorMessage = nil
 
         do {
-            session = try await authService.loginWithKakao()
+            session = try await authService.loginWithGoogle()
         } catch {
             errorMessage = error.localizedDescription
         }
