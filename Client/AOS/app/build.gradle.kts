@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -24,6 +26,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "BASE_URL", runpamineProperty("base_url").toBuildConfigString())
+        buildConfigField("String", "SUPABASE_ANON_KEY", runpamineProperty("supabase_anon_key").toBuildConfigString())
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", runpamineProperty("google_web_client_id").toBuildConfigString())
     }
 
     buildTypes {
@@ -41,6 +46,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -53,6 +59,10 @@ kotlin {
 secrets {
     // local.properties 에 정의한 google_maps_api_key 를 매니페스트 플레이스홀더로 주입한다.
     propertiesFileName = "local.properties"
+    defaultPropertiesFileName = "local.defaults.properties"
+    ignoreList.add("base_url")
+    ignoreList.add("supabase_anon_key")
+    ignoreList.add("google_web_client_id")
 }
 
 dependencies {
@@ -72,6 +82,12 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    implementation(platform(libs.supabase.bom))
+    implementation(libs.supabase.auth)
+    implementation(libs.ktor.client.android)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
     ksp(libs.androidx.room.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -81,3 +97,20 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
+
+fun runpamineProperty(name: String): String {
+    val properties = Properties()
+    rootProject
+        .file("local.defaults.properties")
+        .takeIf { it.exists() }
+        ?.inputStream()
+        ?.use(properties::load)
+    rootProject
+        .file("local.properties")
+        .takeIf { it.exists() }
+        ?.inputStream()
+        ?.use(properties::load)
+    return properties.getProperty(name).orEmpty()
+}
+
+fun String.toBuildConfigString(): String = "\"${replace("\\", "\\\\").replace("\"", "\\\"")}\""

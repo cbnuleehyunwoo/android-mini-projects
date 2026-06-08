@@ -3,19 +3,62 @@ package com.woowacourse.runpamine.di
 import android.content.Context
 import androidx.room.Room
 import com.google.android.gms.location.LocationServices
+import com.woowacourse.runpamine.BuildConfig
+import com.woowacourse.runpamine.data.auth.google.AndroidGoogleAuthCredentialDataSource
+import com.woowacourse.runpamine.data.auth.google.GoogleAuthCredentialDataSource
+import com.woowacourse.runpamine.data.auth.remote.AuthRemoteDataSource
+import com.woowacourse.runpamine.data.auth.remote.SupabaseAuthRemoteDataSource
+import com.woowacourse.runpamine.data.auth.repository.DefaultAuthRepository
+import com.woowacourse.runpamine.data.auth.repository.MissingAuthConfigurationRepository
 import com.woowacourse.runpamine.data.run.local.RoomRunLocalDataSource
 import com.woowacourse.runpamine.data.run.local.RunDatabase
 import com.woowacourse.runpamine.data.run.local.RunLocalDataSource
 import com.woowacourse.runpamine.data.run.repository.DefaultRunTrackingRepository
 import com.woowacourse.runpamine.data.run.repository.LocalOnlyRunSyncRepository
 import com.woowacourse.runpamine.data.run.tracker.AndroidLocationTracker
+import com.woowacourse.runpamine.domain.auth.AuthRepository
 import com.woowacourse.runpamine.domain.run.LocationTracker
 import com.woowacourse.runpamine.domain.run.RunSyncRepository
 import com.woowacourse.runpamine.domain.run.RunTrackingRepository
+import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.createSupabaseClient
 
 class RunpamineContainer(
     private val context: Context,
 ) {
+    private val supabaseClient by lazy {
+        createSupabaseClient(
+            supabaseUrl = BuildConfig.BASE_URL,
+            supabaseKey = BuildConfig.SUPABASE_ANON_KEY,
+        ) {
+            install(Auth)
+        }
+    }
+
+    private val authRemoteDataSource: AuthRemoteDataSource by lazy {
+        SupabaseAuthRemoteDataSource(supabaseClient)
+    }
+
+    val googleAuthCredentialDataSource: GoogleAuthCredentialDataSource by lazy {
+        AndroidGoogleAuthCredentialDataSource(
+            webClientId = BuildConfig.GOOGLE_WEB_CLIENT_ID,
+        )
+    }
+
+    val authRepository: AuthRepository by lazy {
+        val missingKeys =
+            buildList {
+                if (BuildConfig.BASE_URL.isBlank()) add("base_url")
+                if (BuildConfig.SUPABASE_ANON_KEY.isBlank()) add("supabase_anon_key")
+            }
+
+        if (missingKeys.isEmpty()) {
+            DefaultAuthRepository(authRemoteDataSource)
+        } else {
+            MissingAuthConfigurationRepository(missingKeys)
+        }
+    }
+
     private val database: RunDatabase by lazy {
         Room
             .databaseBuilder(
