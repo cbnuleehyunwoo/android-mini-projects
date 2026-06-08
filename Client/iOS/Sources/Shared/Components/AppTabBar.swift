@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct AppTabBar: View {
+    static let height: CGFloat = 104
+
     @Binding var selectedTab: MainTab
 
     var body: some View {
@@ -15,6 +17,7 @@ struct AppTabBar: View {
         .padding(.top, 10)
         .padding(.bottom, 8)
         .background(Color.white.ignoresSafeArea(.container, edges: .bottom))
+        .frame(height: Self.height)
     }
 
     private func tabButton(_ tab: MainTab, title: String, systemIcon: String? = nil, assetIcon: String? = nil) -> some View {

@@ -21,7 +21,7 @@ struct HomeView: View {
             ZStack(alignment: .bottom) {
                 HomeMapView()
                     .frame(maxWidth: .infinity)
-                    .frame(height: 424)
+                    .frame(maxHeight: .infinity)
                     .padding(.horizontal, 8)
 
                 Button(action: onStartRunning) {
@@ -35,8 +35,8 @@ struct HomeView: View {
                 .padding(.bottom, -32)
             }
             .padding(.top, 8)
-
-            Spacer(minLength: 72)
+            .padding(.bottom, 55)
+            .frame(maxHeight: .infinity)
         }
         .background(Color.white)
     }

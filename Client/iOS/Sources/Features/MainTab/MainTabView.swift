@@ -19,7 +19,7 @@ struct MainTabView: View {
     }
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .bottom) {
             Group {
                 switch selectedTab {
                 case .home:
@@ -50,10 +50,12 @@ struct MainTabView: View {
                     HistoryView()
                 }
             }
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                AppTabBar(selectedTab: $selectedTab)
-            }
+            .padding(.bottom, AppTabBar.height)
+
+            AppTabBar(selectedTab: $selectedTab)
+                .ignoresSafeArea(.container, edges: .bottom)
         }
+        .ignoresSafeArea(.container, edges: .bottom)
         .runpamineFullScreenCover(item: $presentedAction) { action in
             switch action {
             case .createTeam:
