@@ -65,6 +65,7 @@ fun TeamMemberCard(
             horizontalArrangement = Arrangement.spacedBy(15.dp),
         ) {
             RunnerThumbnail(
+                hasRunRecord = member.hasRunRecord,
                 modifier = Modifier.size(80.dp),
             )
             RunningMetricSection(
@@ -93,6 +94,7 @@ private fun TeamMemberPreview() {
                     time = "28:35",
                     pace = "2'19\"",
                     calories = "344",
+                    hasRunRecord = true,
                 ),
             distance = "12.3km",
             time = "22:32",
