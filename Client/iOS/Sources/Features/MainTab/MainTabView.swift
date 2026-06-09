@@ -10,16 +10,19 @@ struct MainTabView: View {
     @State private var nickname: String
     private let teamService: TeamServiceProtocol
     private let profileService: ProfileServiceProtocol
+    private let runService: RunServiceProtocol
     private let accessToken: String?
     private let store: LocalAppStateStore
 
     init(
         store: LocalAppStateStore,
         profileService: ProfileServiceProtocol = MockProfileService(),
+        runService: RunServiceProtocol = MockRunService(),
         accessToken: String? = nil
     ) {
         self.store = store
         self.profileService = profileService
+        self.runService = runService
         self.accessToken = accessToken
         teamService = MockTeamService(store: store)
         _nickname = State(initialValue: store.nickname)
@@ -55,7 +58,7 @@ struct MainTabView: View {
                         }
                     )
                 case .history:
-                    HistoryView()
+                    HistoryView(runService: runService, accessToken: accessToken)
                 }
             }
             .padding(.bottom, AppTabBar.height)
@@ -82,7 +85,7 @@ struct MainTabView: View {
             }
         }
         .runpamineFullScreenCover(isPresented: $isRunning) {
-            RunningView()
+            RunningView(runService: runService, accessToken: accessToken)
         }
         .runpamineFullScreenCover(isPresented: $isShowingInvite) {
             InviteMemberView(inviteCode: team?.inviteCode ?? "")

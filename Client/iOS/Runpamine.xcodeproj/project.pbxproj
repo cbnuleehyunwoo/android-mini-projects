@@ -53,6 +53,8 @@
 		7A100001000000000000002C /* TeamService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000012D /* TeamService.swift */; };
 		7A1040010000000000000001 /* ProfileModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1040010000000000000101 /* ProfileModels.swift */; };
 		7A1040010000000000000002 /* ProfileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1040010000000000000102 /* ProfileService.swift */; };
+		7A1070010000000000000001 /* RunModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1070010000000000000101 /* RunModels.swift */; };
+		7A1070010000000000000002 /* RunService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1070010000000000000102 /* RunService.swift */; };
 		7A100001000000000000002D /* TeamDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000130 /* TeamDashboardView.swift */; };
 		7A100001000000000000002E /* InviteMemberView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000131 /* InviteMemberView.swift */; };
 		7A1000010000000000000040 /* pretendard_black.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000140 /* pretendard_black.otf */; };
@@ -120,6 +122,8 @@
 		7A100001000000000000012F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7A1040010000000000000101 /* ProfileModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileModels.swift; sourceTree = "<group>"; };
 		7A1040010000000000000102 /* ProfileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileService.swift; sourceTree = "<group>"; };
+		7A1070010000000000000101 /* RunModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunModels.swift; sourceTree = "<group>"; };
+		7A1070010000000000000102 /* RunService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunService.swift; sourceTree = "<group>"; };
 		7A1000010000000000000130 /* TeamDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamDashboardView.swift; sourceTree = "<group>"; };
 		7A1000010000000000000131 /* InviteMemberView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteMemberView.swift; sourceTree = "<group>"; };
 		7A1000010000000000000140 /* pretendard_black.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_black.otf; sourceTree = "<group>"; };
@@ -357,6 +361,8 @@
 				7A1000010000000000000124 /* RunningHistoryStore.swift */,
 				7A1000010000000000000125 /* RunningSession.swift */,
 				7A1000010000000000000126 /* RunningTracker.swift */,
+				7A1070010000000000000101 /* RunModels.swift */,
+				7A1070010000000000000102 /* RunService.swift */,
 			);
 			path = Running;
 			sourceTree = "<group>";
@@ -543,6 +549,8 @@
 				7A100001000000000000002C /* TeamService.swift in Sources */,
 				7A1040010000000000000001 /* ProfileModels.swift in Sources */,
 				7A1040010000000000000002 /* ProfileService.swift in Sources */,
+				7A1070010000000000000001 /* RunModels.swift in Sources */,
+				7A1070010000000000000002 /* RunService.swift in Sources */,
 				7A100001000000000000002D /* TeamDashboardView.swift in Sources */,
 				7A100001000000000000002E /* InviteMemberView.swift in Sources */,
 			);

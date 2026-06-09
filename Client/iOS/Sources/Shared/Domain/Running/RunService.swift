@@ -1,0 +1,446 @@
+import Foundation
+
+protocol RunServiceProtocol {
+    func createRun(record: RunningRecord, accessToken: String) async throws -> CreatedRun
+    func fetchWeeklyRuns(anchorDate: Date, accessToken: String) async throws -> RunPeriodSummary
+    func fetchMonthlyRuns(year: Int, month: Int, accessToken: String) async throws -> RunPeriodSummary
+    func fetchRunDetail(runID: String, accessToken: String) async throws -> RunningRecord
+}
+
+final class RunAPIService: RunServiceProtocol {
+    private let baseURL: URL
+    private let session: URLSession
+    private let decoder: JSONDecoder
+    private let encoder: JSONEncoder
+
+    init(
+        baseURL: URL,
+        session: URLSession = .shared,
+        decoder: JSONDecoder = JSONDecoder(),
+        encoder: JSONEncoder = JSONEncoder()
+    ) {
+        self.baseURL = baseURL.apiBaseURL
+        self.session = session
+        self.decoder = decoder
+        self.encoder = encoder
+    }
+
+    convenience init(bundle: Bundle = .main) throws {
+        guard let baseURL = bundle.runAPIBaseURL else {
+            throw RunAPIError.missingBaseURL
+        }
+
+        self.init(baseURL: baseURL)
+    }
+
+    func createRun(record: RunningRecord, accessToken: String) async throws -> CreatedRun {
+        let response: CreatedRunEnvelope = try await request(
+            path: "/runs",
+            method: "POST",
+            accessToken: accessToken,
+            body: CreateRunPayload(record)
+        )
+        return response.data.domain
+    }
+
+    func fetchWeeklyRuns(anchorDate: Date = Date(), accessToken: String) async throws -> RunPeriodSummary {
+        let response: WeeklyRunsEnvelope = try await request(
+            path: "/runs/me/week",
+            queryItems: [URLQueryItem(name: "date", value: RunDateCoder.dateString(from: anchorDate))],
+            method: "GET",
+            accessToken: accessToken
+        )
+        return response.data.domain
+    }
+
+    func fetchMonthlyRuns(year: Int, month: Int, accessToken: String) async throws -> RunPeriodSummary {
+        let response: MonthlyRunsEnvelope = try await request(
+            path: "/runs/me/month",
+            queryItems: [
+                URLQueryItem(name: "year", value: "\(year)"),
+                URLQueryItem(name: "month", value: "\(month)")
+            ],
+            method: "GET",
+            accessToken: accessToken
+        )
+        return response.data.domain
+    }
+
+    func fetchRunDetail(runID: String, accessToken: String) async throws -> RunningRecord {
+        let response: RunDetailEnvelope = try await request(
+            path: "/runs/\(runID)",
+            method: "GET",
+            accessToken: accessToken
+        )
+        guard let record = response.data.domain else {
+            throw RunAPIError.invalidResponse
+        }
+
+        return record
+    }
+
+    private func request<Response: Decodable>(
+        path: String,
+        queryItems: [URLQueryItem] = [],
+        method: String,
+        accessToken: String
+    ) async throws -> Response {
+        try await send(request: makeRequest(path: path, queryItems: queryItems, method: method, accessToken: accessToken))
+    }
+
+    private func request<Response: Decodable, Body: Encodable>(
+        path: String,
+        method: String,
+        accessToken: String,
+        body: Body
+    ) async throws -> Response {
+        var request = makeRequest(path: path, method: method, accessToken: accessToken)
+        request.httpBody = try encoder.encode(body)
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        return try await send(request: request)
+    }
+
+    private func makeRequest(
+        path: String,
+        queryItems: [URLQueryItem] = [],
+        method: String,
+        accessToken: String
+    ) -> URLRequest {
+        let url = baseURL.appendingAPIPath(path).appendingQueryItems(queryItems)
+        var request = URLRequest(url: url)
+        request.httpMethod = method
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        return request
+    }
+
+    private func send<Response: Decodable>(request: URLRequest) async throws -> Response {
+        let (data, response) = try await session.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw RunAPIError.invalidResponse
+        }
+
+        guard 200..<300 ~= httpResponse.statusCode else {
+            throw RunAPIError.requestFailed(message: decodeErrorMessage(from: data), statusCode: httpResponse.statusCode)
+        }
+
+        return try decoder.decode(Response.self, from: data)
+    }
+
+    private func decodeErrorMessage(from data: Data) -> String? {
+        try? decoder.decode(RunAPIErrorEnvelope.self, from: data).error.message
+    }
+}
+
+final class MockRunService: RunServiceProtocol {
+    private let historyStore: RunningHistoryStore
+
+    init(historyStore: RunningHistoryStore = RunningHistoryStore()) {
+        self.historyStore = historyStore
+    }
+
+    func createRun(record: RunningRecord, accessToken: String) async throws -> CreatedRun {
+        CreatedRun(
+            id: record.id.uuidString,
+            distanceMeters: Int(record.distanceMeters.rounded()),
+            durationSeconds: Int(record.elapsedTime.rounded()),
+            averagePaceSecondsPerKilometer: record.averagePaceSecondsPerKilometer.map { Int($0.rounded()) },
+            calories: record.estimatedCalories
+        )
+    }
+
+    func fetchWeeklyRuns(anchorDate: Date = Date(), accessToken: String) async throws -> RunPeriodSummary {
+        makePeriodSummary(records: historyStore.load().filter {
+            Calendar.current.isDate($0.startedAt, equalTo: anchorDate, toGranularity: .weekOfYear)
+        })
+    }
+
+    func fetchMonthlyRuns(year: Int, month: Int, accessToken: String) async throws -> RunPeriodSummary {
+        makePeriodSummary(records: historyStore.load().filter { record in
+            let components = Calendar.current.dateComponents([.year, .month], from: record.startedAt)
+            return components.year == year && components.month == month
+        })
+    }
+
+    func fetchRunDetail(runID: String, accessToken: String) async throws -> RunningRecord {
+        guard let record = historyStore.load().first(where: { $0.id.uuidString == runID }) else {
+            throw RunAPIError.invalidResponse
+        }
+
+        return record
+    }
+
+    private func makePeriodSummary(records: [RunningRecord]) -> RunPeriodSummary {
+        RunPeriodSummary(
+            totalDistanceMeters: Int(records.reduce(0) { $0 + $1.distanceMeters }.rounded()),
+            days: records.map {
+                RunDaySummary(
+                    date: Calendar.current.startOfDay(for: $0.startedAt),
+                    distanceMeters: Int($0.distanceMeters.rounded()),
+                    hasRun: true
+                )
+            },
+            runs: records.sorted { $0.startedAt > $1.startedAt }
+        )
+    }
+}
+
+enum RunAPIError: LocalizedError, Equatable {
+    case invalidResponse
+    case missingBaseURL
+    case requestFailed(message: String?, statusCode: Int)
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidResponse:
+            return "러닝 기록 응답을 확인해주세요."
+        case .missingBaseURL:
+            return "러닝 기록 API 주소를 확인해주세요."
+        case let .requestFailed(message, statusCode):
+            return message ?? "러닝 기록 요청에 실패했어요. (\(statusCode))"
+        }
+    }
+}
+
+private struct CreatedRunEnvelope: Decodable {
+    let data: CreatedRunPayload
+}
+
+private struct WeeklyRunsEnvelope: Decodable {
+    let data: WeeklyRunsPayload
+}
+
+private struct MonthlyRunsEnvelope: Decodable {
+    let data: MonthlyRunsPayload
+}
+
+private struct RunDetailEnvelope: Decodable {
+    let data: RunPayload
+}
+
+private struct CreatedRunPayload: Decodable {
+    let id: String
+    let distanceMeters: Int
+    let durationSeconds: Int
+    let averagePaceSecondsPerKm: Int?
+    let calories: Int
+
+    var domain: CreatedRun {
+        CreatedRun(
+            id: id,
+            distanceMeters: distanceMeters,
+            durationSeconds: durationSeconds,
+            averagePaceSecondsPerKilometer: averagePaceSecondsPerKm,
+            calories: calories
+        )
+    }
+}
+
+private struct WeeklyRunsPayload: Decodable {
+    let totalDistanceMeters: Int
+    let days: [RunDayPayload]
+    let runs: [RunPayload]
+
+    var domain: RunPeriodSummary {
+        RunPeriodSummary(
+            totalDistanceMeters: totalDistanceMeters,
+            days: days.compactMap(\.domain),
+            runs: runs.compactMap(\.domain)
+        )
+    }
+}
+
+private struct MonthlyRunsPayload: Decodable {
+    let totalDistanceMeters: Int
+    let days: [RunDayPayload]
+    let runs: [RunPayload]
+
+    var domain: RunPeriodSummary {
+        RunPeriodSummary(
+            totalDistanceMeters: totalDistanceMeters,
+            days: days.compactMap(\.domain),
+            runs: runs.compactMap(\.domain)
+        )
+    }
+}
+
+private struct RunDayPayload: Decodable {
+    let date: String
+    let distanceMeters: Int
+    let hasRun: Bool
+
+    var domain: RunDaySummary? {
+        guard let date = RunDateCoder.date(from: date) else { return nil }
+        return RunDaySummary(date: date, distanceMeters: distanceMeters, hasRun: hasRun)
+    }
+}
+
+private struct RunPayload: Decodable {
+    let id: String
+    let date: String?
+    let startedAt: String
+    let endedAt: String
+    let distanceMeters: Int
+    let durationSeconds: Int
+    let averagePaceSecondsPerKm: Int?
+    let calories: Int
+    let points: [RunPointPayload]?
+
+    var domain: RunningRecord? {
+        guard
+            let startedAt = RunDateCoder.dateTime(from: startedAt),
+            let endedAt = RunDateCoder.dateTime(from: endedAt)
+        else {
+            return nil
+        }
+
+        return RunningRecord(
+            id: UUID(uuidString: id) ?? UUID(),
+            startedAt: startedAt,
+            endedAt: endedAt,
+            elapsedTime: TimeInterval(durationSeconds),
+            distanceMeters: Double(distanceMeters),
+            averagePaceSecondsPerKilometer: averagePaceSecondsPerKm.map(TimeInterval.init),
+            calories: calories,
+            route: (points ?? []).sorted { $0.sequence < $1.sequence }.compactMap(\.domain)
+        )
+    }
+}
+
+private struct CreateRunPayload: Encodable {
+    let startedAt: String
+    let endedAt: String
+    let distanceMeters: Int
+    let durationSeconds: Int
+    let calories: Int
+    let points: [CreateRunPointPayload]
+
+    init(_ record: RunningRecord) {
+        startedAt = RunDateCoder.dateTimeString(from: record.startedAt)
+        endedAt = RunDateCoder.dateTimeString(from: record.endedAt)
+        distanceMeters = Int(record.distanceMeters.rounded())
+        durationSeconds = Int(record.elapsedTime.rounded())
+        calories = record.estimatedCalories
+        points = record.createRunPoints.map(CreateRunPointPayload.init)
+    }
+}
+
+private struct RunPointPayload: Decodable {
+    let sequence: Int
+    let latitude: Double
+    let longitude: Double
+    let recordedAt: String
+
+    var domain: RunningCoordinate? {
+        guard let recordedAt = RunDateCoder.dateTime(from: recordedAt) else { return nil }
+        return RunningCoordinate(
+            .init(latitude: latitude, longitude: longitude),
+            recordedAt: recordedAt
+        )
+    }
+}
+
+private struct CreateRunPointPayload: Encodable {
+    let sequence: Int
+    let latitude: Double
+    let longitude: Double
+    let recordedAt: String
+
+    init(_ point: CreateRunPoint) {
+        sequence = point.sequence
+        latitude = point.latitude
+        longitude = point.longitude
+        recordedAt = RunDateCoder.dateTimeString(from: point.recordedAt)
+    }
+}
+
+private struct RunAPIErrorEnvelope: Decodable {
+    let error: RunAPIErrorPayload
+}
+
+private struct RunAPIErrorPayload: Decodable {
+    let message: String
+}
+
+private enum RunDateCoder {
+    private static let dateTimeFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
+    private static let fallbackDateTimeFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter
+    }()
+
+    private static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
+
+    static func dateTimeString(from date: Date) -> String {
+        fallbackDateTimeFormatter.string(from: date)
+    }
+
+    static func dateString(from date: Date) -> String {
+        dateFormatter.string(from: date)
+    }
+
+    static func dateTime(from string: String) -> Date? {
+        dateTimeFormatter.date(from: string) ?? fallbackDateTimeFormatter.date(from: string)
+    }
+
+    static func date(from string: String) -> Date? {
+        dateFormatter.date(from: string)
+    }
+}
+
+private extension Bundle {
+    var runAPIBaseURL: URL? {
+        guard
+            let baseURLString = (
+                object(forInfoDictionaryKey: "RunAPIBaseURL")
+                ?? object(forInfoDictionaryKey: "ProfileAPIBaseURL")
+            ) as? String,
+            !baseURLString.isEmpty,
+            !baseURLString.hasPrefix("$(")
+        else {
+            return nil
+        }
+
+        return URL(string: baseURLString)
+    }
+}
+
+private extension URL {
+    var apiBaseURL: URL {
+        let normalizedURL = absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        guard host?.hasSuffix(".supabase.co") == true, path.isEmpty || path == "/" else {
+            return URL(string: normalizedURL) ?? self
+        }
+
+        return URL(string: "\(normalizedURL)/functions/v1/api") ?? self
+    }
+
+    func appendingAPIPath(_ path: String) -> URL {
+        var url = self
+        path
+            .split(separator: "/")
+            .forEach { url.appendPathComponent(String($0)) }
+        return url
+    }
+
+    func appendingQueryItems(_ queryItems: [URLQueryItem]) -> URL {
+        guard !queryItems.isEmpty else { return self }
+
+        var components = URLComponents(url: self, resolvingAgainstBaseURL: false)
+        components?.queryItems = queryItems
+        return components?.url ?? self
+    }
+}

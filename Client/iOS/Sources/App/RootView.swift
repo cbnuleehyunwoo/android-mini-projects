@@ -6,15 +6,18 @@ struct RootView: View {
     @State private var currentSession: AuthSession?
     private let authService: AuthServiceProtocol
     private let profileService: ProfileServiceProtocol
+    private let runService: RunServiceProtocol
     private let store: LocalAppStateStore
 
     init(
         authService: AuthServiceProtocol,
         profileService: ProfileServiceProtocol = MockProfileService(),
+        runService: RunServiceProtocol = MockRunService(),
         store: LocalAppStateStore
     ) {
         self.authService = authService
         self.profileService = profileService
+        self.runService = runService
         self.store = store
     }
 
@@ -54,7 +57,12 @@ struct RootView: View {
                     route = .main
                 }
             case .main:
-                MainTabView(store: store, profileService: profileService, accessToken: currentSession?.accessToken)
+                MainTabView(
+                    store: store,
+                    profileService: profileService,
+                    runService: runService,
+                    accessToken: currentSession?.accessToken
+                )
             }
         }
         .tint(AppTheme.Colors.primary)

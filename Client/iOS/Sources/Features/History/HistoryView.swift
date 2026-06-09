@@ -5,9 +5,18 @@ struct HistoryView: View {
     @State private var selectedPeriod: HistoryPeriod = .week
     @State private var displayedMonth = Date()
     @State private var records: [RunningRecord] = RunningHistoryStore().load()
+    @State private var daySummaries: [RunDaySummary] = []
+    @State private var totalDistanceMeters: Int?
     @State private var selectedRecord: RunningRecord?
 
+    private let runService: RunServiceProtocol
+    private let accessToken: String?
     private let calendar = Calendar.current
+
+    init(runService: RunServiceProtocol = MockRunService(), accessToken: String? = nil) {
+        self.runService = runService
+        self.accessToken = accessToken
+    }
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -26,13 +35,14 @@ struct HistoryView: View {
                 .padding(.top, 20)
 
                 if selectedPeriod == .week {
-                    WeekDotsView(records: records)
+                    WeekDotsView(records: records, daySummaries: daySummaries)
                         .padding(.horizontal, 30)
                         .padding(.top, 28)
                 } else {
                     MonthCalendarView(
                         month: displayedMonth,
                         records: records,
+                        daySummaries: daySummaries,
                         onPreviousMonth: moveToPreviousMonth,
                         onNextMonth: moveToNextMonth
                     )
@@ -46,7 +56,9 @@ struct HistoryView: View {
                     } else {
                         ForEach(selectedRecords) { record in
                             Button {
-                                selectedRecord = record
+                                Task {
+                                    await openRecord(record)
+                                }
                             } label: {
                                 RunningRecordCard(record: record)
                             }
@@ -62,6 +74,9 @@ struct HistoryView: View {
         .background(Color.white)
         .onAppear {
             records = RunningHistoryStore().load()
+        }
+        .task(id: refreshIdentifier) {
+            await refreshRecords()
         }
         .runpamineFullScreenCover(item: $selectedRecord) { record in
             RunningSummaryView(record: record) {
@@ -97,8 +112,13 @@ struct HistoryView: View {
     }
 
     private var totalDistanceText: String {
-        let total = selectedRecords.reduce(0) { $0 + $1.distanceKilometers }
+        let total = totalDistanceMeters.map { Double($0) / 1_000 } ?? selectedRecords.reduce(0) { $0 + $1.distanceKilometers }
         return total.formatted(.number.precision(.fractionLength(1)))
+    }
+
+    private var refreshIdentifier: String {
+        let components = calendar.dateComponents([.year, .month], from: displayedMonth)
+        return "\(selectedPeriod.rawValue)-\(components.year ?? 0)-\(components.month ?? 0)"
     }
 
     private var emptyState: some View {
@@ -120,6 +140,55 @@ struct HistoryView: View {
 
     private func moveToNextMonth() {
         displayedMonth = calendar.date(byAdding: .month, value: 1, to: displayedMonth) ?? displayedMonth
+    }
+
+    @MainActor
+    private func refreshRecords() async {
+        guard let accessToken else {
+            useLocalRecords()
+            return
+        }
+
+        do {
+            let summary: RunPeriodSummary
+            switch selectedPeriod {
+            case .week:
+                summary = try await runService.fetchWeeklyRuns(anchorDate: Date(), accessToken: accessToken)
+            case .month:
+                let components = calendar.dateComponents([.year, .month], from: displayedMonth)
+                summary = try await runService.fetchMonthlyRuns(
+                    year: components.year ?? calendar.component(.year, from: Date()),
+                    month: components.month ?? calendar.component(.month, from: Date()),
+                    accessToken: accessToken
+                )
+            }
+
+            records = summary.runs
+            daySummaries = summary.days
+            totalDistanceMeters = summary.totalDistanceMeters
+        } catch {
+            useLocalRecords()
+        }
+    }
+
+    private func useLocalRecords() {
+        records = RunningHistoryStore().load()
+        daySummaries = []
+        totalDistanceMeters = nil
+    }
+
+    @MainActor
+    private func openRecord(_ record: RunningRecord) async {
+        guard let accessToken else {
+            selectedRecord = record
+            return
+        }
+
+        do {
+            selectedRecord = try await runService.fetchRunDetail(runID: record.id.uuidString, accessToken: accessToken)
+        } catch {
+            selectedRecord = record
+        }
     }
 }
 
@@ -159,6 +228,7 @@ private struct HistoryPeriodControl: View {
 
 private struct WeekDotsView: View {
     let records: [RunningRecord]
+    let daySummaries: [RunDaySummary]
     private let calendar = Calendar.current
 
     var body: some View {
@@ -189,7 +259,8 @@ private struct WeekDotsView: View {
             guard let date = calendar.date(byAdding: .day, value: offset, to: start) else { return nil }
             let day = calendar.component(.day, from: date)
             let weekday = calendar.component(.weekday, from: date)
-            let hasRun = records.contains { calendar.isDate($0.startedAt, inSameDayAs: date) }
+            let hasRun = daySummaries.first(where: { calendar.isDate($0.date, inSameDayAs: date) })?.hasRun
+                ?? records.contains { calendar.isDate($0.startedAt, inSameDayAs: date) }
             return (date, "\(day) \(symbols[weekday - 1])", hasRun)
         }
     }
@@ -198,6 +269,7 @@ private struct WeekDotsView: View {
 private struct MonthCalendarView: View {
     let month: Date
     let records: [RunningRecord]
+    let daySummaries: [RunDaySummary]
     let onPreviousMonth: () -> Void
     let onNextMonth: () -> Void
 
@@ -289,7 +361,8 @@ private struct MonthCalendarView: View {
             guard let date = calendar.date(byAdding: .day, value: offset, to: gridStart) else { return nil }
             let day = calendar.component(.day, from: date)
             let isInDisplayedMonth = calendar.isDate(date, equalTo: month, toGranularity: .month)
-            let hasRun = records.contains { calendar.isDate($0.startedAt, inSameDayAs: date) }
+            let hasRun = daySummaries.first(where: { calendar.isDate($0.date, inSameDayAs: date) })?.hasRun
+                ?? records.contains { calendar.isDate($0.startedAt, inSameDayAs: date) }
 
             return MonthCalendarDay(
                 date: date,

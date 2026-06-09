@@ -7,6 +7,8 @@ struct RunningRecord: Identifiable, Codable, Hashable {
     let endedAt: Date
     let elapsedTime: TimeInterval
     let distanceMeters: CLLocationDistance
+    let averagePaceSecondsPerKilometerOverride: TimeInterval?
+    let calories: Int?
     let route: [RunningCoordinate]
 
     init(
@@ -15,6 +17,8 @@ struct RunningRecord: Identifiable, Codable, Hashable {
         endedAt: Date,
         elapsedTime: TimeInterval,
         distanceMeters: CLLocationDistance,
+        averagePaceSecondsPerKilometer: TimeInterval? = nil,
+        calories: Int? = nil,
         route: [RunningCoordinate]
     ) {
         self.id = id
@@ -22,6 +26,8 @@ struct RunningRecord: Identifiable, Codable, Hashable {
         self.endedAt = endedAt
         self.elapsedTime = elapsedTime
         self.distanceMeters = distanceMeters
+        averagePaceSecondsPerKilometerOverride = averagePaceSecondsPerKilometer
+        self.calories = calories
         self.route = route
     }
 
@@ -30,12 +36,20 @@ struct RunningRecord: Identifiable, Codable, Hashable {
     }
 
     var averagePaceSecondsPerKilometer: TimeInterval? {
+        if let averagePaceSecondsPerKilometerOverride {
+            return averagePaceSecondsPerKilometerOverride
+        }
+
         guard distanceKilometers > 0.01 else { return nil }
         return elapsedTime / distanceKilometers
     }
 
     var estimatedCalories: Int {
-        max(0, Int((distanceKilometers * 58).rounded()))
+        if let calories {
+            return calories
+        }
+
+        return max(0, Int((distanceKilometers * 58).rounded()))
     }
 
     var routeCoordinates: [CLLocationCoordinate2D] {
@@ -46,10 +60,12 @@ struct RunningRecord: Identifiable, Codable, Hashable {
 struct RunningCoordinate: Codable, Hashable {
     let latitude: CLLocationDegrees
     let longitude: CLLocationDegrees
+    let recordedAt: Date?
 
-    init(_ coordinate: CLLocationCoordinate2D) {
+    init(_ coordinate: CLLocationCoordinate2D, recordedAt: Date? = nil) {
         latitude = coordinate.latitude
         longitude = coordinate.longitude
+        self.recordedAt = recordedAt
     }
 
     var coordinate: CLLocationCoordinate2D {
