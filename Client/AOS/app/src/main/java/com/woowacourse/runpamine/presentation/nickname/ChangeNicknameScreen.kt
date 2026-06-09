@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,7 +15,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -85,80 +83,77 @@ private fun ChangeNicknameContent(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = Color.White,
-    ) { innerPadding ->
-        Column(
+    Column(
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp),
+    ) {
+        ScreenTopBar(
+            title = stringResource(R.string.change_nickname_bar),
+            onBackClick = onBackClick,
             modifier =
                 Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .safeDrawingPadding()
-                    .padding(horizontal = 24.dp),
-        ) {
-            ScreenTopBar(
-                title = stringResource(R.string.change_nickname_bar),
-                onBackClick = onBackClick,
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .height(64.dp),
-            )
-            Spacer(modifier = Modifier.height(15.dp))
+                    .fillMaxWidth()
+                    .height(64.dp),
+        )
+        Spacer(modifier = Modifier.height(15.dp))
+        Text(
+            text = stringResource(R.string.change_nickname_description),
+            style =
+                MaterialTheme.typography.headlineLarge.copy(
+                    fontSize = 36.sp,
+                    lineHeight = 50.sp,
+                ),
+            fontWeight = FontWeight.Black,
+            color = Color.Black,
+        )
+        Spacer(modifier = Modifier.height(28.dp))
+        NicknameTextField(
+            value = uiState.nickname,
+            onValueChange = onNicknameChange,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+        NicknameCondition(
+            text = stringResource(R.string.change_nickname_condition_length),
+            valid = uiState.nickname.length in NICKNAME_MIN_LENGTH..NICKNAME_MAX_LENGTH,
+            neutral = uiState.nickname.isEmpty(),
+        )
+        Spacer(modifier = Modifier.height(14.dp))
+        NicknameCondition(
+            text = stringResource(R.string.change_nickname_condition_characters),
+            valid = uiState.nickname.isEmpty() || NICKNAME_REGEX.matches(uiState.nickname),
+        )
+        Spacer(modifier = Modifier.height(14.dp))
+        NicknameCondition(
+            text = stringResource(R.string.change_nickname_condition_special),
+            valid = false,
+            neutral = uiState.nickname.isEmpty() || NICKNAME_REGEX.matches(uiState.nickname),
+            positiveWhenNeutral = false,
+        )
+        uiState.errorMessage?.let { message ->
+            Spacer(modifier = Modifier.height(14.dp))
             Text(
-                text = stringResource(R.string.change_nickname_description),
-                style = MaterialTheme.typography.headlineLarge.copy(fontSize = 36.sp, lineHeight = 50.sp),
-                fontWeight = FontWeight.Black,
-                color = Color.Black,
-            )
-            Spacer(modifier = Modifier.height(28.dp))
-            NicknameTextField(
-                value = uiState.nickname,
-                onValueChange = onNicknameChange,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Spacer(modifier = Modifier.height(24.dp))
-            NicknameCondition(
-                text = stringResource(R.string.change_nickname_condition_length),
-                valid = uiState.nickname.length in NICKNAME_MIN_LENGTH..NICKNAME_MAX_LENGTH,
-                neutral = uiState.nickname.isEmpty(),
-            )
-            Spacer(modifier = Modifier.height(14.dp))
-            NicknameCondition(
-                text = stringResource(R.string.change_nickname_condition_characters),
-                valid = uiState.nickname.isEmpty() || NICKNAME_REGEX.matches(uiState.nickname),
-            )
-            Spacer(modifier = Modifier.height(14.dp))
-            NicknameCondition(
-                text = stringResource(R.string.change_nickname_condition_special),
-                valid = false,
-                neutral = uiState.nickname.isEmpty() || NICKNAME_REGEX.matches(uiState.nickname),
-                positiveWhenNeutral = false,
-            )
-            uiState.errorMessage?.let { message ->
-                Spacer(modifier = Modifier.height(14.dp))
-                Text(
-                    text = message,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Red40,
-                )
-            }
-            Spacer(modifier = Modifier.weight(1f))
-            BottomButton(
-                text =
-                    if (uiState.isLoading) {
-                        "설정 중..."
-                    } else {
-                        stringResource(R.string.change_nickname_button)
-                    },
-                onClick = onSubmitClick,
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 24.dp),
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Red40,
             )
         }
+        Spacer(modifier = Modifier.weight(1f))
+        BottomButton(
+            text =
+                if (uiState.isLoading) {
+                    "설정 중..."
+                } else {
+                    stringResource(R.string.change_nickname_button)
+                },
+            onClick = onSubmitClick,
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 24.dp),
+        )
     }
 }
 

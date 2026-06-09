@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
 import java.util.Locale
@@ -54,7 +53,11 @@ class RecordViewModel(
                 _uiState.update {
                     it.copy(
                         records = summary.runs.map { run -> run.toRunningRecord() },
-                        recordedDates = summary.days.filter { day -> day.hasRun }.map { day -> day.date }.toSet(),
+                        recordedDates =
+                            summary.days
+                                .filter { day -> day.hasRun }
+                                .map { day -> day.date }
+                                .toSet(),
                         totalDistanceKm = summary.totalDistanceMeters / METERS_PER_KILOMETER,
                         isLoading = false,
                     )
