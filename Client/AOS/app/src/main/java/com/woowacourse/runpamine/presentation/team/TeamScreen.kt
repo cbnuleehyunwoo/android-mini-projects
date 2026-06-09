@@ -97,7 +97,7 @@ private fun TeamScreenPreview() {
                         listOf(
                             TeamMember(
                                 id = "1",
-                                name = "호이",
+                                name = "러너",
                                 distance = "1.1 km",
                                 time = "33:41",
                                 pace = "30'37\"",

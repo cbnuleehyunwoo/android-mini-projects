@@ -15,6 +15,28 @@ class NicknameViewModel(
     private val _uiState = MutableStateFlow(NicknameUiState())
     val uiState = _uiState.asStateFlow()
 
+    init {
+        loadMyProfile()
+    }
+
+    private fun loadMyProfile() {
+        viewModelScope.launch {
+            runCatching {
+                profileRepository.getMyProfile()
+            }.onSuccess { profile ->
+                if (profile != null) {
+                    _uiState.update {
+                        it.copy(
+                            nickname = profile.nickname,
+                            hasProfile = true,
+                            errorMessage = null,
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     fun updateNickname(input: String) {
         if (input.length <= NICKNAME_MAX_LENGTH && NICKNAME_REGEX.matches(input)) {
             _uiState.update {
@@ -26,7 +48,7 @@ class NicknameViewModel(
         }
     }
 
-    fun createProfile() {
+    fun submitProfile() {
         val currentState = _uiState.value
         if (!currentState.isValid || currentState.isLoading) return
 
@@ -39,7 +61,11 @@ class NicknameViewModel(
             }
 
             runCatching {
-                profileRepository.createProfile(currentState.nickname)
+                if (currentState.hasProfile) {
+                    profileRepository.updateMyProfile(currentState.nickname)
+                } else {
+                    profileRepository.createProfile(currentState.nickname)
+                }
             }.onSuccess {
                 _uiState.update {
                     it.copy(

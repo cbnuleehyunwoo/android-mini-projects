@@ -97,7 +97,7 @@ private fun DefaultProfileImage(modifier: Modifier = Modifier) {
 private fun HomeHeaderPreview() {
     RunpamineTheme {
         HomeHeader(
-            name = "호이",
+            name = "러너",
             onMyPageClick = {},
         )
     }

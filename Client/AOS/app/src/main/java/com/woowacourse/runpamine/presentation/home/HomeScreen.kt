@@ -108,7 +108,7 @@ private fun HomeContent(
 private fun HomeScreenPreview() {
     RunpamineTheme {
         HomeContent(
-            uiState = HomeUiState(nickname = "호이"),
+            uiState = HomeUiState(nickname = "러너"),
             onCreateTeamClick = {},
             onJoinTeamClick = {},
             onStartClick = {},

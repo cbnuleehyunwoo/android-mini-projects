@@ -69,7 +69,7 @@ fun ChangeNicknameScreen(
     ChangeNicknameContent(
         uiState = uiState,
         onNicknameChange = viewModel::updateNickname,
-        onSubmitClick = viewModel::createProfile,
+        onSubmitClick = viewModel::submitProfile,
         onBackClick = onBackClick,
         modifier = modifier,
     )

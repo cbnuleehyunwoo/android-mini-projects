@@ -6,4 +6,6 @@ interface ProfileRepository {
     suspend fun getMyProfile(): UserProfile?
 
     suspend fun createProfile(nickname: String): UserProfile
+
+    suspend fun updateMyProfile(nickname: String): UserProfile
 }

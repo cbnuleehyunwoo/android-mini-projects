@@ -2,6 +2,7 @@ package com.woowacourse.runpamine.presentation.nickname.viewmodel
 
 data class NicknameUiState(
     val nickname: String = "",
+    val hasProfile: Boolean = false,
     val isLoading: Boolean = false,
     val isCompleted: Boolean = false,
     val errorMessage: String? = null,

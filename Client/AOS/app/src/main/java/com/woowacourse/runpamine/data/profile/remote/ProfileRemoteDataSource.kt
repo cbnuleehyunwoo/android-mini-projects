@@ -12,4 +12,9 @@ interface ProfileRemoteDataSource {
         accessToken: String,
         request: CreateProfileRequest,
     ): UserProfile
+
+    suspend fun updateMyProfile(
+        accessToken: String,
+        request: CreateProfileRequest,
+    ): UserProfile
 }
