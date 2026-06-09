@@ -11,10 +11,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.woowacourse.runpamine.R
+import com.woowacourse.runpamine.ui.theme.Green40
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
 @Composable
 fun RunningControls(
+    isPaused: Boolean,
     onPauseClick: () -> Unit,
     onStopClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -24,9 +26,9 @@ fun RunningControls(
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         RunningControlButton(
-            text = stringResource(R.string.running_pause),
-            iconResId = R.drawable.ic_pause,
-            containerColor = Color.Black,
+            text = stringResource(if (isPaused) R.string.running_resume else R.string.running_pause),
+            iconResId = if (isPaused) R.drawable.ic_play else R.drawable.ic_pause,
+            containerColor = if (isPaused) Green40 else Color.Black,
             contentColor = Color.White,
             onClick = onPauseClick,
             modifier = Modifier.weight(0.62f),
@@ -48,6 +50,7 @@ fun RunningControls(
 private fun RunningControlsPreview() {
     RunpamineTheme {
         RunningControls(
+            isPaused = false,
             onPauseClick = {},
             onStopClick = {},
             modifier =

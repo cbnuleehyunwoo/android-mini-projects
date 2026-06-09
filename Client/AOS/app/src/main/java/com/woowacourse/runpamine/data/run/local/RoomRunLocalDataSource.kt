@@ -29,6 +29,22 @@ class RoomRunLocalDataSource(
         )
     }
 
+    override suspend fun updateRunningMetrics(
+        sessionId: String,
+        distanceMeters: Int,
+        durationSeconds: Long,
+        averagePaceSecondsPerKm: Int,
+        calories: Int,
+    ) {
+        runDao.updateRunningMetrics(
+            sessionId = sessionId,
+            distanceMeters = distanceMeters,
+            durationSeconds = durationSeconds,
+            averagePaceSecondsPerKm = averagePaceSecondsPerKm,
+            calories = calories,
+        )
+    }
+
     override suspend fun findSession(sessionId: String): RunSession? = runDao.getSession(sessionId)?.toDomain()
 
     override suspend fun findActiveSession(): RunSession? = runDao.getActiveSession()?.toDomain()

@@ -18,8 +18,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.time.Duration
-import java.time.Instant
 
 class RunTrackingViewModel(
     application: Application,
@@ -31,13 +29,15 @@ class RunTrackingViewModel(
     val currentRunState =
         combine(
             runTrackingRepository.observeCurrentRun(),
+            runTrackingRepository.observePaused(),
             errorMessage,
             tickerFlow(),
-        ) { session, error, _ ->
+        ) { session, isPaused, error, _ ->
             RunTrackingUiState(
                 session = session,
-                elapsedSeconds = session.elapsedSeconds(),
+                elapsedSeconds = runTrackingRepository.currentElapsedSeconds(),
                 isRunning = session != null,
+                isPaused = isPaused,
                 lastErrorMessage = error,
             )
         }.stateIn(
@@ -69,6 +69,16 @@ class RunTrackingViewModel(
         }
     }
 
+    fun togglePause() {
+        viewModelScope.launch {
+            if (currentRunState.value.isPaused) {
+                runTrackingRepository.resumeRun()
+            } else {
+                runTrackingRepository.pauseRun()
+            }
+        }
+    }
+
     class Factory(
         private val application: Application,
         private val runTrackingRepository: RunTrackingRepository,
@@ -93,11 +103,5 @@ private fun tickerFlow(): Flow<Unit> =
             delay(TICK_INTERVAL_MILLIS)
         }
     }
-
-private fun com.woowacourse.runpamine.domain.run.RunSession?.elapsedSeconds(): Long {
-    val session = this ?: return 0
-    val runningElapsedSeconds = Duration.between(session.startedAt, Instant.now()).seconds.coerceAtLeast(0)
-    return maxOf(session.durationSeconds, runningElapsedSeconds)
-}
 
 private const val TICK_INTERVAL_MILLIS = 1_000L

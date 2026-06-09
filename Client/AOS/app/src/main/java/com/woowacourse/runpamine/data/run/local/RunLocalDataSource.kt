@@ -16,6 +16,14 @@ interface RunLocalDataSource {
         calories: Int,
     )
 
+    suspend fun updateRunningMetrics(
+        sessionId: String,
+        distanceMeters: Int,
+        durationSeconds: Long,
+        averagePaceSecondsPerKm: Int,
+        calories: Int,
+    )
+
     suspend fun findSession(sessionId: String): RunSession?
 
     suspend fun findActiveSession(): RunSession?

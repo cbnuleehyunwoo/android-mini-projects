@@ -6,5 +6,6 @@ data class RunTrackingUiState(
     val session: RunSession? = null,
     val elapsedSeconds: Long = 0,
     val isRunning: Boolean = false,
+    val isPaused: Boolean = false,
     val lastErrorMessage: String? = null,
 )
