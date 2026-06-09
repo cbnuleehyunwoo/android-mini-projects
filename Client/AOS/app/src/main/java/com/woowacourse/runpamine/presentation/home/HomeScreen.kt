@@ -165,7 +165,7 @@ private fun RunningStartDialog(
                 Text(
                     text = stringResource(R.string.running_start_confirmation),
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = Color.Black,
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 Row(
@@ -192,7 +192,10 @@ private fun RunningStartDialog(
                                 containerColor = MaterialTheme.colorScheme.primary,
                             ),
                     ) {
-                        Text(text = stringResource(R.string.start))
+                        Text(
+                            text = stringResource(R.string.start),
+                            color = Color.White
+                        )
                     }
                 }
             }

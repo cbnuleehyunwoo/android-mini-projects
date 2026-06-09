@@ -29,8 +29,9 @@ fun InviteTeamScreen(
     val clipboardManager = LocalClipboardManager.current
 
     Column(
-        modifier = modifier
-            .padding(horizontal = 24.dp),
+        modifier =
+            modifier
+                .padding(horizontal = 24.dp),
     ) {
         ScreenTopBar(
             title = stringResource(R.string.invite_team_bar),
