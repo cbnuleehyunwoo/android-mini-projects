@@ -57,7 +57,10 @@ class RunTrackingService : Service() {
 
     private fun stopTracking() {
         scope.launch {
-            runpamineContainer.runTrackingRepository.stopRun()
+            val finishedSession = runpamineContainer.runTrackingRepository.stopRun()
+            if (finishedSession != null) {
+                runpamineContainer.runSyncRepository.syncRun(finishedSession.id)
+            }
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
         }

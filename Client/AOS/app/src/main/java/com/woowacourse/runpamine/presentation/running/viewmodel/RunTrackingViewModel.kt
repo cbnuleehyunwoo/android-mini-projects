@@ -54,7 +54,7 @@ class RunTrackingViewModel(
         )
     }
 
-    fun stopRun() {
+    fun stopRun(onStopped: () -> Unit = {}) {
         viewModelScope.launch {
             val context = getApplication<Application>()
             val finishedSession = runTrackingRepository.stopRun()
@@ -65,6 +65,7 @@ class RunTrackingViewModel(
                     .syncRun(finishedSession.id)
                     .onFailure { errorMessage.value = it.message }
             }
+            onStopped()
         }
     }
 
