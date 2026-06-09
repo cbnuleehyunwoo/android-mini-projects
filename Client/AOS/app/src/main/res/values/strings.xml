@@ -34,7 +34,7 @@
     <string name="record_distance_unit">KM</string>
     <string name="change_nickname_bar">닉네임 변경</string>
     <string name="change_nickname_description">사용할 닉네임을\n입력해주세요</string>
-    <string name="change_nickname_placeholder">ㅇㄴㅇㄴㅁㅇㅁ</string>
+    <string name="change_nickname_placeholder">변경할 닉네임을 입력해주세요.</string>
     <string name="change_nickname_condition_length">2-10자 이내</string>
     <string name="change_nickname_condition_characters">한글, 영문, 숫자 사용 가능</string>
     <string name="change_nickname_condition_special">특수문자 사용 불가</string>
