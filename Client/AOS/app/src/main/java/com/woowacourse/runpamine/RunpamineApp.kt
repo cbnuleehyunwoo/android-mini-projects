@@ -50,6 +50,8 @@ fun RunpamineApp(
 }
 
 private fun NavHostController.navigateToBottomTab(tab: RunpamineBottomTab) {
+    if (currentDestination?.route == tab.route) return
+
     navigate(tab.route) {
         popUpTo(graph.findStartDestination().id) {
             saveState = true
