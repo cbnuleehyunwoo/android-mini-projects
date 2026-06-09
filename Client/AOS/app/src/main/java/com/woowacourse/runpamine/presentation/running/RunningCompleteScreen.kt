@@ -22,13 +22,13 @@ import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
 @Composable
 fun RunningCompleteScreen(
-    distance: String ,
+    distance: String,
     time: String,
     pace: String,
     calories: String,
     onCompleteClick: () -> Unit,
     modifier: Modifier = Modifier,
-    ) {
+) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = Color.White,
