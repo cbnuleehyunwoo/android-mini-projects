@@ -26,6 +26,7 @@ import java.time.Instant
 fun RunningScreenContent(
     session: RunSession?,
     elapsedSeconds: Long,
+    isPaused: Boolean = false,
     modifier: Modifier = Modifier,
     onPauseClick: () -> Unit = {},
     onStopClick: () -> Unit = {},
@@ -72,6 +73,7 @@ fun RunningScreenContent(
             }
             Spacer(modifier = Modifier.height(80.dp))
             RunningControls(
+                isPaused = isPaused,
                 onPauseClick = onPauseClick,
                 onStopClick = onStopClick,
                 modifier = Modifier.fillMaxWidth(),

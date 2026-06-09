@@ -24,7 +24,6 @@ import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 @Composable
 fun RunningScreen(
     modifier: Modifier = Modifier,
-    onPauseClick: () -> Unit = {},
     onStopCompleted: () -> Unit = {},
 ) {
     val context = LocalContext.current
@@ -59,8 +58,9 @@ fun RunningScreen(
     RunningScreenContent(
         session = state.session,
         elapsedSeconds = state.elapsedSeconds,
+        isPaused = state.isPaused,
         modifier = modifier,
-        onPauseClick = onPauseClick,
+        onPauseClick = viewModel::togglePause,
         onStopClick = {
             viewModel.stopRun(onStopped = onStopCompleted)
         },

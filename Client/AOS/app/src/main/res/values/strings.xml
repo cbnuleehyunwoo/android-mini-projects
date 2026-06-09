@@ -49,6 +49,7 @@
     <string name="running_pace">페이스</string>
     <string name="running_kcal">칼로리</string>
     <string name="running_pause">일시 정지</string>
+    <string name="running_resume">계속</string>
     <string name="running_stop">종료</string>
     <string name="running_notification_channel">러닝 측정</string>
     <string name="running_notification_title">러닝 측정 중</string>

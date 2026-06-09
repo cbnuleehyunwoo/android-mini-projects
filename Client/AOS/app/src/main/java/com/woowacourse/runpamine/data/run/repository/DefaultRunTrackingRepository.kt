@@ -10,11 +10,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.time.Duration
 import java.time.Instant
 import java.util.UUID
 
@@ -28,6 +30,15 @@ class DefaultRunTrackingRepository(
     private val scope = CoroutineScope(SupervisorJob() + dispatcher)
     private val mutex = Mutex()
     private var trackingJob: Job? = null
+    private val isPaused = MutableStateFlow(false)
+
+    @Volatile
+    private var accumulatedDurationSeconds: Long = 0
+
+    @Volatile
+    private var currentSegmentStartedAt: Instant? = null
+
+    private var activeSessionId: String? = null
 
     override suspend fun startRun(): RunSession =
         mutex.withLock {
@@ -38,9 +49,40 @@ class DefaultRunTrackingRepository(
                         startedAt = now(),
                     ).also { localDataSource.saveSession(it) }
 
-            startCollectingIfNeeded(session)
+            if (activeSessionId != session.id) {
+                activeSessionId = session.id
+                accumulatedDurationSeconds = session.durationSeconds
+                currentSegmentStartedAt = now()
+                isPaused.value = false
+            }
+            startCollectingIfNeeded(session, resetLastPoint = false)
             session
         }
+
+    override suspend fun pauseRun() {
+        mutex.withLock {
+            val activeSession = localDataSource.findActiveSession() ?: return@withLock
+            if (isPaused.value) return@withLock
+
+            accumulatedDurationSeconds = currentElapsedSeconds()
+            currentSegmentStartedAt = null
+            isPaused.value = true
+            trackingJob?.cancel()
+            trackingJob = null
+            saveCurrentMetrics(activeSession, accumulatedDurationSeconds)
+        }
+    }
+
+    override suspend fun resumeRun() {
+        mutex.withLock {
+            val activeSession = localDataSource.findActiveSession() ?: return@withLock
+            if (!isPaused.value) return@withLock
+
+            currentSegmentStartedAt = now()
+            isPaused.value = false
+            startCollectingIfNeeded(activeSession, resetLastPoint = true)
+        }
+    }
 
     override suspend fun stopRun(): RunSession? =
         mutex.withLock {
@@ -49,7 +91,7 @@ class DefaultRunTrackingRepository(
             trackingJob = null
 
             val endedAt = now()
-            val durationSeconds = metricCalculator.durationSeconds(activeSession.startedAt, endedAt)
+            val durationSeconds = currentElapsedSeconds()
             val finishedSession =
                 activeSession.copy(
                     endedAt = endedAt,
@@ -62,23 +104,41 @@ class DefaultRunTrackingRepository(
                     calories = metricCalculator.calories(activeSession.distanceMeters),
                 )
             localDataSource.finishSession(finishedSession)
+            activeSessionId = null
+            accumulatedDurationSeconds = 0
+            currentSegmentStartedAt = null
+            isPaused.value = false
             localDataSource.findSession(finishedSession.id)
         }
 
     override fun observeCurrentRun(): Flow<RunSession?> = localDataSource.observeActiveSession()
 
-    private fun startCollectingIfNeeded(session: RunSession) {
+    override fun observePaused(): Flow<Boolean> = isPaused
+
+    override fun currentElapsedSeconds(): Long {
+        val segmentStartedAt = currentSegmentStartedAt ?: return accumulatedDurationSeconds
+        val segmentDuration = Duration.between(segmentStartedAt, now()).seconds.coerceAtLeast(0)
+        return accumulatedDurationSeconds + segmentDuration
+    }
+
+    private fun startCollectingIfNeeded(
+        session: RunSession,
+        resetLastPoint: Boolean,
+    ) {
         if (trackingJob?.isActive == true) return
 
         trackingJob =
             scope.launch {
-                collectLocation(session)
+                collectLocation(session, resetLastPoint)
             }
     }
 
-    private suspend fun collectLocation(session: RunSession) {
+    private suspend fun collectLocation(
+        session: RunSession,
+        resetLastPoint: Boolean,
+    ) {
         var currentSession = localDataSource.findSession(session.id) ?: session
-        var lastPoint = localDataSource.findLastPoint(session.id)
+        var lastPoint = localDataSource.findLastPoint(session.id).takeUnless { resetLastPoint }
         var nextSequence = localDataSource.countPoints(session.id) + 1
         var distanceMeters = currentSession.distanceMeters
 
@@ -94,7 +154,7 @@ class DefaultRunTrackingRepository(
                     )
                 distanceMeters += lastPoint?.let { metricCalculator.distanceBetweenMeters(it, point) } ?: 0
 
-                val durationSeconds = metricCalculator.durationSeconds(currentSession.startedAt, point.recordedAt)
+                val durationSeconds = currentElapsedSeconds()
                 val averagePaceSecondsPerKm =
                     metricCalculator.averagePaceSecondsPerKm(
                         distanceMeters = distanceMeters,
@@ -122,5 +182,22 @@ class DefaultRunTrackingRepository(
                 lastPoint = point
                 nextSequence += 1
             }
+    }
+
+    private suspend fun saveCurrentMetrics(
+        session: RunSession,
+        durationSeconds: Long,
+    ) {
+        localDataSource.updateRunningMetrics(
+            sessionId = session.id,
+            distanceMeters = session.distanceMeters,
+            durationSeconds = durationSeconds,
+            averagePaceSecondsPerKm =
+                metricCalculator.averagePaceSecondsPerKm(
+                    distanceMeters = session.distanceMeters,
+                    durationSeconds = durationSeconds,
+                ),
+            calories = metricCalculator.calories(session.distanceMeters),
+        )
     }
 }
