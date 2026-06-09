@@ -9,10 +9,18 @@ struct MainTabView: View {
     @State private var isShowingInvite = false
     @State private var nickname: String
     private let teamService: TeamServiceProtocol
+    private let profileService: ProfileServiceProtocol
+    private let accessToken: String?
     private let store: LocalAppStateStore
 
-    init(store: LocalAppStateStore) {
+    init(
+        store: LocalAppStateStore,
+        profileService: ProfileServiceProtocol = MockProfileService(),
+        accessToken: String? = nil
+    ) {
         self.store = store
+        self.profileService = profileService
+        self.accessToken = accessToken
         teamService = MockTeamService(store: store)
         _nickname = State(initialValue: store.nickname)
         _team = State(initialValue: store.loadTeam())
@@ -69,7 +77,7 @@ struct MainTabView: View {
             }
         }
         .sheet(isPresented: $isShowingMyPage) {
-            MyPageView(store: store) { updatedNickname in
+            MyPageView(store: store, profileService: profileService, accessToken: accessToken) { updatedNickname in
                 nickname = updatedNickname
             }
         }
@@ -79,12 +87,36 @@ struct MainTabView: View {
         .runpamineFullScreenCover(isPresented: $isShowingInvite) {
             InviteMemberView(inviteCode: team?.inviteCode ?? "")
         }
+        .task {
+            await refreshHomeState()
+        }
     }
 
     private func handleTeamUpdated(_ updatedTeam: RunningTeam) {
         team = updatedTeam
         selectedTab = .team
         presentedAction = nil
+    }
+
+    @MainActor
+    private func refreshHomeState() async {
+        guard let accessToken else { return }
+
+        do {
+            let homeState = try await profileService.fetchHomeState(accessToken: accessToken)
+
+            if let profile = homeState.profile {
+                nickname = profile.nickname
+                store.saveNickname(profile.nickname)
+            }
+
+            if let runningTeam = homeState.team?.runningTeam {
+                team = runningTeam
+                store.saveTeam(runningTeam)
+            }
+        } catch {
+            return
+        }
     }
 }
 

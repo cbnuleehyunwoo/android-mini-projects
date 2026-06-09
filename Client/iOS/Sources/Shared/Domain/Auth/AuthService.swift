@@ -5,6 +5,7 @@ import Supabase
 import UIKit
 
 protocol AuthServiceProtocol {
+    func restoreSession() async throws -> AuthSession?
     func loginWithGoogle() async throws -> AuthSession
     func completeSignup(profile: SignupProfile) async throws -> AuthSession
 }
@@ -28,6 +29,18 @@ final class SupabaseAuthService: AuthServiceProtocol {
                 )
             )
         }
+    }
+
+    func restoreSession() async throws -> AuthSession? {
+        guard let supabase else { return nil }
+
+        let session = try await supabase.auth.session
+        return AuthSession(
+            accessToken: session.accessToken,
+            refreshToken: session.refreshToken,
+            userID: session.user.id.uuidString,
+            needsSignup: !store.hasCompletedSignup
+        )
     }
 
     func loginWithGoogle() async throws -> AuthSession {
@@ -117,6 +130,17 @@ final class MockAuthService: AuthServiceProtocol {
 
     init(store: LocalAppStateStore = LocalAppStateStore()) {
         self.store = store
+    }
+
+    func restoreSession() async throws -> AuthSession? {
+        guard store.hasCompletedSignup else { return nil }
+
+        return AuthSession(
+            accessToken: "mock-access-token",
+            refreshToken: "mock-refresh-token",
+            userID: UUID().uuidString,
+            needsSignup: false
+        )
     }
 
     func loginWithGoogle() async throws -> AuthSession {

@@ -35,6 +35,8 @@
 	<string>218936780568-amfro0n7bdqcrvp3cqsca1c4rdofm4mm.apps.googleusercontent.com</string>
 	<key>GIDServerClientID</key>
 	<string>218936780568-gget6j62mchc2301fpnato1fqq71j6q7.apps.googleusercontent.com</string>
+	<key>ProfileAPIBaseURL</key>
+	<string>https://rbqucawwocwyuqnsdgtv.supabase.co/functions/v1/api</string>
 	<key>SupabaseAnonKey</key>
 	<string>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJicXVjYXd3b2N3eXVxbnNkZ3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzODI2MzMsImV4cCI6MjA5NTk1ODYzM30.S9odkE0bK1iFa0kdt2yaob7nX-78h0h63MiYTDiqND4</string>
 	<key>SupabaseURL</key>

@@ -9,10 +9,19 @@ final class NicknameSetupViewModel: ObservableObject {
     @Published var errorMessage: String?
 
     private let authService: AuthServiceProtocol
+    private let profileService: ProfileServiceProtocol?
+    private let accessToken: String?
     private let agreements: [TermsAgreement]
 
-    init(authService: AuthServiceProtocol, agreements: [TermsAgreement]) {
+    init(
+        authService: AuthServiceProtocol,
+        profileService: ProfileServiceProtocol? = nil,
+        accessToken: String? = nil,
+        agreements: [TermsAgreement]
+    ) {
         self.authService = authService
+        self.profileService = profileService
+        self.accessToken = accessToken
         self.agreements = agreements
     }
 
@@ -44,6 +53,13 @@ final class NicknameSetupViewModel: ObservableObject {
         didComplete = false
 
         do {
+            if let profileService, let accessToken {
+                _ = try await profileService.createProfile(
+                    form: ProfileMutationForm(nickname: trimmedNickname),
+                    accessToken: accessToken
+                )
+            }
+
             _ = try await authService.completeSignup(
                 profile: SignupProfile(
                     nickname: trimmedNickname,
