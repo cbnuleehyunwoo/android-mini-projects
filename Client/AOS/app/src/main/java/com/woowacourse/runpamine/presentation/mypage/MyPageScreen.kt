@@ -10,17 +10,24 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.woowacourse.runpamine.R
+import com.woowacourse.runpamine.di.runpamineContainer
 import com.woowacourse.runpamine.presentation.component.ScreenTopBar
 import com.woowacourse.runpamine.presentation.mypage.components.MyPageMenuRow
 import com.woowacourse.runpamine.presentation.mypage.components.MyPageProfile
 import com.woowacourse.runpamine.presentation.mypage.components.MyPageSection
+import com.woowacourse.runpamine.presentation.mypage.viewmodel.MyPageUiState
+import com.woowacourse.runpamine.presentation.mypage.viewmodel.MyPageViewModel
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
 private const val PRIVACY_POLICY_URL =
@@ -30,6 +37,28 @@ private const val TERMS_OF_SERVICE_URL =
 
 @Composable
 fun MyPageScreen(
+    onChangeNicknameClick: () -> Unit,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val container = LocalContext.current.runpamineContainer
+    val viewModel: MyPageViewModel =
+        viewModel(
+            factory = MyPageViewModel.Factory(container.profileRepository),
+        )
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    MyPageContent(
+        uiState = uiState,
+        onChangeNicknameClick = onChangeNicknameClick,
+        onBackClick = onBackClick,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun MyPageContent(
+    uiState: MyPageUiState,
     onChangeNicknameClick: () -> Unit,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -52,7 +81,7 @@ fun MyPageScreen(
                     .padding(vertical = 16.dp),
         )
         MyPageProfile(
-            name = "호이",
+            name = uiState.nickname.ifBlank { "러너" },
             modifier = Modifier.align(Alignment.CenterHorizontally),
         )
         MyPageSection(
@@ -107,7 +136,8 @@ fun MyPageScreen(
 @Composable
 private fun MyPageScreenPreview() {
     RunpamineTheme {
-        MyPageScreen(
+        MyPageContent(
+            uiState = MyPageUiState(nickname = "러너", isLoading = false),
             onChangeNicknameClick = {},
             onBackClick = {},
         )

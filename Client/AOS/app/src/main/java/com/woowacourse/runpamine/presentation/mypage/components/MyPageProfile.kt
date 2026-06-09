@@ -60,7 +60,7 @@ fun MyPageProfile(
 private fun MyPageProfilePreview() {
     RunpamineTheme {
         MyPageProfile(
-            name = "호이",
+            name = "러너",
         )
     }
 }

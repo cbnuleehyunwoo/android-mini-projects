@@ -27,6 +27,12 @@ class DefaultProfileRepository(
             request = CreateProfileRequest(nickname = nickname.trim()),
         )
 
+    override suspend fun updateMyProfile(nickname: String): UserProfile =
+        remoteDataSource.updateMyProfile(
+            accessToken = requireAccessToken(),
+            request = CreateProfileRequest(nickname = nickname.trim()),
+        )
+
     private suspend fun requireAccessToken(): String =
         requireNotNull(authRepository.getCurrentSession()?.accessToken) {
             "로그인이 필요해요."

@@ -22,14 +22,24 @@ class ApiProfileRemoteDataSource(
                     method = "GET",
                     accessToken = accessToken,
                 )
-            val data = response.getJSONObject("data")
+            val data = requireNotNull(response).getJSONObject("data")
             HomeState(
                 profile = data.optJSONObject("profile")?.toUserProfile(),
                 team = data.optJSONObject("team")?.toTeamSummary(),
             )
         }
 
-    override suspend fun getMyProfile(accessToken: String): UserProfile? = getHomeState(accessToken).profile
+    override suspend fun getMyProfile(accessToken: String): UserProfile? =
+        withContext(Dispatchers.IO) {
+            val response =
+                request(
+                    path = "/profile/me",
+                    method = "GET",
+                    accessToken = accessToken,
+                    returnNullOnNotFound = true,
+                )
+            response?.optJSONObject("data")?.toUserProfile()
+        }
 
     override suspend fun createProfile(
         accessToken: String,
@@ -48,7 +58,27 @@ class ApiProfileRemoteDataSource(
                     accessToken = accessToken,
                     body = body,
                 )
-            response.getJSONObject("data").toUserProfile()
+            requireNotNull(response).getJSONObject("data").toUserProfile()
+        }
+
+    override suspend fun updateMyProfile(
+        accessToken: String,
+        request: CreateProfileRequest,
+    ): UserProfile =
+        withContext(Dispatchers.IO) {
+            val body =
+                JSONObject()
+                    .put("nickname", request.nickname)
+                    .put("avatarKey", request.avatarKey)
+
+            val response =
+                request(
+                    path = "/profile/me",
+                    method = "PATCH",
+                    accessToken = accessToken,
+                    body = body,
+                )
+            requireNotNull(response).getJSONObject("data").toUserProfile()
         }
 
     private fun request(
@@ -56,9 +86,10 @@ class ApiProfileRemoteDataSource(
         method: String,
         accessToken: String,
         body: JSONObject? = null,
-    ): JSONObject {
+        returnNullOnNotFound: Boolean = false,
+    ): JSONObject? {
         val connection = URL("$apiBaseUrl$path").openConnection() as HttpURLConnection
-        return connection.useJsonRequest(method, accessToken, body)
+        return connection.useJsonRequest(method, accessToken, body, returnNullOnNotFound)
     }
 }
 
@@ -66,7 +97,8 @@ private fun HttpURLConnection.useJsonRequest(
     method: String,
     accessToken: String,
     body: JSONObject?,
-): JSONObject =
+    returnNullOnNotFound: Boolean,
+): JSONObject? =
     try {
         requestMethod = method
         connectTimeout = CONNECT_TIMEOUT_MILLIS
@@ -82,11 +114,13 @@ private fun HttpURLConnection.useJsonRequest(
         }
 
         val responseText =
-            if (responseCode in 200..299) {
-                inputStream.bufferedReader().use { it.readText() }
-            } else {
-                val errorText = errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
-                throw IllegalStateException(errorText.toApiErrorMessage(responseCode))
+            when {
+                responseCode in 200..299 -> inputStream.bufferedReader().use { it.readText() }
+                responseCode == HttpURLConnection.HTTP_NOT_FOUND && returnNullOnNotFound -> return null
+                else -> {
+                    val errorText = errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
+                    throw IllegalStateException(errorText.toApiErrorMessage(responseCode))
+                }
             }
 
         JSONObject(responseText)
