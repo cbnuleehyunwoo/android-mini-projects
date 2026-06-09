@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,7 +32,8 @@ fun HomeTeamSection(
                 .background(
                     color = MaterialTheme.colorScheme.primary,
                     shape = RoundedCornerShape(15.dp),
-                ).padding(horizontal = 50.dp, vertical = 20.dp),
+                ).padding(horizontal = 50.dp, vertical = 20.dp)
+                .fillMaxWidth(),
         contentAlignment = Alignment.Center,
     ) {
         Column {
@@ -53,7 +55,7 @@ fun HomeTeamSection(
     }
 }
 
-@Preview
+@Preview(showBackground = true, widthDp = 150)
 @Composable
 private fun HomeTeamSectionPreview() {
     RunpamineTheme {
