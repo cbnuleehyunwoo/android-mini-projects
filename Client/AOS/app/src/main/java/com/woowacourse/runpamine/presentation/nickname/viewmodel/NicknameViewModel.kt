@@ -38,7 +38,7 @@ class NicknameViewModel(
     }
 
     fun updateNickname(input: String) {
-        if (input.length <= NICKNAME_MAX_LENGTH && NICKNAME_REGEX.matches(input)) {
+        if (input.length <= NICKNAME_MAX_LENGTH) {
             _uiState.update {
                 it.copy(
                     nickname = input,

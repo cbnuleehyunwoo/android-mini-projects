@@ -118,19 +118,11 @@ private fun ChangeNicknameContent(
         NicknameCondition(
             text = stringResource(R.string.change_nickname_condition_length),
             valid = uiState.nickname.length in NICKNAME_MIN_LENGTH..NICKNAME_MAX_LENGTH,
-            neutral = uiState.nickname.isEmpty(),
         )
         Spacer(modifier = Modifier.height(14.dp))
         NicknameCondition(
             text = stringResource(R.string.change_nickname_condition_characters),
-            valid = uiState.nickname.isEmpty() || NICKNAME_REGEX.matches(uiState.nickname),
-        )
-        Spacer(modifier = Modifier.height(14.dp))
-        NicknameCondition(
-            text = stringResource(R.string.change_nickname_condition_special),
-            valid = false,
-            neutral = uiState.nickname.isEmpty() || NICKNAME_REGEX.matches(uiState.nickname),
-            positiveWhenNeutral = false,
+            valid = uiState.nickname.isNotEmpty() && NICKNAME_REGEX.matches(uiState.nickname),
         )
         uiState.errorMessage?.let { message ->
             Spacer(modifier = Modifier.height(14.dp))
@@ -187,6 +179,8 @@ private fun NicknameTextField(
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
         colors =
             OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black,
                 focusedBorderColor = Blue40,
                 unfocusedBorderColor = Blue40,
                 cursorColor = Blue40,
@@ -199,16 +193,8 @@ private fun NicknameCondition(
     text: String,
     valid: Boolean,
     modifier: Modifier = Modifier,
-    neutral: Boolean = false,
-    positiveWhenNeutral: Boolean = true,
 ) {
-    val conditionColor =
-        when {
-            neutral && positiveWhenNeutral -> Green40
-            neutral -> Red40
-            valid -> Green40
-            else -> Red40
-        }
+    val conditionColor = if (valid) Green40 else Red40
     val mark = if (conditionColor == Green40) "✓" else "×"
 
     Row(
