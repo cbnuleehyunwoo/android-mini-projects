@@ -127,25 +127,13 @@ struct RunningView: View {
     private var controlButtons: some View {
         HStack(spacing: 12) {
             Button {
-                togglePause()
-            } label: {
-                Label(tracker.trackingState == .paused ? "재시작" : "일시 정지", systemImage: tracker.trackingState == .paused ? "play.fill" : "pause.fill")
-                    .font(AppTheme.Typography.font(size: 13, weight: .black))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
-                    .background(Color.black)
-                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-            }
-
-            Button {
                 finishRunning()
             } label: {
                 Label("종료", systemImage: "stop.fill")
                     .font(AppTheme.Typography.font(size: 13, weight: .black))
                     .foregroundStyle(Color(red: 0.72, green: 0.05, blue: 0.05))
                     .frame(maxWidth: .infinity)
-                    .frame(height: 50)
+                    .frame(height: 54)
                     .background(Color(red: 0.98, green: 0.90, blue: 0.90))
                     .overlay {
                         RoundedRectangle(cornerRadius: 8, style: .continuous)
@@ -153,10 +141,37 @@ struct RunningView: View {
                     }
                     .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
             }
+
+            Button {
+                togglePause()
+            } label: {
+                Label(pauseToggleTitle, systemImage: pauseToggleIcon)
+                    .font(AppTheme.Typography.font(size: 13, weight: .black))
+                    .foregroundStyle(.white)
+                    .frame(width: 127, height: 54)
+                    .background(pauseToggleBackgroundColor)
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            }
         }
         .padding(.horizontal, 24)
         .padding(.top, 36)
         .padding(.bottom, 42)
+    }
+
+    private var isPaused: Bool {
+        tracker.trackingState == .paused
+    }
+
+    private var pauseToggleTitle: String {
+        isPaused ? "시작" : "일시 정지"
+    }
+
+    private var pauseToggleIcon: String {
+        isPaused ? "play.fill" : "pause.fill"
+    }
+
+    private var pauseToggleBackgroundColor: Color {
+        isPaused ? AppTheme.Colors.success : .black
     }
 
     private func togglePause() {
