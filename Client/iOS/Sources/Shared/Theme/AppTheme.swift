@@ -43,7 +43,7 @@ enum AppTheme {
     }
 
     enum Colors {
-        static let primary = Color(red: 0.03, green: 0.34, blue: 0.97)
+        static let primary = Color(red: 0.0, green: 88.0 / 255.0, blue: 1.0)
         static let textPrimary = Color(red: 0.07, green: 0.11, blue: 0.17)
         static let textSecondary = Color(red: 0.42, green: 0.47, blue: 0.55)
         static let border = Color(red: 0.86, green: 0.89, blue: 0.93)

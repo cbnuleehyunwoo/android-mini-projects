@@ -26,9 +26,9 @@ struct HomeView: View {
 
                 Button(action: onStartRunning) {
                     Text("시작")
-                        .font(AppTheme.Typography.font(size: 20, weight: .black))
+                        .font(AppTheme.Typography.font(size: 24, weight: .bold))
                         .foregroundStyle(.white)
-                        .frame(width: 82, height: 82)
+                        .frame(width: 100, height: 100)
                         .background(AppTheme.Colors.primary)
                         .clipShape(Circle())
                 }
