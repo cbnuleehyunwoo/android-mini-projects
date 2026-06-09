@@ -18,13 +18,14 @@ struct MainTabView: View {
         store: LocalAppStateStore,
         profileService: ProfileServiceProtocol = MockProfileService(),
         runService: RunServiceProtocol = MockRunService(),
+        teamService: TeamServiceProtocol? = nil,
         accessToken: String? = nil
     ) {
         self.store = store
         self.profileService = profileService
         self.runService = runService
         self.accessToken = accessToken
-        teamService = MockTeamService(store: store)
+        self.teamService = teamService ?? MockTeamService(store: store)
         _nickname = State(initialValue: store.nickname)
         _team = State(initialValue: store.loadTeam())
     }
@@ -47,6 +48,8 @@ struct MainTabView: View {
                     TeamDashboardView(
                         team: team,
                         nickname: nickname,
+                        teamService: teamService,
+                        accessToken: accessToken,
                         onCreateTeam: {
                             presentedAction = .createTeam
                         },
@@ -70,11 +73,11 @@ struct MainTabView: View {
         .runpamineFullScreenCover(item: $presentedAction) { action in
             switch action {
             case .createTeam:
-                TeamCreateView(viewModel: TeamCreateViewModel(teamService: teamService)) { createdTeam in
+                TeamCreateView(viewModel: TeamCreateViewModel(teamService: teamService, accessToken: accessToken)) { createdTeam in
                     handleTeamUpdated(createdTeam)
                 }
             case .joinTeam:
-                TeamJoinView(viewModel: TeamJoinViewModel(teamService: teamService)) { joinedTeam in
+                TeamJoinView(viewModel: TeamJoinViewModel(teamService: teamService, accessToken: accessToken)) { joinedTeam in
                     handleTeamUpdated(joinedTeam)
                 }
             }
@@ -97,6 +100,7 @@ struct MainTabView: View {
 
     private func handleTeamUpdated(_ updatedTeam: RunningTeam) {
         team = updatedTeam
+        store.saveTeam(updatedTeam)
         selectedTab = .team
         presentedAction = nil
     }

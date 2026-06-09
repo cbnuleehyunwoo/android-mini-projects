@@ -3,13 +3,16 @@ import SwiftUI
 struct TeamDashboardView: View {
     let team: RunningTeam?
     let nickname: String
+    let teamService: TeamServiceProtocol
+    let accessToken: String?
     let onCreateTeam: () -> Void
     let onJoinTeam: () -> Void
     let onInvite: () -> Void
     @State private var records: [RunningRecord] = RunningHistoryStore().load()
+    @State private var dailySummary: TeamDailySummary?
 
     var body: some View {
-        if team == nil {
+        if displayTeam == nil {
             TeamEmptyStateView(onCreateTeam: onCreateTeam, onJoinTeam: onJoinTeam)
         } else {
             teamContent
@@ -20,7 +23,7 @@ struct TeamDashboardView: View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 0) {
                 HStack(alignment: .firstTextBaseline, spacing: 12) {
-                    Text(team?.name ?? "")
+                    Text(displayTeam?.name ?? "")
                         .font(AppTheme.Typography.font(size: 36, weight: .black))
                         .foregroundStyle(AppTheme.Colors.primary)
                         .lineLimit(1)
@@ -40,14 +43,14 @@ struct TeamDashboardView: View {
                 .padding(.horizontal, 24)
                 .padding(.top, 32)
 
-                Text("2026년 6월 2일 - 화요일")
+                Text(summaryDateText)
                     .font(AppTheme.Typography.font(size: 24, weight: .black))
                     .foregroundStyle(.black)
                     .padding(.top, 10)
 
                 HStack(spacing: 8) {
                     metricCard(value: teamDistanceText, label: "팀 총 거리")
-                    metricCard(value: "\(completedMemberCount) / \(memberCards.count)", label: "완료 / 전체")
+                    metricCard(value: "\(completedMemberCount) / \(totalMemberCount)", label: "완료 / 전체")
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 20)
@@ -65,6 +68,9 @@ struct TeamDashboardView: View {
         .background(Color.white)
         .onAppear {
             records = RunningHistoryStore().load()
+        }
+        .task(id: team?.id) {
+            await refreshDailySummary()
         }
     }
 
@@ -85,7 +91,11 @@ struct TeamDashboardView: View {
     }
 
     private var memberCards: [TeamMemberCardModel] {
-        [
+        if let dailySummary {
+            return dailySummary.members.map { TeamMemberCardModel(member: $0) }
+        }
+
+        return [
             TeamMemberCardModel.runningMember(
                 id: "member-primary",
                 name: nickname,
@@ -97,12 +107,39 @@ struct TeamDashboardView: View {
     }
 
     private var teamDistanceText: String {
+        if let dailySummary {
+            return TeamDashboardFormatter.distanceKilometers(dailySummary.teamTotalDistanceMeters)
+        }
+
         let totalDistance = records.reduce(0) { $0 + $1.distanceKilometers }
         return "\(totalDistance.formatted(.number.precision(.fractionLength(1)))) km"
     }
 
     private var completedMemberCount: Int {
-        memberCards.filter(\.hasRunRecord).count
+        dailySummary?.completedMemberCount ?? memberCards.filter(\.hasRunRecord).count
+    }
+
+    private var totalMemberCount: Int {
+        dailySummary?.totalMemberCount ?? memberCards.count
+    }
+
+    private var displayTeam: RunningTeam? {
+        dailySummary?.team ?? team
+    }
+
+    private var summaryDateText: String {
+        TeamDashboardFormatter.dateString(from: dailySummary?.date ?? Date())
+    }
+
+    @MainActor
+    private func refreshDailySummary() async {
+        guard team != nil, let accessToken else { return }
+
+        do {
+            dailySummary = try await teamService.fetchDailySummary(date: Date(), accessToken: accessToken)
+        } catch {
+            return
+        }
     }
 }
 
@@ -212,6 +249,37 @@ private struct TeamMemberCardModel: Identifiable {
     let paceText: String
     let caloriesText: String
     let hasRunRecord: Bool
+
+    init(
+        id: String,
+        name: String,
+        imageName: String,
+        distanceText: String,
+        timeText: String,
+        paceText: String,
+        caloriesText: String,
+        hasRunRecord: Bool
+    ) {
+        self.id = id
+        self.name = name
+        self.imageName = imageName
+        self.distanceText = distanceText
+        self.timeText = timeText
+        self.paceText = paceText
+        self.caloriesText = caloriesText
+        self.hasRunRecord = hasRunRecord
+    }
+
+    init(member: TeamDailyMember) {
+        id = member.id
+        name = member.nickname
+        imageName = TeamDashboardFormatter.imageName(for: member.avatarKey)
+        distanceText = TeamDashboardFormatter.memberDistanceKilometers(member.distanceMeters)
+        timeText = member.durationSeconds > 0 ? RunningMetricFormatter.duration(TimeInterval(member.durationSeconds)) : "--:--"
+        paceText = "\(RunningMetricFormatter.pace(member.averagePaceSecondsPerKilometer.map(TimeInterval.init)))/km"
+        caloriesText = "\(member.calories)"
+        hasRunRecord = member.completed
+    }
 
     static func runningMember(
         id: String,
@@ -371,6 +439,43 @@ private struct TeamCaloriesBadge: View {
     }
 }
 
+private enum TeamDashboardFormatter {
+    private static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
+        formatter.dateFormat = "yyyy년 M월 d일 - EEEE"
+        return formatter
+    }()
+
+    static func dateString(from date: Date) -> String {
+        dateFormatter.string(from: date)
+    }
+
+    static func distanceKilometers(_ distanceMeters: Int) -> String {
+        let kilometers = Double(distanceMeters) / 1_000
+        let formatted = kilometers.formatted(.number.precision(.fractionLength(kilometers.truncatingRemainder(dividingBy: 1) == 0 ? 0 : 1)))
+        return "\(formatted) km"
+    }
+
+    static func memberDistanceKilometers(_ distanceMeters: Int) -> String {
+        let kilometers = Double(distanceMeters) / 1_000
+        return "\(kilometers.formatted(.number.precision(.fractionLength(1)))) km"
+    }
+
+    static func imageName(for avatarKey: String?) -> String {
+        switch avatarKey {
+        case "runner_default", "encho":
+            return "encho"
+        case "burger_default", "bk":
+            return "bk"
+        default:
+            return "bk"
+        }
+    }
+}
+
 #Preview("팀 기록 화면") {
     TeamDashboardView(
         team: RunningTeam(
@@ -382,6 +487,8 @@ private struct TeamCaloriesBadge: View {
             inviteCode: "RUN200"
         ),
         nickname: "커비",
+        teamService: MockTeamService(),
+        accessToken: "preview-token",
         onCreateTeam: {},
         onJoinTeam: {},
         onInvite: {}
@@ -404,5 +511,4 @@ private struct TeamCaloriesBadge: View {
     .padding(20)
     .frame(width: 390)
     .background(Color(red: 0.96, green: 0.96, blue: 0.96))
-    .previewLayout(.sizeThatFits)
 }

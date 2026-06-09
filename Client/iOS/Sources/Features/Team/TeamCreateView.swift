@@ -47,7 +47,7 @@ struct TeamCreateView: View {
                 .padding(.top, 14)
 
                 VStack(alignment: .leading, spacing: 9) {
-                    ValidationRuleRow(text: "2-6자 이내", isValid: viewModel.hasValidLength)
+                    ValidationRuleRow(text: "2-10자 이내", isValid: viewModel.hasValidLength)
                     ValidationRuleRow(text: "한글, 영문, 숫자 사용 가능", isValid: viewModel.containsOnlyAllowedCharacters)
                     ValidationRuleRow(text: "특수문자 사용 불가", isValid: viewModel.doesNotContainSpecialCharacters)
                     if viewModel.shouldShowDuplicateError {

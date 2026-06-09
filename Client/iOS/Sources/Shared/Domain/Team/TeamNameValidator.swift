@@ -8,7 +8,7 @@ enum TeamNameValidator {
     }
 
     static func hasValidLength(_ name: String) -> Bool {
-        (2...6).contains(name.count)
+        (2...10).contains(name.count)
     }
 
     static func containsOnlyAllowedCharacters(_ name: String) -> Bool {
