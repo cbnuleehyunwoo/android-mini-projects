@@ -28,7 +28,7 @@ struct InviteMemberView: View {
                     ForEach(Array(inviteCode), id: \.self) { character in
                         Text(String(character))
                             .font(AppTheme.Typography.font(size: 24, weight: .black))
-                            .foregroundStyle(character.isLetter ? Color(red: 0.38, green: 0.42, blue: 1.0) : AppTheme.Colors.textPrimary)
+                            .foregroundStyle(character.isLetter ? AppTheme.Colors.primary : AppTheme.Colors.textPrimary)
                             .frame(width: 36, height: 42)
                             .background(Color.white)
                             .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
@@ -44,7 +44,7 @@ struct InviteMemberView: View {
                 Button(action: {}) {
                     Label("코드 복사", systemImage: "doc.on.doc")
                         .font(AppTheme.Typography.font(size: 13, weight: .bold))
-                        .foregroundStyle(Color(red: 0.38, green: 0.42, blue: 1.0))
+                        .foregroundStyle(AppTheme.Colors.primary)
                         .frame(width: 214, height: 40)
                         .background(Color(red: 0.92, green: 0.94, blue: 1.0))
                         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
