@@ -10,12 +10,20 @@ struct TeamDashboardView: View {
     let onInvite: () -> Void
     @State private var records: [RunningRecord] = RunningHistoryStore().load()
     @State private var dailySummary: TeamDailySummary?
+    @State private var hasResolvedDailySummary = false
 
     var body: some View {
-        if displayTeam == nil {
-            TeamEmptyStateView(onCreateTeam: onCreateTeam, onJoinTeam: onJoinTeam)
-        } else {
-            teamContent
+        Group {
+            if displayTeam == nil {
+                TeamEmptyStateView(onCreateTeam: onCreateTeam, onJoinTeam: onJoinTeam)
+            } else if shouldShowSkeleton {
+                TeamDashboardSkeletonView()
+            } else {
+                teamContent
+            }
+        }
+        .task(id: team?.id) {
+            await refreshDailySummary()
         }
     }
 
@@ -68,9 +76,6 @@ struct TeamDashboardView: View {
         .background(Color.white)
         .onAppear {
             records = RunningHistoryStore().load()
-        }
-        .task(id: team?.id) {
-            await refreshDailySummary()
         }
     }
 
@@ -127,6 +132,10 @@ struct TeamDashboardView: View {
         dailySummary?.team ?? team
     }
 
+    private var shouldShowSkeleton: Bool {
+        team != nil && accessToken != nil && dailySummary == nil && !hasResolvedDailySummary
+    }
+
     private var summaryDateText: String {
         TeamDashboardFormatter.dateString(from: dailySummary?.date ?? Date())
     }
@@ -134,12 +143,16 @@ struct TeamDashboardView: View {
     @MainActor
     private func refreshDailySummary() async {
         guard team != nil, let accessToken else { return }
+        dailySummary = nil
+        hasResolvedDailySummary = false
 
         do {
             dailySummary = try await teamService.fetchDailySummary(date: Date(), accessToken: accessToken)
         } catch {
-            return
+            dailySummary = nil
         }
+
+        hasResolvedDailySummary = true
     }
 }
 
@@ -238,6 +251,134 @@ private struct TeamEmptyStateView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.white)
     }
+}
+
+private struct TeamDashboardSkeletonView: View {
+    var body: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 0) {
+                HStack(spacing: 12) {
+                    skeletonBlock(width: 220, height: 42, cornerRadius: 8)
+
+                    Spacer()
+
+                    skeletonBlock(width: 48, height: 48, cornerRadius: 12)
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, 32)
+
+                skeletonBlock(width: 230, height: 30, cornerRadius: 8)
+                    .padding(.top, 10)
+
+                HStack(spacing: 8) {
+                    TeamMetricSkeletonCard()
+                    TeamMetricSkeletonCard()
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, 20)
+
+                VStack(spacing: 28) {
+                    ForEach(0..<3, id: \.self) { _ in
+                        TeamMemberRunCardSkeleton()
+                    }
+                }
+                .padding(.horizontal, 28)
+                .padding(.top, 28)
+                .padding(.bottom, 98)
+            }
+        }
+        .background(Color.white)
+        .allowsHitTesting(false)
+    }
+
+    private func skeletonBlock(width: CGFloat, height: CGFloat, cornerRadius: CGFloat) -> some View {
+        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            .fill(TeamSkeletonStyle.fill)
+            .frame(width: width, height: height)
+    }
+}
+
+private struct TeamMetricSkeletonCard: View {
+    var body: some View {
+        VStack(spacing: 10) {
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(TeamSkeletonStyle.fill)
+                .frame(width: 86, height: 26)
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(TeamSkeletonStyle.fill)
+                .frame(width: 74, height: 14)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 90)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .shadow(color: .black.opacity(0.10), radius: 8, x: 0, y: 2)
+    }
+}
+
+private struct TeamMemberRunCardSkeleton: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(TeamSkeletonStyle.fill)
+                .frame(width: 150, height: 28)
+
+            HStack(spacing: 0) {
+                RoundedRectangle(cornerRadius: 0, style: .continuous)
+                    .fill(TeamSkeletonStyle.fill)
+                    .frame(width: 80, height: 80)
+
+                Spacer()
+                    .frame(width: 14)
+
+                VStack(alignment: .leading, spacing: 10) {
+                    TeamMetricRowSkeleton()
+                    TeamMetricRowSkeleton()
+                    TeamMetricRowSkeleton()
+                }
+                .frame(width: 136, alignment: .leading)
+
+                Spacer(minLength: 0)
+
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(TeamSkeletonStyle.fill)
+                    .frame(width: 70, height: 90)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 26)
+        .padding(.bottom, 32)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .shadow(color: .black.opacity(0.16), radius: 9, x: 0, y: 6)
+    }
+}
+
+private struct TeamMetricRowSkeleton: View {
+    var body: some View {
+        HStack(spacing: 0) {
+            RoundedRectangle(cornerRadius: 4, style: .continuous)
+                .fill(TeamSkeletonStyle.fill)
+                .frame(width: 18, height: 18)
+                .frame(width: 24, height: 20, alignment: .leading)
+
+            RoundedRectangle(cornerRadius: 4, style: .continuous)
+                .fill(TeamSkeletonStyle.fill)
+                .frame(width: 34, height: 16)
+                .frame(width: 48, alignment: .leading)
+
+            RoundedRectangle(cornerRadius: 4, style: .continuous)
+                .fill(TeamSkeletonStyle.fill)
+                .frame(width: 58, height: 16)
+                .frame(width: 64, alignment: .leading)
+        }
+        .frame(width: 136, height: 20, alignment: .leading)
+    }
+}
+
+private enum TeamSkeletonStyle {
+    static let fill = Color(red: 0.92, green: 0.94, blue: 0.97)
 }
 
 private struct TeamMemberCardModel: Identifiable {
