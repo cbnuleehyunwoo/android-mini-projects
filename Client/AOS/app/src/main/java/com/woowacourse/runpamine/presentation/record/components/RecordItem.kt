@@ -139,7 +139,7 @@ private fun RecordItemPreview() {
         RecordItem(
             record =
                 RunningRecord(
-                    id = 1,
+                    id = "1",
                     date = LocalDate.of(2026, 5, 29),
                     distanceKm = 5.0,
                     duration = "28:45",

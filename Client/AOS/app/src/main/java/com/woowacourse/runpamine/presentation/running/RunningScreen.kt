@@ -62,8 +62,7 @@ fun RunningScreen(
         modifier = modifier,
         onPauseClick = onPauseClick,
         onStopClick = {
-            viewModel.stopRun()
-            onStopCompleted()
+            viewModel.stopRun(onStopped = onStopCompleted)
         },
     )
 }
