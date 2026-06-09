@@ -8,6 +8,9 @@
     <string name="join_team">팀 참가하기</string>
     <string name="info_team">팀 정보 보기</string>
     <string name="start">시작</string>
+    <string name="cancel">취소</string>
+    <string name="running_start_title">러닝 시작</string>
+    <string name="running_start_confirmation">러닝을 시작하시겠습니까?</string>
     <string name="map_my_location">내 위치</string>
     <string name="map_permission_rationale">주변 지도를 보려면 위치 권한이 필요해요.</string>
     <string name="map_permission_request">위치 권한 허용하기</string>
