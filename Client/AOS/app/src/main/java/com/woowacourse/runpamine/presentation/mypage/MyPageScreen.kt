@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.woowacourse.runpamine.R
@@ -22,12 +23,19 @@ import com.woowacourse.runpamine.presentation.mypage.components.MyPageProfile
 import com.woowacourse.runpamine.presentation.mypage.components.MyPageSection
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
+private const val PRIVACY_POLICY_URL =
+    "https://sheer-mimosa-20f.notion.site/37958b8d8e6c80cdb6b8c29d6d6935f5?pvs=74"
+private const val TERMS_OF_SERVICE_URL =
+    "https://sheer-mimosa-20f.notion.site/2b658b8d8e6c80f386e1ef1910dbff34?pvs=73"
+
 @Composable
 fun MyPageScreen(
     onChangeNicknameClick: () -> Unit,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val uriHandler = LocalUriHandler.current
+
     Column(
         modifier =
             modifier
@@ -71,11 +79,13 @@ fun MyPageScreen(
                 iconResId = R.drawable.ic_shield,
                 title = "개인정보처리방침",
                 description = "개인정보 수집 및 이용에 대한 안내",
+                onClick = { uriHandler.openUri(PRIVACY_POLICY_URL) },
             )
             MyPageMenuRow(
                 iconResId = R.drawable.ic_page,
                 title = "이용약관",
                 description = "서비스 이용에 관한 약관을 확인하세요",
+                onClick = { uriHandler.openUri(TERMS_OF_SERVICE_URL) },
             )
         }
         Spacer(modifier = Modifier.height(24.dp))
