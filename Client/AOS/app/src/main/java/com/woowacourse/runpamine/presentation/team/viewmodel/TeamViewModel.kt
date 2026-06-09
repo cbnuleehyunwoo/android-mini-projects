@@ -1,9 +1,11 @@
 package com.woowacourse.runpamine.presentation.team.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.woowacourse.runpamine.domain.team.Team
+import com.woowacourse.runpamine.domain.team.TeamMemberSummary
 import com.woowacourse.runpamine.domain.team.TeamRepository
 import com.woowacourse.runpamine.domain.team.TeamRunSummary
 import com.woowacourse.runpamine.presentation.team.model.TeamMember
@@ -31,6 +33,7 @@ class TeamViewModel(
                 it.copy(
                     isLoading = true,
                     errorMessage = null,
+                    memberErrorMessage = null,
                 )
             }
             runCatching {
@@ -50,64 +53,59 @@ class TeamViewModel(
     }
 
     private suspend fun loadTeamDailySummary(team: Team) {
-        runCatching {
-            teamRepository.getMyTeamDailySummary()
-        }.onSuccess { summary ->
-            _uiState.update {
-                it.copy(
-                    hasTeam = true,
-                    teamName = summary.team.name,
-                    joinCode = summary.team.joinCode,
-                    date = summary.date.toKoreanDisplayText(),
-                    totalDistance = summary.teamTotalDistanceMeters.toKilometerText(),
-                    completedMemberCount = summary.completedMemberCount,
-                    totalMemberCount = summary.totalMemberCount,
-                    members = summary.members.map { member -> member.toTeamMember() },
-                    isLoading = false,
-                )
-            }
-        }.onFailure { throwable ->
-            _uiState.update {
-                it.copy(
-                    hasTeam = true,
-                    teamName = team.name,
-                    joinCode = team.joinCode,
-                    date = LocalDate.now().toKoreanDisplayText(),
-                    totalDistance = 0.toKilometerText(),
-                    completedMemberCount = 0,
-                    totalMemberCount = team.memberCount,
-                    members = emptyList(),
-                    isLoading = false,
-                    errorMessage = throwable.message ?: "팀 기록 정보를 불러오지 못했어요.",
-                )
-            }
-            loadTeamMembers(team)
-        }
-    }
+        val membersResult = runCatching { teamRepository.getMyTeamMembers() }
+        val summaryResult = runCatching { teamRepository.getMyTeamDailySummary() }
 
-    private fun loadTeamMembers(team: Team) {
-        viewModelScope.launch {
-            runCatching {
-                teamRepository.getMyTeamMembers()
-            }.onSuccess { members ->
+        summaryResult
+            .onSuccess { summary ->
+                val members =
+                    mergeMembersWithRuns(
+                        members = membersResult.getOrNull(),
+                        runs = summary.members,
+                        totalMemberCount = summary.totalMemberCount,
+                    )
                 _uiState.update {
                     it.copy(
-                        members =
-                            members.map { member ->
-                                TeamMember(
-                                    id = member.id,
-                                    name = member.nickname,
-                                    distance = 0.toKilometerText(),
-                                    time = 0.toDurationText(),
-                                    pace = "-",
-                                    calories = "0",
-                                )
-                            },
-                        totalMemberCount = team.memberCount,
+                        hasTeam = true,
+                        teamName = summary.team.name,
+                        joinCode = summary.team.joinCode,
+                        date = summary.date.toKoreanDisplayText(),
+                        totalDistance = summary.teamTotalDistanceMeters.toKilometerText(),
+                        completedMemberCount = summary.completedMemberCount,
+                        totalMemberCount = summary.totalMemberCount,
+                        members = members,
+                        isLoading = false,
+                        memberErrorMessage = membersResult.exceptionOrNull()?.toMemberErrorMessage(),
                     )
                 }
+                membersResult.exceptionOrNull()?.let { throwable ->
+                    Log.w(TAG, "Failed to load team members.", throwable)
+                }
+            }.onFailure { throwable ->
+                val members =
+                    membersResult
+                        .getOrNull()
+                        .orEmpty()
+                        .map { member -> member.toEmptyTeamMember() }
+                _uiState.update {
+                    it.copy(
+                        hasTeam = true,
+                        teamName = team.name,
+                        joinCode = team.joinCode,
+                        date = LocalDate.now().toKoreanDisplayText(),
+                        totalDistance = 0.toKilometerText(),
+                        completedMemberCount = 0,
+                        totalMemberCount = team.memberCount,
+                        members = members,
+                        isLoading = false,
+                        errorMessage = throwable.message ?: "팀 기록 정보를 불러오지 못했어요.",
+                        memberErrorMessage = membersResult.exceptionOrNull()?.toMemberErrorMessage(),
+                    )
+                }
+                membersResult.exceptionOrNull()?.let { memberThrowable ->
+                    Log.w(TAG, "Failed to load team members.", memberThrowable)
+                }
             }
-        }
     }
 
     class Factory(
@@ -121,6 +119,21 @@ class TeamViewModel(
     }
 }
 
+private fun mergeMembersWithRuns(
+    members: List<TeamMemberSummary>?,
+    runs: List<TeamRunSummary>,
+    totalMemberCount: Int,
+): List<TeamMember> {
+    if (members == null) {
+        return runs.map { run -> run.toTeamMember() }
+    }
+
+    val runsByUserId = runs.associateBy { run -> run.userId }
+    return members.map { member ->
+        runsByUserId[member.id]?.toTeamMember() ?: member.toEmptyTeamMember()
+    }
+}
+
 private fun TeamRunSummary.toTeamMember(): TeamMember =
     TeamMember(
         id = userId,
@@ -129,6 +142,16 @@ private fun TeamRunSummary.toTeamMember(): TeamMember =
         time = durationSeconds.toDurationText(),
         pace = averagePaceSecondsPerKm.toPaceText(),
         calories = calories.toString(),
+    )
+
+private fun TeamMemberSummary.toEmptyTeamMember(): TeamMember =
+    TeamMember(
+        id = id,
+        name = nickname,
+        distance = 0.toKilometerText(),
+        time = 0.toDurationText(),
+        pace = "-",
+        calories = "0",
     )
 
 private fun String.toKoreanDisplayText(): String =
@@ -161,3 +184,7 @@ private fun Int.toPaceText(): String {
     val seconds = this % 60
     return "%d'%02d\"".format(Locale.US, minutes, seconds)
 }
+
+private fun Throwable.toMemberErrorMessage(): String = message?.let { "팀원 목록을 불러오지 못했어요. ($it)" } ?: "팀원 목록을 불러오지 못했어요."
+
+private const val TAG = "TeamViewModel"

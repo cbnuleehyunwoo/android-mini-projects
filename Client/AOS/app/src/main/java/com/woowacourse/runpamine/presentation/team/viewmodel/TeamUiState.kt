@@ -13,4 +13,5 @@ data class TeamUiState(
     val members: List<TeamMember> = emptyList(),
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
+    val memberErrorMessage: String? = null,
 )

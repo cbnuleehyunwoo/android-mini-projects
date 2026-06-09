@@ -65,6 +65,7 @@ private fun TeamScreenContent(
                 members = uiState.members,
                 onAddClick = { onInviteClick(uiState.joinCode) },
                 modifier = modifier.fillMaxSize(),
+                memberErrorMessage = uiState.memberErrorMessage,
             )
         }
 

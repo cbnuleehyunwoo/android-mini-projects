@@ -1,5 +1,6 @@
 package com.woowacourse.runpamine.data.team.remote
 
+import android.util.Log
 import com.woowacourse.runpamine.domain.team.Team
 import com.woowacourse.runpamine.domain.team.TeamDailySummary
 import com.woowacourse.runpamine.domain.team.TeamMemberSummary
@@ -64,7 +65,13 @@ class ApiTeamRemoteDataSource(
                     method = "GET",
                     accessToken = accessToken,
                 )
-            val members = response.getJSONObject("data").getJSONArray("members")
+            val data = response.optJSONObject("data")
+            val members =
+                when {
+                    data?.has("members") == true -> data.getJSONArray("members")
+                    response.has("members") -> response.getJSONArray("members")
+                    else -> response.getJSONArray("data")
+                }
             List(members.length()) { index ->
                 members.getJSONObject(index).toTeamMemberSummary()
             }
@@ -98,6 +105,12 @@ private fun HttpURLConnection.useJsonRequest(
     body: JSONObject?,
 ): JSONObject =
     try {
+        val requestUrl = url.toString()
+        Log.d(TAG, "HTTP $method $requestUrl")
+        body?.let { requestBody ->
+            Log.d(TAG, "Request body: $requestBody")
+        }
+
         requestMethod = method
         connectTimeout = CONNECT_TIMEOUT_MILLIS
         readTimeout = READ_TIMEOUT_MILLIS
@@ -113,13 +126,19 @@ private fun HttpURLConnection.useJsonRequest(
 
         val responseText =
             if (responseCode in 200..299) {
-                inputStream.bufferedReader().use { it.readText() }
+                inputStream.bufferedReader().use { it.readText() }.also { text ->
+                    Log.d(TAG, "Response $responseCode $method $requestUrl: $text")
+                }
             } else {
                 val errorText = errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
+                Log.w(TAG, "Error $responseCode $method $requestUrl: $errorText")
                 throw IllegalStateException(errorText.toApiErrorMessage(responseCode))
             }
 
         JSONObject(responseText)
+    } catch (throwable: Throwable) {
+        Log.e(TAG, "HTTP $method $url failed.", throwable)
+        throw throwable
     } finally {
         disconnect()
     }
@@ -136,8 +155,13 @@ private fun JSONObject.toTeam(): Team =
 
 private fun JSONObject.toTeamMemberSummary(): TeamMemberSummary =
     TeamMemberSummary(
-        id = getString("id"),
-        nickname = getString("nickname"),
+        id =
+            optString("id")
+                .ifBlank { optString("userId") }
+                .ifBlank { optString("profileId") },
+        nickname =
+            optString("nickname")
+                .ifBlank { optJSONObject("profile")?.optString("nickname").orEmpty() },
         avatarKey = optString("avatarKey").takeIf { it.isNotBlank() },
     )
 
@@ -183,3 +207,4 @@ private fun String.toApiBaseUrl(): String {
 
 private const val CONNECT_TIMEOUT_MILLIS = 10_000
 private const val READ_TIMEOUT_MILLIS = 10_000
+private const val TAG = "TeamApi"

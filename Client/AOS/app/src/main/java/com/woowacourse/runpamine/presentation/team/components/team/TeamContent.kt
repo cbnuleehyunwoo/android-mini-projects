@@ -17,6 +17,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.woowacourse.runpamine.presentation.team.model.TeamMember
+import com.woowacourse.runpamine.ui.theme.Red40
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
 @Composable
@@ -29,6 +30,7 @@ fun TeamContent(
     members: List<TeamMember>,
     onAddClick: () -> Unit,
     modifier: Modifier = Modifier,
+    memberErrorMessage: String? = null,
 ) {
     LazyColumn(
         modifier = modifier,
@@ -69,6 +71,19 @@ fun TeamContent(
                 )
             }
         }
+
+        memberErrorMessage?.let { message ->
+            item {
+                Text(
+                    text = message,
+                    modifier = Modifier.fillMaxWidth(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Red40,
+                    textAlign = TextAlign.Center,
+                )
+            }
+        }
+
         items(
             items = members,
             key = { it.id },
