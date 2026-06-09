@@ -40,6 +40,8 @@ fun CreateTeamContent(
     onCreateClick: () -> Unit,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
+    isLoading: Boolean = false,
+    errorMessage: String? = null,
 ) {
     Column(
         modifier =
@@ -71,11 +73,19 @@ fun CreateTeamContent(
             hasAllowedCharacters = hasAllowedCharacters,
             hasNoSpecialCharacters = hasNoSpecialCharacters,
         )
+        errorMessage?.let { message ->
+            Text(
+                text = message,
+                color = Red40,
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
         Spacer(modifier = Modifier.weight(1f))
         BottomButton(
             text = stringResource(R.string.create_team),
             onClick = onCreateClick,
             modifier = Modifier.fillMaxWidth(),
+            enabled = !isLoading,
         )
     }
 }

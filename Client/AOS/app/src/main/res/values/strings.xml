@@ -14,7 +14,7 @@
     <string name="create_team_bar">팀 생성</string>
     <string name="create_team_header">팀 이름을\n입력해주세요.</string>
     <string name="create_team_name_placeholder">팀 이름을 입력해주세요</string>
-    <string name="create_team_condition_length">2-6자 이내</string>
+    <string name="create_team_condition_length">2-10자 이내</string>
     <string name="create_team_condition_characters">한글, 영문, 숫자 가능</string>
     <string name="create_team_condition_special">특수문자 사용 불가</string>
     <string name="invite_team_bar">팀 초대</string>

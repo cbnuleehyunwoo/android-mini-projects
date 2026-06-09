@@ -17,6 +17,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.woowacourse.runpamine.presentation.team.model.TeamMember
+import com.woowacourse.runpamine.ui.theme.Red40
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
 @Composable
@@ -29,6 +30,7 @@ fun TeamContent(
     members: List<TeamMember>,
     onAddClick: () -> Unit,
     modifier: Modifier = Modifier,
+    memberErrorMessage: String? = null,
 ) {
     LazyColumn(
         modifier = modifier,
@@ -69,16 +71,29 @@ fun TeamContent(
                 )
             }
         }
+
+        memberErrorMessage?.let { message ->
+            item {
+                Text(
+                    text = message,
+                    modifier = Modifier.fillMaxWidth(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Red40,
+                    textAlign = TextAlign.Center,
+                )
+            }
+        }
+
         items(
             items = members,
             key = { it.id },
         ) { member ->
             TeamMemberCard(
                 member = member,
-                calories = "0",
-                distance = "${member.distance}km",
+                calories = member.calories,
+                distance = member.distance,
                 time = member.time,
-                pace = "-",
+                pace = member.pace,
             )
         }
     }
@@ -96,10 +111,22 @@ private fun TeamContentPreview() {
             totalMemberCount = 4,
             members =
                 listOf(
-                    TeamMember(id = 1L, name = "커비커비커비커비커", distance = "12.3", time = "28:35"),
-                    TeamMember(id = 2L, name = "호이", distance = "1.1", time = "33:41"),
-                    TeamMember(id = 3L, name = "볼트트", distance = "9.2", time = "30:30"),
-                    TeamMember(id = 4L, name = "커비커비커비커비커", distance = "10.2", time = "31:58"),
+                    TeamMember(
+                        id = "1",
+                        name = "커비커비커비커비커",
+                        distance = "12.3 km",
+                        time = "28:35",
+                        pace = "2'19\"",
+                        calories = "344",
+                    ),
+                    TeamMember(
+                        id = "2",
+                        name = "호이",
+                        distance = "1.1 km",
+                        time = "33:41",
+                        pace = "30'37\"",
+                        calories = "66",
+                    ),
                 ),
             onAddClick = {},
             modifier = Modifier.fillMaxSize(),
