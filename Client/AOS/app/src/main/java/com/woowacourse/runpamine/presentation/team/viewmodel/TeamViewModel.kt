@@ -142,6 +142,7 @@ private fun TeamRunSummary.toTeamMember(): TeamMember =
         time = durationSeconds.toDurationText(),
         pace = averagePaceSecondsPerKm.toPaceText(),
         calories = calories.toString(),
+        hasRunRecord = completed && (distanceMeters > 0 || durationSeconds > 0),
     )
 
 private fun TeamMemberSummary.toEmptyTeamMember(): TeamMember =

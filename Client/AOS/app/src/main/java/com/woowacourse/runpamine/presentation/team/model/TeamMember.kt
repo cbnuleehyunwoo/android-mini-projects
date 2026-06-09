@@ -7,4 +7,5 @@ data class TeamMember(
     val time: String,
     val pace: String,
     val calories: String,
+    val hasRunRecord: Boolean = false,
 )
