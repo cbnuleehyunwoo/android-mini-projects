@@ -8,9 +8,11 @@ final class TeamCreateViewModel: ObservableObject {
     @Published private(set) var error: TeamError?
 
     private let teamService: TeamServiceProtocol
+    private let accessToken: String?
 
-    init(teamService: TeamServiceProtocol) {
+    init(teamService: TeamServiceProtocol, accessToken: String? = nil) {
         self.teamService = teamService
+        self.accessToken = accessToken
     }
 
     var hasValidLength: Bool {
@@ -44,7 +46,11 @@ final class TeamCreateViewModel: ObservableObject {
         createdTeam = nil
 
         do {
-            createdTeam = try await teamService.createTeam(name: trimmedName)
+            guard let accessToken else {
+                throw TeamError.unauthorized
+            }
+
+            createdTeam = try await teamService.createTeam(name: trimmedName, accessToken: accessToken)
         } catch let teamError as TeamError {
             error = teamError
         } catch {
