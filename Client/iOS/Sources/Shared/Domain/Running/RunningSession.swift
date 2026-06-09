@@ -2,7 +2,7 @@ import CoreLocation
 import Foundation
 
 struct RunningSession {
-    private(set) var route: [CLLocationCoordinate2D] = []
+    private(set) var routePoints: [RunningCoordinate] = []
     private(set) var latestLocation: CLLocation?
     private(set) var elapsedTime: TimeInterval = 0
     private(set) var distanceMeters: CLLocationDistance = 0
@@ -21,8 +21,12 @@ struct RunningSession {
         return elapsedTime / distanceKilometers
     }
 
+    var route: [CLLocationCoordinate2D] {
+        routePoints.map(\.coordinate)
+    }
+
     mutating func reset() {
-        route.removeAll()
+        routePoints.removeAll()
         latestLocation = nil
         elapsedTime = 0
         distanceMeters = 0
@@ -71,7 +75,7 @@ struct RunningSession {
         }
 
         latestLocation = location
-        route.append(location.coordinate)
+        routePoints.append(RunningCoordinate(location.coordinate, recordedAt: location.timestamp))
         shouldMeasureDistanceFromPreviousLocation = true
     }
 
@@ -83,7 +87,7 @@ struct RunningSession {
             endedAt: endedAt,
             elapsedTime: elapsedTime,
             distanceMeters: distanceMeters,
-            route: route.map(RunningCoordinate.init)
+            route: routePoints
         )
     }
 }
