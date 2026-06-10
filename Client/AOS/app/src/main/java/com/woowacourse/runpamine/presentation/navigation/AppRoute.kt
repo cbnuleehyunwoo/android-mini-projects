@@ -23,6 +23,10 @@ sealed interface AppRoute {
         override val route = "record"
     }
 
+    data object Ranking : AppRoute {
+        override val route = "ranking"
+    }
+
     data object Running : AppRoute {
         override val route = "running"
     }

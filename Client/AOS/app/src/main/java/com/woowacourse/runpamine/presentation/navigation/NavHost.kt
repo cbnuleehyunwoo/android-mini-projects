@@ -17,6 +17,7 @@ import com.woowacourse.runpamine.presentation.login.LoginScreen
 import com.woowacourse.runpamine.presentation.login.viewmodel.LoginDestination
 import com.woowacourse.runpamine.presentation.mypage.MyPageScreen
 import com.woowacourse.runpamine.presentation.nickname.ChangeNicknameScreen
+import com.woowacourse.runpamine.presentation.ranking.RankingScreen
 import com.woowacourse.runpamine.presentation.record.RecordScreen
 import com.woowacourse.runpamine.presentation.running.RunningScreen
 import com.woowacourse.runpamine.presentation.team.TeamScreen
@@ -88,6 +89,10 @@ fun NavHost(
 
         composable(AppRoute.Record.route) {
             RecordScreen()
+        }
+
+        composable(AppRoute.Ranking.route) {
+            RankingScreen()
         }
 
         composable(AppRoute.Running.route) {
