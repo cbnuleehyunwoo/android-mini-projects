@@ -37,7 +37,10 @@ import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 import java.time.LocalDate
 
 @Composable
-fun RecordScreen(modifier: Modifier = Modifier) {
+fun RecordScreen(
+    onRecordClick: (RunningRecord) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val context = LocalContext.current
     val container = context.runpamineContainer
     val viewModel: RecordViewModel =
@@ -53,6 +56,7 @@ fun RecordScreen(modifier: Modifier = Modifier) {
         uiState = uiState,
         onPeriodSelect = viewModel::selectPeriod,
         onRetryClick = viewModel::retry,
+        onRecordClick = onRecordClick,
         modifier = modifier,
     )
 }
@@ -62,6 +66,7 @@ private fun RecordContent(
     uiState: RecordUiState,
     onPeriodSelect: (RecordPeriod) -> Unit,
     onRetryClick: () -> Unit,
+    onRecordClick: (RunningRecord) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -131,7 +136,10 @@ private fun RecordContent(
             }
         }
         items(uiState.records, key = { it.id }) { record ->
-            RecordItem(record = record)
+            RecordItem(
+                record = record,
+                onClick = { onRecordClick(record) },
+            )
         }
     }
 }
@@ -174,10 +182,10 @@ private fun RecordMessage(
 
 private fun sampleRecords(today: LocalDate): List<RunningRecord> =
     listOf(
-        RunningRecord("1", today, 5.0, "28:45", "5'45\"/km"),
-        RunningRecord("2", today.minusDays(1), 12.4, "54:12", "4'22\"/km"),
-        RunningRecord("3", today.minusDays(2), 5.0, "1:24:30", "4'38\"/km"),
-        RunningRecord("4", today.minusDays(3), 5.0, "1:24:30", "4'38\"/km"),
+        RunningRecord("1", today, 5.0, "28:45", "5'45\"/km", 344),
+        RunningRecord("2", today.minusDays(1), 12.4, "54:12", "4'22\"/km", 512),
+        RunningRecord("3", today.minusDays(2), 5.0, "1:24:30", "4'38\"/km", 289),
+        RunningRecord("4", today.minusDays(3), 5.0, "1:24:30", "4'38\"/km", 301),
     ).sortedByDescending { it.date }
 
 @Preview(showBackground = true)
@@ -195,6 +203,7 @@ private fun RecordScreenPreview() {
                 ),
             onPeriodSelect = {},
             onRetryClick = {},
+            onRecordClick = {},
         )
     }
 }
