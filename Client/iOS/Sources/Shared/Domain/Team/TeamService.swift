@@ -4,6 +4,7 @@ protocol TeamServiceProtocol {
     func fetchMyTeam(accessToken: String) async throws -> RunningTeam?
     func fetchMyTeamMembers(accessToken: String) async throws -> [TeamMember]
     func fetchDailySummary(date: Date, accessToken: String) async throws -> TeamDailySummary
+    func fetchMyTeamSeasonStats(seasonID: String?, accessToken: String) async throws -> TeamSeasonStats
     func createTeam(name: String, accessToken: String) async throws -> RunningTeam
     func joinTeam(inviteCode: String, accessToken: String) async throws -> RunningTeam
 }
@@ -64,6 +65,26 @@ final class TeamAPIService: TeamServiceProtocol {
         }
 
         return summary
+    }
+
+    func fetchMyTeamSeasonStats(seasonID: String? = nil, accessToken: String) async throws -> TeamSeasonStats {
+        var queryItems: [URLQueryItem] = []
+        if let seasonID, !seasonID.isEmpty {
+            queryItems.append(URLQueryItem(name: "seasonId", value: seasonID))
+        }
+
+        let response: TeamSeasonStatsEnvelope = try await request(
+            path: "/teams/me/season-stats",
+            queryItems: queryItems,
+            method: "GET",
+            accessToken: accessToken
+        )
+
+        guard let stats = response.data.domain else {
+            throw TeamError.invalidResponse
+        }
+
+        return stats
     }
 
     func createTeam(name: String, accessToken: String) async throws -> RunningTeam {
@@ -209,6 +230,61 @@ final class MockTeamService: TeamServiceProtocol {
         )
     }
 
+    func fetchMyTeamSeasonStats(seasonID: String? = nil, accessToken: String) async throws -> TeamSeasonStats {
+        let team = createdTeam ?? store.loadTeam() ?? RunningTeam(
+            id: UUID(),
+            name: "팀이름팀이름팀이름",
+            distanceKilometers: 324,
+            memberCount: 3,
+            memberLimit: 4,
+            inviteCode: "SRN742"
+        )
+        let now = Date()
+
+        return TeamSeasonStats(
+            season: TeamSeason(
+                id: seasonID ?? "mock-season",
+                name: "2026-06",
+                year: 2026,
+                month: 6,
+                startsAt: now,
+                endsAt: now,
+                elapsedDays: 10
+            ),
+            team: TeamSeasonTeam(
+                id: team.id.uuidString,
+                name: team.name,
+                ownerID: "member-primary"
+            ),
+            members: [
+                TeamSeasonMember(
+                    id: "member-primary",
+                    nickname: store.nickname,
+                    avatarKey: "runner_default",
+                    seasonDistanceMeters: 42_800,
+                    seasonDurationSeconds: 13_200,
+                    seasonCalories: 1_200,
+                    seasonRunCount: 8,
+                    seasonActiveDays: 6,
+                    averagePaceSecondsPerKilometer: 308,
+                    consecutiveRunDays: 5
+                ),
+                TeamSeasonMember(
+                    id: "member-burger-1",
+                    nickname: "버거킹 스마일",
+                    avatarKey: "burger_default",
+                    seasonDistanceMeters: 3_800,
+                    seasonDurationSeconds: 1_400,
+                    seasonCalories: 120,
+                    seasonRunCount: 2,
+                    seasonActiveDays: 2,
+                    averagePaceSecondsPerKilometer: 368,
+                    consecutiveRunDays: -5
+                )
+            ]
+        )
+    }
+
     func createTeam(name: String, accessToken: String) async throws -> RunningTeam {
         try await Task.sleep(nanoseconds: 350_000_000)
 
@@ -273,6 +349,10 @@ private struct TeamMembersEnvelope: Decodable {
 
 private struct TeamDailySummaryEnvelope: Decodable {
     let data: TeamDailySummaryPayload
+}
+
+private struct TeamSeasonStatsEnvelope: Decodable {
+    let data: TeamSeasonStatsPayload
 }
 
 private struct TeamPayload: Decodable {
@@ -385,6 +465,89 @@ private struct TeamDailyMemberPayload: Decodable {
     }
 }
 
+private struct TeamSeasonStatsPayload: Decodable {
+    let season: TeamSeasonPayload
+    let team: TeamSeasonTeamPayload
+    let members: [TeamSeasonMemberPayload]
+
+    var domain: TeamSeasonStats? {
+        guard let season = season.domain else { return nil }
+
+        return TeamSeasonStats(
+            season: season,
+            team: team.domain,
+            members: members.map(\.domain)
+        )
+    }
+}
+
+private struct TeamSeasonPayload: Decodable {
+    let id: String
+    let name: String
+    let year: Int
+    let month: Int
+    let startsAt: String
+    let endsAt: String
+    let elapsedDays: Int
+
+    var domain: TeamSeason? {
+        guard
+            let startsAt = TeamDateCoder.dateTime(from: startsAt),
+            let endsAt = TeamDateCoder.dateTime(from: endsAt)
+        else {
+            return nil
+        }
+
+        return TeamSeason(
+            id: id,
+            name: name,
+            year: year,
+            month: month,
+            startsAt: startsAt,
+            endsAt: endsAt,
+            elapsedDays: elapsedDays
+        )
+    }
+}
+
+private struct TeamSeasonTeamPayload: Decodable {
+    let id: String
+    let name: String
+    let ownerId: String
+
+    var domain: TeamSeasonTeam {
+        TeamSeasonTeam(id: id, name: name, ownerID: ownerId)
+    }
+}
+
+private struct TeamSeasonMemberPayload: Decodable {
+    let id: String
+    let nickname: String
+    let avatarKey: String?
+    let seasonDistanceMeters: Int
+    let seasonDurationSeconds: Int
+    let seasonCalories: Int
+    let seasonRunCount: Int
+    let seasonActiveDays: Int
+    let averagePaceSecondsPerKm: Int?
+    let consecutiveRunDays: Int
+
+    var domain: TeamSeasonMember {
+        TeamSeasonMember(
+            id: id,
+            nickname: nickname,
+            avatarKey: avatarKey,
+            seasonDistanceMeters: seasonDistanceMeters,
+            seasonDurationSeconds: seasonDurationSeconds,
+            seasonCalories: seasonCalories,
+            seasonRunCount: seasonRunCount,
+            seasonActiveDays: seasonActiveDays,
+            averagePaceSecondsPerKilometer: averagePaceSecondsPerKm,
+            consecutiveRunDays: consecutiveRunDays
+        )
+    }
+}
+
 private struct CreateTeamPayload: Encodable {
     let name: String
 }
@@ -402,6 +565,18 @@ private struct TeamAPIErrorPayload: Decodable {
 }
 
 private enum TeamDateCoder {
+    private static let dateTimeFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
+    private static let fallbackDateTimeFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter
+    }()
+
     private static let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.calendar = Calendar(identifier: .gregorian)
@@ -417,6 +592,10 @@ private enum TeamDateCoder {
 
     static func date(from string: String) -> Date? {
         dateFormatter.date(from: string)
+    }
+
+    static func dateTime(from string: String) -> Date? {
+        dateTimeFormatter.date(from: string) ?? fallbackDateTimeFormatter.date(from: string)
     }
 }
 
