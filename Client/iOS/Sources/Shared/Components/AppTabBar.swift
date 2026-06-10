@@ -11,6 +11,8 @@ struct AppTabBar: View {
             Spacer()
             tabButton(.team, title: "팀", assetIcon: "icon_team")
             Spacer()
+            tabButton(.ranking, title: "랭킹", assetIcon: "icon_rank")
+            Spacer()
             tabButton(.history, title: "기록", assetIcon: "icon_history")
         }
         .padding(.horizontal, 30)

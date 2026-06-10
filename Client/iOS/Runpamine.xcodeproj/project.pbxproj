@@ -57,6 +57,8 @@
 		7A1070010000000000000002 /* RunService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1070010000000000000102 /* RunService.swift */; };
 		7A100001000000000000002D /* TeamDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000130 /* TeamDashboardView.swift */; };
 		7A100001000000000000002E /* InviteMemberView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000131 /* InviteMemberView.swift */; };
+		7A1420010000000000000001 /* RankingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1420010000000000000101 /* RankingService.swift */; };
+		7A1420010000000000000002 /* RankingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1420010000000000000102 /* RankingView.swift */; };
 		7A1000010000000000000040 /* pretendard_black.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000140 /* pretendard_black.otf */; };
 		7A1000010000000000000041 /* pretendard_bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000141 /* pretendard_bold.otf */; };
 		7A1000010000000000000042 /* pretendard_extra_bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000142 /* pretendard_extra_bold.otf */; };
@@ -126,6 +128,8 @@
 		7A1070010000000000000102 /* RunService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunService.swift; sourceTree = "<group>"; };
 		7A1000010000000000000130 /* TeamDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamDashboardView.swift; sourceTree = "<group>"; };
 		7A1000010000000000000131 /* InviteMemberView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteMemberView.swift; sourceTree = "<group>"; };
+		7A1420010000000000000101 /* RankingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RankingService.swift; sourceTree = "<group>"; };
+		7A1420010000000000000102 /* RankingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RankingView.swift; sourceTree = "<group>"; };
 		7A1000010000000000000140 /* pretendard_black.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_black.otf; sourceTree = "<group>"; };
 		7A1000010000000000000141 /* pretendard_bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_bold.otf; sourceTree = "<group>"; };
 		7A1000010000000000000142 /* pretendard_extra_bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_extra_bold.otf; sourceTree = "<group>"; };
@@ -200,6 +204,7 @@
 				7A1000010000000000000319 /* Running */,
 				7A100001000000000000031B /* History */,
 				7A100001000000000000031C /* Team */,
+				7A1420010000000000000302 /* Ranking */,
 				7A1000010000000000000313 /* Home */,
 				7A1000010000000000000314 /* MainTab */,
 			);
@@ -265,6 +270,7 @@
 				7A1040010000000000000301 /* Profile */,
 				7A100001000000000000031A /* Running */,
 				7A1000010000000000000315 /* Team */,
+				7A1420010000000000000301 /* Ranking */,
 			);
 			path = Domain;
 			sourceTree = "<group>";
@@ -386,6 +392,22 @@
 				7A1000010000000000000131 /* InviteMemberView.swift */,
 			);
 			path = Team;
+			sourceTree = "<group>";
+		};
+		7A1420010000000000000301 /* Ranking */ = {
+			isa = PBXGroup;
+			children = (
+				7A1420010000000000000101 /* RankingService.swift */,
+			);
+			path = Ranking;
+			sourceTree = "<group>";
+		};
+		7A1420010000000000000302 /* Ranking */ = {
+			isa = PBXGroup;
+			children = (
+				7A1420010000000000000102 /* RankingView.swift */,
+			);
+			path = Ranking;
 			sourceTree = "<group>";
 		};
 		7A1000010000000000000320 /* Resources */ = {
@@ -553,6 +575,8 @@
 				7A1070010000000000000002 /* RunService.swift in Sources */,
 				7A100001000000000000002D /* TeamDashboardView.swift in Sources */,
 				7A100001000000000000002E /* InviteMemberView.swift in Sources */,
+				7A1420010000000000000001 /* RankingService.swift in Sources */,
+				7A1420010000000000000002 /* RankingView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

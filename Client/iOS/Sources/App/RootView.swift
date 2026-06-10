@@ -8,6 +8,7 @@ struct RootView: View {
     private let profileService: ProfileServiceProtocol
     private let runService: RunServiceProtocol
     private let teamService: TeamServiceProtocol
+    private let rankingService: RankingServiceProtocol
     private let store: LocalAppStateStore
 
     init(
@@ -15,12 +16,14 @@ struct RootView: View {
         profileService: ProfileServiceProtocol = MockProfileService(),
         runService: RunServiceProtocol = MockRunService(),
         teamService: TeamServiceProtocol = MockTeamService(),
+        rankingService: RankingServiceProtocol = MockRankingService(),
         store: LocalAppStateStore
     ) {
         self.authService = authService
         self.profileService = profileService
         self.runService = runService
         self.teamService = teamService
+        self.rankingService = rankingService
         self.store = store
     }
 
@@ -65,6 +68,7 @@ struct RootView: View {
                     profileService: profileService,
                     runService: runService,
                     teamService: teamService,
+                    rankingService: rankingService,
                     accessToken: currentSession?.accessToken
                 )
             }

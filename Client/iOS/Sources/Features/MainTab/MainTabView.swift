@@ -11,6 +11,7 @@ struct MainTabView: View {
     private let teamService: TeamServiceProtocol
     private let profileService: ProfileServiceProtocol
     private let runService: RunServiceProtocol
+    private let rankingService: RankingServiceProtocol
     private let accessToken: String?
     private let store: LocalAppStateStore
 
@@ -19,11 +20,13 @@ struct MainTabView: View {
         profileService: ProfileServiceProtocol = MockProfileService(),
         runService: RunServiceProtocol = MockRunService(),
         teamService: TeamServiceProtocol? = nil,
+        rankingService: RankingServiceProtocol = MockRankingService(),
         accessToken: String? = nil
     ) {
         self.store = store
         self.profileService = profileService
         self.runService = runService
+        self.rankingService = rankingService
         self.accessToken = accessToken
         self.teamService = teamService ?? MockTeamService(store: store)
         _nickname = State(initialValue: store.nickname)
@@ -59,6 +62,13 @@ struct MainTabView: View {
                         onInvite: {
                             isShowingInvite = true
                         }
+                    )
+                case .ranking:
+                    RankingView(
+                        rankingService: rankingService,
+                        accessToken: accessToken,
+                        team: team,
+                        nickname: nickname
                     )
                 case .history:
                     HistoryView(runService: runService, accessToken: accessToken)
@@ -130,6 +140,7 @@ struct MainTabView: View {
 enum MainTab {
     case home
     case team
+    case ranking
     case history
 }
 
