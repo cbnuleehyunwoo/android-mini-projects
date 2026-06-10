@@ -13,6 +13,9 @@ import com.woowacourse.runpamine.data.auth.repository.MissingAuthConfigurationRe
 import com.woowacourse.runpamine.data.profile.remote.ApiProfileRemoteDataSource
 import com.woowacourse.runpamine.data.profile.remote.ProfileRemoteDataSource
 import com.woowacourse.runpamine.data.profile.repository.DefaultProfileRepository
+import com.woowacourse.runpamine.data.ranking.remote.ApiRankingRemoteDataSource
+import com.woowacourse.runpamine.data.ranking.remote.RankingRemoteDataSource
+import com.woowacourse.runpamine.data.ranking.repository.DefaultRankingRepository
 import com.woowacourse.runpamine.data.run.local.RoomRunLocalDataSource
 import com.woowacourse.runpamine.data.run.local.RunDatabase
 import com.woowacourse.runpamine.data.run.local.RunLocalDataSource
@@ -27,6 +30,7 @@ import com.woowacourse.runpamine.data.team.remote.TeamRemoteDataSource
 import com.woowacourse.runpamine.data.team.repository.DefaultTeamRepository
 import com.woowacourse.runpamine.domain.auth.AuthRepository
 import com.woowacourse.runpamine.domain.profile.ProfileRepository
+import com.woowacourse.runpamine.domain.ranking.RankingRepository
 import com.woowacourse.runpamine.domain.run.LocationTracker
 import com.woowacourse.runpamine.domain.run.RunRecordRepository
 import com.woowacourse.runpamine.domain.run.RunSyncRepository
@@ -79,6 +83,17 @@ class RunpamineContainer(
         DefaultProfileRepository(
             authRepository = authRepository,
             remoteDataSource = profileRemoteDataSource,
+        )
+    }
+
+    private val rankingRemoteDataSource: RankingRemoteDataSource by lazy {
+        ApiRankingRemoteDataSource(BuildConfig.BASE_URL)
+    }
+
+    val rankingRepository: RankingRepository by lazy {
+        DefaultRankingRepository(
+            authRepository = authRepository,
+            remoteDataSource = rankingRemoteDataSource,
         )
     }
 

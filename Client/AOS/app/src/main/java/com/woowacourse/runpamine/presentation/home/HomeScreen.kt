@@ -194,7 +194,7 @@ private fun RunningStartDialog(
                     ) {
                         Text(
                             text = stringResource(R.string.start),
-                            color = Color.White
+                            color = Color.White,
                         )
                     }
                 }

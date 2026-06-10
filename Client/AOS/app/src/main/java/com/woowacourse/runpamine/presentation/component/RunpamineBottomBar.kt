@@ -34,6 +34,7 @@ enum class RunpamineBottomTab(
 ) {
     Home(label = "홈", iconResId = R.drawable.ic_home, route = AppRoute.Home.route),
     Team(label = "팀", iconResId = R.drawable.ic_team, route = AppRoute.Team.route),
+    Ranking(label = "랭킹", iconResId = R.drawable.mdi_prize, route = AppRoute.Ranking.route),
     History(label = "기록", iconResId = R.drawable.ic_record, route = AppRoute.Record.route),
 }
 
