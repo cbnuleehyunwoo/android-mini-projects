@@ -1,5 +1,6 @@
 package com.woowacourse.runpamine.presentation.team.components.noteam
 
+import android.R.attr.contentDescription
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -11,8 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -62,20 +61,20 @@ private fun CreateTeamButton(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(20.dp),
             modifier =
                 Modifier
                     .padding(24.dp)
                     .fillMaxWidth(),
         ) {
             Icon(
-                imageVector = Icons.Default.Add,
+                painter = painterResource(R.drawable.ic_plus),
                 contentDescription = "팀 생성하기",
                 tint = Color.White,
                 modifier = Modifier.size(32.dp),
             )
             Column(
-                modifier = Modifier,
+                modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 Text(
@@ -108,11 +107,12 @@ private fun JoinTeamButton(
         modifier =
             modifier
                 .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(24.dp))
+                .clickable(onClick = onClick)
                 .fillMaxWidth(),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(20.dp),
             modifier =
                 Modifier
                     .padding(24.dp)
@@ -125,7 +125,7 @@ private fun JoinTeamButton(
                 modifier = Modifier.size(32.dp),
             )
             Column(
-                modifier = Modifier,
+                modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 Text(
