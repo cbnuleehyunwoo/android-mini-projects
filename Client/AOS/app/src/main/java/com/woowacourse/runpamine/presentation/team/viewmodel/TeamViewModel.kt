@@ -5,9 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.woowacourse.runpamine.domain.team.Team
+import com.woowacourse.runpamine.domain.team.TeamMemberSeasonStats
 import com.woowacourse.runpamine.domain.team.TeamMemberSummary
 import com.woowacourse.runpamine.domain.team.TeamRepository
 import com.woowacourse.runpamine.domain.team.TeamRunSummary
+import com.woowacourse.runpamine.presentation.team.model.RunningStatus
 import com.woowacourse.runpamine.presentation.team.model.TeamMember
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -54,6 +56,7 @@ class TeamViewModel(
 
     private suspend fun loadTeamDailySummary(team: Team) {
         val membersResult = runCatching { teamRepository.getMyTeamMembers() }
+        val seasonStatsResult = runCatching { teamRepository.getMyTeamSeasonStats() }
         val summaryResult = runCatching { teamRepository.getMyTeamDailySummary() }
 
         summaryResult
@@ -62,7 +65,7 @@ class TeamViewModel(
                     mergeMembersWithRuns(
                         members = membersResult.getOrNull(),
                         runs = summary.members,
-                        totalMemberCount = summary.totalMemberCount,
+                        seasonStats = seasonStatsResult.getOrNull(),
                     )
                 _uiState.update {
                     it.copy(
@@ -81,12 +84,15 @@ class TeamViewModel(
                 membersResult.exceptionOrNull()?.let { throwable ->
                     Log.w(TAG, "Failed to load team members.", throwable)
                 }
+                seasonStatsResult.exceptionOrNull()?.let { throwable ->
+                    Log.w(TAG, "Failed to load team season stats.", throwable)
+                }
             }.onFailure { throwable ->
                 val members =
-                    membersResult
-                        .getOrNull()
-                        .orEmpty()
-                        .map { member -> member.toEmptyTeamMember() }
+                    buildEmptyTeamMembers(
+                        members = membersResult.getOrNull(),
+                        seasonStats = seasonStatsResult.getOrNull(),
+                    )
                 _uiState.update {
                     it.copy(
                         hasTeam = true,
@@ -105,6 +111,9 @@ class TeamViewModel(
                 membersResult.exceptionOrNull()?.let { memberThrowable ->
                     Log.w(TAG, "Failed to load team members.", memberThrowable)
                 }
+                seasonStatsResult.exceptionOrNull()?.let { statsThrowable ->
+                    Log.w(TAG, "Failed to load team season stats.", statsThrowable)
+                }
             }
     }
 
@@ -119,22 +128,48 @@ class TeamViewModel(
     }
 }
 
+private fun buildEmptyTeamMembers(
+    members: List<TeamMemberSummary>?,
+    seasonStats: List<TeamMemberSeasonStats>?,
+): List<TeamMember> {
+    val statsByUserId = seasonStats.orEmpty().associateBy { stats -> stats.id }
+    if (members == null) {
+        return seasonStats
+            .orEmpty()
+            .map { stats -> stats.toEmptyTeamMember(stats.consecutiveRunDays.toRunningStatus()) }
+    }
+
+    return members.map { member ->
+        member.toEmptyTeamMember(statsByUserId[member.id]?.consecutiveRunDays.toRunningStatus())
+    }
+}
+
 private fun mergeMembersWithRuns(
     members: List<TeamMemberSummary>?,
     runs: List<TeamRunSummary>,
-    totalMemberCount: Int,
+    seasonStats: List<TeamMemberSeasonStats>?,
 ): List<TeamMember> {
+    val statsByUserId = seasonStats.orEmpty().associateBy { stats -> stats.id }
     if (members == null) {
-        return runs.map { run -> run.toTeamMember() }
+        if (seasonStats != null) {
+            val runsByUserId = runs.associateBy { run -> run.userId }
+            return seasonStats.map { stats ->
+                runsByUserId[stats.id]?.toTeamMember(stats)
+                    ?: stats.toEmptyTeamMember(stats.consecutiveRunDays.toRunningStatus())
+            }
+        }
+        return runs.map { run -> run.toTeamMember(statsByUserId[run.userId]) }
     }
 
     val runsByUserId = runs.associateBy { run -> run.userId }
     return members.map { member ->
-        runsByUserId[member.id]?.toTeamMember() ?: member.toEmptyTeamMember()
+        val stats = statsByUserId[member.id]
+        runsByUserId[member.id]?.toTeamMember(stats)
+            ?: member.toEmptyTeamMember(stats?.consecutiveRunDays.toRunningStatus())
     }
 }
 
-private fun TeamRunSummary.toTeamMember(): TeamMember =
+private fun TeamRunSummary.toTeamMember(seasonStats: TeamMemberSeasonStats?): TeamMember =
     TeamMember(
         id = userId,
         name = nickname,
@@ -142,10 +177,10 @@ private fun TeamRunSummary.toTeamMember(): TeamMember =
         time = durationSeconds.toDurationText(),
         pace = averagePaceSecondsPerKm.toPaceText(),
         calories = calories.toString(),
-        hasRunRecord = completed && (distanceMeters > 0 || durationSeconds > 0),
+        runningStatus = seasonStats?.consecutiveRunDays.toRunningStatus(hasRunRecord = hasRunRecord),
     )
 
-private fun TeamMemberSummary.toEmptyTeamMember(): TeamMember =
+private fun TeamMemberSummary.toEmptyTeamMember(runningStatus: RunningStatus = RunningStatus.Resting): TeamMember =
     TeamMember(
         id = id,
         name = nickname,
@@ -153,7 +188,33 @@ private fun TeamMemberSummary.toEmptyTeamMember(): TeamMember =
         time = 0.toDurationText(),
         pace = "-",
         calories = "0",
+        runningStatus = runningStatus,
     )
+
+private fun TeamMemberSeasonStats.toEmptyTeamMember(runningStatus: RunningStatus = RunningStatus.Resting): TeamMember =
+    TeamMember(
+        id = id,
+        name = nickname,
+        distance = 0.toKilometerText(),
+        time = 0.toDurationText(),
+        pace = "-",
+        calories = "0",
+        runningStatus = runningStatus,
+    )
+
+private val TeamRunSummary.hasRunRecord: Boolean
+    get() = completed && (distanceMeters > 0 || durationSeconds > 0)
+
+private fun Int?.toRunningStatus(hasRunRecord: Boolean = false): RunningStatus =
+    when {
+        this == null && hasRunRecord -> RunningStatus.Running
+        this == null -> RunningStatus.Resting
+        this >= 5 -> RunningStatus.FiveDayRunning
+        this >= 3 -> RunningStatus.ThreeDayRunning
+        this > 0 -> RunningStatus.Running
+        this <= -5 -> RunningStatus.LongResting
+        else -> RunningStatus.Resting
+    }
 
 private fun String.toKoreanDisplayText(): String =
     runCatching {

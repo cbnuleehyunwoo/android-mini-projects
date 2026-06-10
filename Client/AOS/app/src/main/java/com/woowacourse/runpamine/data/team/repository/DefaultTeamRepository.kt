@@ -4,6 +4,7 @@ import com.woowacourse.runpamine.data.team.remote.TeamRemoteDataSource
 import com.woowacourse.runpamine.domain.auth.AuthRepository
 import com.woowacourse.runpamine.domain.team.Team
 import com.woowacourse.runpamine.domain.team.TeamDailySummary
+import com.woowacourse.runpamine.domain.team.TeamMemberSeasonStats
 import com.woowacourse.runpamine.domain.team.TeamMemberSummary
 import com.woowacourse.runpamine.domain.team.TeamRepository
 
@@ -30,6 +31,11 @@ class DefaultTeamRepository(
 
     override suspend fun getMyTeamMembers(): List<TeamMemberSummary> =
         remoteDataSource.getMyTeamMembers(
+            accessToken = requireAccessToken(),
+        )
+
+    override suspend fun getMyTeamSeasonStats(): List<TeamMemberSeasonStats> =
+        remoteDataSource.getMyTeamSeasonStats(
             accessToken = requireAccessToken(),
         )
 
