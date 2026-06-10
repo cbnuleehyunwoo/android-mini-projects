@@ -37,6 +37,66 @@ struct TeamDailyMember: Identifiable, Equatable {
     var id: String { userID }
 }
 
+struct TeamSeasonStats: Equatable {
+    let season: TeamSeason
+    let team: TeamSeasonTeam
+    let members: [TeamSeasonMember]
+
+    var teamTotalDistanceMeters: Int {
+        members.reduce(0) { $0 + $1.seasonDistanceMeters }
+    }
+
+    var completedMemberCount: Int {
+        members.filter { $0.consecutiveRunDays > 0 }.count
+    }
+
+    var totalMemberCount: Int {
+        members.count
+    }
+
+    var runningTeam: RunningTeam? {
+        guard let id = UUID(uuidString: team.id) else { return nil }
+
+        return RunningTeam(
+            id: id,
+            name: team.name,
+            distanceKilometers: Double(teamTotalDistanceMeters) / 1_000,
+            memberCount: totalMemberCount,
+            memberLimit: max(totalMemberCount, 30),
+            inviteCode: ""
+        )
+    }
+}
+
+struct TeamSeason: Equatable {
+    let id: String
+    let name: String
+    let year: Int
+    let month: Int
+    let startsAt: Date
+    let endsAt: Date
+    let elapsedDays: Int
+}
+
+struct TeamSeasonTeam: Equatable {
+    let id: String
+    let name: String
+    let ownerID: String
+}
+
+struct TeamSeasonMember: Identifiable, Equatable {
+    let id: String
+    let nickname: String
+    let avatarKey: String?
+    let seasonDistanceMeters: Int
+    let seasonDurationSeconds: Int
+    let seasonCalories: Int
+    let seasonRunCount: Int
+    let seasonActiveDays: Int
+    let averagePaceSecondsPerKilometer: Int?
+    let consecutiveRunDays: Int
+}
+
 enum TeamError: LocalizedError, Equatable {
     case invalidName
     case invalidInviteCode

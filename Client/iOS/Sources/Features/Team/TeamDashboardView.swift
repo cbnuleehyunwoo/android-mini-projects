@@ -9,8 +9,8 @@ struct TeamDashboardView: View {
     let onJoinTeam: () -> Void
     let onInvite: () -> Void
     @State private var records: [RunningRecord] = RunningHistoryStore().load()
-    @State private var dailySummary: TeamDailySummary?
-    @State private var hasResolvedDailySummary = false
+    @State private var seasonStats: TeamSeasonStats?
+    @State private var hasResolvedSeasonStats = false
 
     var body: some View {
         Group {
@@ -23,7 +23,7 @@ struct TeamDashboardView: View {
             }
         }
         .task(id: team?.id) {
-            await refreshDailySummary()
+            await refreshSeasonStats()
         }
     }
 
@@ -96,15 +96,14 @@ struct TeamDashboardView: View {
     }
 
     private var memberCards: [TeamMemberCardModel] {
-        if let dailySummary {
-            return dailySummary.members.map { TeamMemberCardModel(member: $0) }
+        if let seasonStats {
+            return seasonStats.members.map { TeamMemberCardModel(member: $0) }
         }
 
         return [
             TeamMemberCardModel.runningMember(
                 id: "member-primary",
                 name: nickname,
-                imageName: "encho",
                 records: records
             ),
             TeamMemberCardModel.emptyBurger(index: 1)
@@ -112,8 +111,8 @@ struct TeamDashboardView: View {
     }
 
     private var teamDistanceText: String {
-        if let dailySummary {
-            return TeamDashboardFormatter.distanceKilometers(dailySummary.teamTotalDistanceMeters)
+        if let seasonStats {
+            return TeamDashboardFormatter.distanceKilometers(seasonStats.teamTotalDistanceMeters)
         }
 
         let totalDistance = records.reduce(0) { $0 + $1.distanceKilometers }
@@ -121,38 +120,38 @@ struct TeamDashboardView: View {
     }
 
     private var completedMemberCount: Int {
-        dailySummary?.completedMemberCount ?? memberCards.filter(\.hasRunRecord).count
+        seasonStats?.completedMemberCount ?? memberCards.filter(\.hasRunRecord).count
     }
 
     private var totalMemberCount: Int {
-        dailySummary?.totalMemberCount ?? memberCards.count
+        seasonStats?.totalMemberCount ?? memberCards.count
     }
 
     private var displayTeam: RunningTeam? {
-        dailySummary?.team ?? team
+        seasonStats?.runningTeam ?? team
     }
 
     private var shouldShowSkeleton: Bool {
-        team != nil && accessToken != nil && dailySummary == nil && !hasResolvedDailySummary
+        team != nil && accessToken != nil && seasonStats == nil && !hasResolvedSeasonStats
     }
 
     private var summaryDateText: String {
-        TeamDashboardFormatter.dateString(from: dailySummary?.date ?? Date())
+        TeamDashboardFormatter.dateString(from: Date())
     }
 
     @MainActor
-    private func refreshDailySummary() async {
+    private func refreshSeasonStats() async {
         guard team != nil, let accessToken else { return }
-        dailySummary = nil
-        hasResolvedDailySummary = false
+        seasonStats = nil
+        hasResolvedSeasonStats = false
 
         do {
-            dailySummary = try await teamService.fetchDailySummary(date: Date(), accessToken: accessToken)
+            seasonStats = try await teamService.fetchMyTeamSeasonStats(seasonID: nil, accessToken: accessToken)
         } catch {
-            dailySummary = nil
+            seasonStats = nil
         }
 
-        hasResolvedDailySummary = true
+        hasResolvedSeasonStats = true
     }
 }
 
@@ -384,7 +383,7 @@ private enum TeamSkeletonStyle {
 private struct TeamMemberCardModel: Identifiable {
     let id: String
     let name: String
-    let imageName: String
+    let animation: RunpamineLottieAnimation
     let distanceText: String
     let timeText: String
     let paceText: String
@@ -394,7 +393,7 @@ private struct TeamMemberCardModel: Identifiable {
     init(
         id: String,
         name: String,
-        imageName: String,
+        animation: RunpamineLottieAnimation,
         distanceText: String,
         timeText: String,
         paceText: String,
@@ -403,7 +402,7 @@ private struct TeamMemberCardModel: Identifiable {
     ) {
         self.id = id
         self.name = name
-        self.imageName = imageName
+        self.animation = animation
         self.distanceText = distanceText
         self.timeText = timeText
         self.paceText = paceText
@@ -411,21 +410,20 @@ private struct TeamMemberCardModel: Identifiable {
         self.hasRunRecord = hasRunRecord
     }
 
-    init(member: TeamDailyMember) {
+    init(member: TeamSeasonMember) {
         id = member.id
         name = member.nickname
-        imageName = TeamDashboardFormatter.imageName(for: member.avatarKey)
-        distanceText = TeamDashboardFormatter.memberDistanceKilometers(member.distanceMeters)
-        timeText = member.durationSeconds > 0 ? RunningMetricFormatter.duration(TimeInterval(member.durationSeconds)) : "--:--"
+        animation = .teamMember(consecutiveRunDays: member.consecutiveRunDays)
+        distanceText = TeamDashboardFormatter.memberDistanceKilometers(member.seasonDistanceMeters)
+        timeText = member.seasonDurationSeconds > 0 ? RunningMetricFormatter.duration(TimeInterval(member.seasonDurationSeconds)) : "--:--"
         paceText = "\(RunningMetricFormatter.pace(member.averagePaceSecondsPerKilometer.map(TimeInterval.init)))/km"
-        caloriesText = "\(member.calories)"
-        hasRunRecord = member.completed
+        caloriesText = "\(member.seasonCalories)"
+        hasRunRecord = member.consecutiveRunDays > 0
     }
 
     static func runningMember(
         id: String,
         name: String,
-        imageName: String,
         records: [RunningRecord]
     ) -> TeamMemberCardModel {
         let totalDistanceMeters = records.reduce(0) { $0 + $1.distanceMeters }
@@ -437,7 +435,7 @@ private struct TeamMemberCardModel: Identifiable {
         return TeamMemberCardModel(
             id: id,
             name: name,
-            imageName: imageName,
+            animation: .teamMember(consecutiveRunDays: TeamRunStreakCalculator.consecutiveRunDays(from: records)),
             distanceText: "\(totalDistanceKilometers.formatted(.number.precision(.fractionLength(1)))) km",
             timeText: totalElapsedTime > 0 ? RunningMetricFormatter.duration(totalElapsedTime) : "--:--",
             paceText: "\(RunningMetricFormatter.pace(averagePace))/km",
@@ -450,7 +448,7 @@ private struct TeamMemberCardModel: Identifiable {
         TeamMemberCardModel(
             id: "member-empty-\(index)",
             name: "버거킹 스마일",
-            imageName: "bk",
+            animation: .hamburger,
             distanceText: "0.0 km",
             timeText: "--:--",
             paceText: "0'00\"/km",
@@ -470,9 +468,7 @@ private struct TeamMemberRunCard: View {
                 .foregroundStyle(.black)
 
             HStack(spacing: 0) {
-                Image(member.imageName)
-                    .resizable()
-                    .scaledToFill()
+                RunpamineLottieView(animation: member.animation)
                     .frame(width: 80, height: 80)
                     .clipped()
 
@@ -604,18 +600,39 @@ private enum TeamDashboardFormatter {
         let kilometers = Double(distanceMeters) / 1_000
         return "\(kilometers.formatted(.number.precision(.fractionLength(1)))) km"
     }
+}
 
-    static func imageName(for avatarKey: String?) -> String {
-        switch avatarKey {
-        case "runner_default", "encho":
-            return "encho"
-        case "burger_default", "bk":
-            return "bk"
-        default:
-            return "bk"
+private enum TeamRunStreakCalculator {
+    private static var calendar: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "Asia/Seoul") ?? .current
+        return calendar
+    }
+
+    static func consecutiveRunDays(from records: [RunningRecord], now: Date = Date()) -> Int {
+        let runningDays = Set(records.map { calendar.startOfDay(for: $0.startedAt) })
+        guard !runningDays.isEmpty else { return -1 }
+
+        let today = calendar.startOfDay(for: now)
+        if runningDays.contains(today) {
+            var count = 0
+            var day = today
+
+            while runningDays.contains(day) {
+                count += 1
+                guard let previousDay = calendar.date(byAdding: .day, value: -1, to: day) else { break }
+                day = previousDay
+            }
+
+            return count
         }
+
+        guard let latestRunDay = runningDays.max() else { return -1 }
+        let missedDays = calendar.dateComponents([.day], from: latestRunDay, to: today).day ?? 1
+        return -max(missedDays, 1)
     }
 }
+
 
 #Preview("팀 기록 화면") {
     TeamDashboardView(
@@ -641,7 +658,7 @@ private enum TeamDashboardFormatter {
         member: TeamMemberCardModel(
             id: "member-preview",
             name: "커비",
-            imageName: "encho",
+            animation: .running,
             distanceText: "12.0 km",
             timeText: "10:00",
             paceText: "0'50\"/km",
