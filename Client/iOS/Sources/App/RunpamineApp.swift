@@ -7,11 +7,13 @@ struct RunpamineApp: App {
     private let profileService: ProfileServiceProtocol
     private let runService: RunServiceProtocol
     private let teamService: TeamServiceProtocol
+    private let rankingService: RankingServiceProtocol
 
     init() {
         profileService = (try? ProfileAPIService()) ?? MockProfileService()
         runService = (try? RunAPIService()) ?? MockRunService()
         teamService = (try? TeamAPIService()) ?? MockTeamService(store: store)
+        rankingService = (try? RankingAPIService()) ?? MockRankingService()
     }
 
     var body: some Scene {
@@ -21,6 +23,7 @@ struct RunpamineApp: App {
                 profileService: profileService,
                 runService: runService,
                 teamService: teamService,
+                rankingService: rankingService,
                 store: store
             )
                 .onOpenURL { url in
