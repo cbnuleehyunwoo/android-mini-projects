@@ -35,9 +35,11 @@ import java.util.Locale
 @Composable
 fun RecordItem(
     record: RunningRecord,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(
+        onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -144,7 +146,9 @@ private fun RecordItemPreview() {
                     distanceKm = 5.0,
                     duration = "28:45",
                     pace = "5'45\"/km",
+                    calories = 344,
                 ),
+            onClick = {},
         )
     }
 }

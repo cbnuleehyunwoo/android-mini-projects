@@ -91,6 +91,7 @@ private fun RunSession.toRunningRecord(): RunningRecord =
         distanceKm = distanceMeters / METERS_PER_KILOMETER,
         duration = durationSeconds.toDurationText(),
         pace = averagePaceSecondsPerKm.toPaceText(),
+        calories = calories,
     )
 
 private fun Long.toDurationText(): String {

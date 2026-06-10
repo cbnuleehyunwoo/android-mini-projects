@@ -10,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.woowacourse.runpamine.presentation.createteam.CreateTeamScreen
+import com.woowacourse.runpamine.presentation.history.HistoryScreen
 import com.woowacourse.runpamine.presentation.home.HomeScreen
 import com.woowacourse.runpamine.presentation.invite.InviteTeamScreen
 import com.woowacourse.runpamine.presentation.join.JoinScreen
@@ -21,6 +22,7 @@ import com.woowacourse.runpamine.presentation.ranking.RankingScreen
 import com.woowacourse.runpamine.presentation.record.RecordScreen
 import com.woowacourse.runpamine.presentation.running.RunningScreen
 import com.woowacourse.runpamine.presentation.team.TeamScreen
+import java.util.Locale
 
 @Composable
 fun NavHost(
@@ -88,7 +90,45 @@ fun NavHost(
         }
 
         composable(AppRoute.Record.route) {
-            RecordScreen()
+            RecordScreen(
+                onRecordClick = { record ->
+                    navController.navigate(
+                        AppRoute.History.createRoute(
+                            distance = String.format(Locale.getDefault(), "%.1f", record.distanceKm),
+                            time = record.duration,
+                            pace = record.pace.removeSuffix("/km"),
+                            calories = record.calories.toString(),
+                        ),
+                    )
+                },
+            )
+        }
+
+        composable(
+            route = AppRoute.History.route,
+            arguments =
+                listOf(
+                    navArgument(AppRoute.History.DISTANCE) {
+                        type = NavType.StringType
+                    },
+                    navArgument(AppRoute.History.TIME) {
+                        type = NavType.StringType
+                    },
+                    navArgument(AppRoute.History.PACE) {
+                        type = NavType.StringType
+                    },
+                    navArgument(AppRoute.History.CALORIES) {
+                        type = NavType.StringType
+                    },
+                ),
+        ) { backStackEntry ->
+            HistoryScreen(
+                distance = backStackEntry.arguments?.getString(AppRoute.History.DISTANCE).orEmpty(),
+                time = backStackEntry.arguments?.getString(AppRoute.History.TIME).orEmpty(),
+                pace = backStackEntry.arguments?.getString(AppRoute.History.PACE).orEmpty(),
+                calories = backStackEntry.arguments?.getString(AppRoute.History.CALORIES).orEmpty(),
+                onBack = navController::popBackStack,
+            )
         }
 
         composable(AppRoute.Ranking.route) {

@@ -8,4 +8,5 @@ data class RunningRecord(
     val distanceKm: Double,
     val duration: String,
     val pace: String,
+    val calories: Int,
 )

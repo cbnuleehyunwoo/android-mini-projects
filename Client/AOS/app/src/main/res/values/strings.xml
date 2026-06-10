@@ -33,6 +33,7 @@
     <string name="no_team_join_team_button">초대 코드로 팀에 들어가요</string>
     <string name="team_loading">팀 정보를 불러오고 있어요...</string>
     <string name="record_title">기록</string>
+    <string name="history_title">러닝 기록</string>
     <string name="record_period_week">주</string>
     <string name="record_period_month">월</string>
     <string name="record_distance_unit">KM</string>

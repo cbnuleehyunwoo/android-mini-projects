@@ -1,5 +1,7 @@
 package com.woowacourse.runpamine.presentation.navigation
 
+import android.net.Uri
+
 sealed interface AppRoute {
     val route: String
 
@@ -21,6 +23,24 @@ sealed interface AppRoute {
 
     data object Record : AppRoute {
         override val route = "record"
+    }
+
+    data object History : AppRoute {
+        const val DISTANCE = "distance"
+        const val TIME = "time"
+        const val PACE = "pace"
+        const val CALORIES = "calories"
+
+        override val route = "history/{$DISTANCE}/{$TIME}/{$PACE}/{$CALORIES}"
+
+        fun createRoute(
+            distance: String,
+            time: String,
+            pace: String,
+            calories: String,
+        ): String =
+            listOf("history", distance, time, pace, calories)
+                .joinToString(separator = "/") { value -> Uri.encode(value) }
     }
 
     data object Ranking : AppRoute {
