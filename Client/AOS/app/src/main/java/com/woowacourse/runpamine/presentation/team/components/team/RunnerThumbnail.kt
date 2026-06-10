@@ -12,11 +12,12 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.tooling.preview.Preview
 import com.woowacourse.runpamine.R
 import com.woowacourse.runpamine.presentation.component.RunpamineLottie
+import com.woowacourse.runpamine.presentation.team.model.RunningStatus
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
 @Composable
 fun RunnerThumbnail(
-    hasRunRecord: Boolean,
+    runningStatus: RunningStatus,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -27,29 +28,48 @@ fun RunnerThumbnail(
         contentAlignment = Alignment.Center,
     ) {
         RunpamineLottie(
-            rawResId = if (hasRunRecord) R.raw.encho_lottie15 else R.raw.hamberger_1,
+            rawResId = runningStatus.rawResId,
+            speed = runningStatus.speed,
             modifier =
                 Modifier
                     .fillMaxSize()
                     .then(
-                        if (hasRunRecord) {
-                            Modifier
-                        } else {
+                        if (runningStatus == RunningStatus.LongResting) {
                             Modifier.graphicsLayer {
                                 transformOrigin = TransformOrigin(0f, 0f)
                                 scaleX = 2.67f
                                 scaleY = 2.67f
                             }
+                        } else {
+                            Modifier
                         },
                     ),
         )
     }
 }
 
+private val RunningStatus.rawResId: Int
+    get() =
+        when (this) {
+            RunningStatus.LongResting -> R.raw.hamberger_1
+            RunningStatus.Resting -> R.raw.no_run
+            RunningStatus.Running -> R.raw.encho_lottie10
+            RunningStatus.ThreeDayRunning -> R.raw.reverse
+            RunningStatus.FiveDayRunning -> R.raw.cheeta
+        }
+
+private val RunningStatus.speed: Float
+    get() =
+        when (this) {
+            RunningStatus.ThreeDayRunning -> 0.75f
+            RunningStatus.FiveDayRunning -> 1.5f
+            else -> 1f
+        }
+
 @Preview(showBackground = true)
 @Composable
 private fun RunnerThumbnailPreview() {
     RunpamineTheme {
-        RunnerThumbnail(hasRunRecord = true)
+        RunnerThumbnail(runningStatus = RunningStatus.Running)
     }
 }

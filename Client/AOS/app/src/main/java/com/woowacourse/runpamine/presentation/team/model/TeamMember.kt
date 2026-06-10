@@ -7,5 +7,13 @@ data class TeamMember(
     val time: String,
     val pace: String,
     val calories: String,
-    val hasRunRecord: Boolean = false,
+    val runningStatus: RunningStatus = RunningStatus.Resting,
 )
+
+enum class RunningStatus {
+    LongResting,
+    Resting,
+    Running,
+    ThreeDayRunning,
+    FiveDayRunning,
+}

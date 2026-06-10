@@ -15,6 +15,7 @@ fun RunpamineLottie(
     @RawRes rawResId: Int,
     modifier: Modifier = Modifier,
     iterations: Int = LottieConstants.IterateForever,
+    speed: Float = 1f,
     contentScale: ContentScale = ContentScale.Fit,
 ) {
     val composition = rememberLottieComposition(LottieCompositionSpec.RawRes(rawResId))
@@ -22,6 +23,7 @@ fun RunpamineLottie(
         animateLottieCompositionAsState(
             composition = composition.value,
             iterations = iterations,
+            speed = speed,
         )
 
     LottieAnimation(

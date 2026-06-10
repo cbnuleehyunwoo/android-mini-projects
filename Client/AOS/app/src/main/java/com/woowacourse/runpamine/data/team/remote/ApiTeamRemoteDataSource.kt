@@ -3,6 +3,7 @@ package com.woowacourse.runpamine.data.team.remote
 import android.util.Log
 import com.woowacourse.runpamine.domain.team.Team
 import com.woowacourse.runpamine.domain.team.TeamDailySummary
+import com.woowacourse.runpamine.domain.team.TeamMemberSeasonStats
 import com.woowacourse.runpamine.domain.team.TeamMemberSummary
 import com.woowacourse.runpamine.domain.team.TeamRunSummary
 import kotlinx.coroutines.Dispatchers
@@ -74,6 +75,20 @@ class ApiTeamRemoteDataSource(
                 }
             List(members.length()) { index ->
                 members.getJSONObject(index).toTeamMemberSummary()
+            }
+        }
+
+    override suspend fun getMyTeamSeasonStats(accessToken: String): List<TeamMemberSeasonStats> =
+        withContext(Dispatchers.IO) {
+            val response =
+                request(
+                    path = "/teams/me/season-stats",
+                    method = "GET",
+                    accessToken = accessToken,
+                )
+            val members = response.getJSONObject("data").getJSONArray("members")
+            List(members.length()) { index ->
+                members.getJSONObject(index).toTeamMemberSeasonStats()
             }
         }
 
@@ -163,6 +178,14 @@ private fun JSONObject.toTeamMemberSummary(): TeamMemberSummary =
             optString("nickname")
                 .ifBlank { optJSONObject("profile")?.optString("nickname").orEmpty() },
         avatarKey = optString("avatarKey").takeIf { it.isNotBlank() },
+    )
+
+private fun JSONObject.toTeamMemberSeasonStats(): TeamMemberSeasonStats =
+    TeamMemberSeasonStats(
+        id = getString("id"),
+        nickname = getString("nickname"),
+        avatarKey = optString("avatarKey").takeIf { it.isNotBlank() },
+        consecutiveRunDays = getInt("consecutiveRunDays"),
     )
 
 private fun JSONObject.toTeamDailySummary(): TeamDailySummary {

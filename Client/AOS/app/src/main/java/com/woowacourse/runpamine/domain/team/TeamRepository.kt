@@ -9,5 +9,7 @@ interface TeamRepository {
 
     suspend fun getMyTeamMembers(): List<TeamMemberSummary>
 
+    suspend fun getMyTeamSeasonStats(): List<TeamMemberSeasonStats>
+
     suspend fun getMyTeamDailySummary(): TeamDailySummary
 }
