@@ -88,7 +88,9 @@ struct RankingView: View {
 
     private var summaryCard: some View {
         Group {
-            if let summary = currentSummary {
+            if isLoading, currentSummary == nil {
+                RankingSummarySkeletonCard()
+            } else if let summary = currentSummary {
                 HStack(spacing: 18) {
                     RankBadge(rank: summary.rank, isHighlighted: true)
 
@@ -138,9 +140,7 @@ struct RankingView: View {
             }
 
             if isLoading, rows.isEmpty {
-                ProgressView()
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 180)
+                RankingRowsSkeleton()
             } else if rows.isEmpty {
                 Text(errorMessage ?? "아직 표시할 랭킹이 없습니다.")
                     .font(AppTheme.Typography.font(size: 16, weight: .semibold))
@@ -402,6 +402,81 @@ private struct RankingRow: View {
         .background(row.isHighlighted ? Color(red: 0.92, green: 0.96, blue: 1.0) : Color(red: 0.98, green: 0.98, blue: 0.99))
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
+}
+
+private struct RankingSummarySkeletonCard: View {
+    var body: some View {
+        HStack(spacing: 18) {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(RankingSkeletonStyle.fill)
+                .frame(width: 44, height: 44)
+
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(RankingSkeletonStyle.fill)
+                .frame(width: 96, height: 22)
+
+            Spacer(minLength: 12)
+
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(RankingSkeletonStyle.fill)
+                .frame(width: 132, height: 22)
+        }
+        .padding(.horizontal, 24)
+        .frame(height: 96)
+        .background(Color(red: 0.92, green: 0.96, blue: 1.0))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .allowsHitTesting(false)
+    }
+}
+
+private struct RankingRowsSkeleton: View {
+    var body: some View {
+        VStack(spacing: 10) {
+            ForEach(0..<6, id: \.self) { index in
+                RankingRowSkeleton(isHighlighted: index == 1)
+            }
+        }
+        .allowsHitTesting(false)
+    }
+}
+
+private struct RankingRowSkeleton: View {
+    let isHighlighted: Bool
+
+    var body: some View {
+        HStack(spacing: 16) {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(RankingSkeletonStyle.badgeFill)
+                .frame(width: 44, height: 44)
+
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(RankingSkeletonStyle.fill)
+                .frame(width: nameWidth, height: 20)
+
+            Spacer(minLength: 12)
+
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(RankingSkeletonStyle.fill)
+                .frame(width: valueWidth, height: 20)
+        }
+        .padding(.horizontal, 18)
+        .frame(height: 64)
+        .background(isHighlighted ? Color(red: 0.92, green: 0.96, blue: 1.0) : Color(red: 0.98, green: 0.98, blue: 0.99))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+
+    private var nameWidth: CGFloat {
+        isHighlighted ? 92 : 76
+    }
+
+    private var valueWidth: CGFloat {
+        isHighlighted ? 104 : 84
+    }
+}
+
+private enum RankingSkeletonStyle {
+    static let fill = Color(red: 0.86, green: 0.89, blue: 0.94)
+    static let badgeFill = Color(red: 0.72, green: 0.77, blue: 0.84)
 }
 
 private struct RankBadge: View {
