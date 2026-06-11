@@ -66,7 +66,7 @@ struct RankingView: View {
             scopeButton(.team)
             scopeButton(.personal)
         }
-        .padding(4)
+        .padding(RankingLayout.filterPadding)
         .frame(height: RankingLayout.filterOuterHeight)
         .background(Color(red: 0.88, green: 0.88, blue: 0.88))
         .clipShape(Capsule())
@@ -80,7 +80,7 @@ struct RankingView: View {
             metricButton(.pace, title: "페이스")
             metricButton(.consistency, title: "스트릭")
         }
-        .padding(4)
+        .padding(RankingLayout.filterPadding)
         .frame(height: RankingLayout.filterOuterHeight)
         .background(Color(red: 0.88, green: 0.88, blue: 0.88))
         .clipShape(Capsule())
@@ -170,7 +170,7 @@ struct RankingView: View {
             }
         } label: {
             Text(scope.title)
-                .font(AppTheme.Typography.font(size: 18, weight: .bold))
+                .font(AppTheme.Typography.font(size: RankingLayout.scopeFontSize, weight: .bold))
                 .foregroundStyle(selectedScope == scope ? Color.white : Color(red: 0.61, green: 0.66, blue: 0.73))
                 .frame(maxWidth: .infinity)
                 .frame(height: RankingLayout.filterInnerHeight)
@@ -191,7 +191,7 @@ struct RankingView: View {
             }
         } label: {
             Text(title)
-                .font(AppTheme.Typography.font(size: 16, weight: .bold))
+                .font(AppTheme.Typography.font(size: RankingLayout.metricFontSize, weight: .bold))
                 .foregroundStyle(selectedMetric == metric ? Color.white : Color(red: 0.61, green: 0.66, blue: 0.73))
                 .frame(maxWidth: .infinity)
                 .frame(height: RankingLayout.filterInnerHeight)
@@ -345,8 +345,13 @@ struct RankingView: View {
 }
 
 private enum RankingLayout {
-    static let filterOuterHeight: CGFloat = 42
-    static let filterInnerHeight: CGFloat = 34
+    private static let filterScale: CGFloat = 1.5
+
+    static let filterPadding: CGFloat = 4 * filterScale
+    static let filterOuterHeight: CGFloat = 42 * filterScale
+    static let filterInnerHeight: CGFloat = 34 * filterScale
+    static let scopeFontSize: CGFloat = 18 * filterScale
+    static let metricFontSize: CGFloat = 16 * filterScale
 }
 
 private enum RankingScope {
