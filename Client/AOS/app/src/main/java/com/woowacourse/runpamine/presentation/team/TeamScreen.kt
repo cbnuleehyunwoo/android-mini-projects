@@ -130,13 +130,13 @@ private fun TeamHeaderSkeleton(modifier: Modifier = Modifier) {
         TeamSkeletonBox(
             modifier =
                 Modifier
-                    .height(46.dp)
+                    .height(36.dp)
                     .weight(1f),
             shape = RoundedCornerShape(12.dp),
         )
         Spacer(modifier = Modifier.width(48.dp))
         TeamSkeletonBox(
-            modifier = Modifier.size(50.dp),
+            modifier = Modifier.size(48.dp),
             shape = RoundedCornerShape(14.dp),
         )
     }
@@ -151,8 +151,8 @@ private fun TeamDateSkeleton(modifier: Modifier = Modifier) {
         TeamSkeletonBox(
             modifier =
                 Modifier
-                    .fillMaxWidth(0.62f)
-                    .height(32.dp),
+                    .fillMaxWidth(0.58f)
+                    .height(24.dp),
             shape = RoundedCornerShape(12.dp),
         )
     }
@@ -163,7 +163,7 @@ private fun TeamSummarySkeletonCard(modifier: Modifier = Modifier) {
     Column(
         modifier =
             modifier
-                .height(96.dp)
+                .height(72.dp)
                 .teamSkeletonCard(shape = RoundedCornerShape(14.dp)),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -171,16 +171,16 @@ private fun TeamSummarySkeletonCard(modifier: Modifier = Modifier) {
         TeamSkeletonBox(
             modifier =
                 Modifier
-                    .fillMaxWidth(0.55f)
-                    .height(28.dp),
+                    .fillMaxWidth(0.52f)
+                    .height(24.dp),
             shape = RoundedCornerShape(10.dp),
         )
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(6.dp))
         TeamSkeletonBox(
             modifier =
                 Modifier
                     .fillMaxWidth(0.48f)
-                    .height(18.dp),
+                    .height(14.dp),
             shape = RoundedCornerShape(8.dp),
         )
     }
@@ -192,25 +192,25 @@ private fun TeamMemberSkeletonCard(modifier: Modifier = Modifier) {
         modifier =
             modifier
                 .fillMaxWidth()
-                .height(196.dp)
+                .height(168.dp)
                 .teamSkeletonCard(shape = RoundedCornerShape(18.dp))
-                .padding(16.dp),
+                .padding(25.dp),
     ) {
         TeamSkeletonBox(
             modifier =
                 Modifier
                     .fillMaxWidth(0.42f)
-                    .height(30.dp),
+                    .height(28.dp),
             shape = RoundedCornerShape(10.dp),
         )
-        Spacer(modifier = Modifier.height(26.dp))
+        Spacer(modifier = Modifier.height(20.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(15.dp),
         ) {
             TeamSkeletonBox(
-                modifier = Modifier.size(82.dp),
+                modifier = Modifier.size(80.dp),
                 shape = RoundedCornerShape(0.dp),
             )
             Column(
@@ -224,9 +224,9 @@ private fun TeamMemberSkeletonCard(modifier: Modifier = Modifier) {
             TeamSkeletonBox(
                 modifier =
                     Modifier
-                        .width(72.dp)
-                        .height(100.dp),
-                shape = RoundedCornerShape(20.dp),
+                        .width(58.dp)
+                        .height(76.dp),
+                shape = RoundedCornerShape(12.dp),
             )
         }
     }
@@ -240,21 +240,21 @@ private fun TeamMetricSkeletonRow(modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         TeamSkeletonBox(
-            modifier = Modifier.size(18.dp),
+            modifier = Modifier.size(14.dp),
             shape = RoundedCornerShape(5.dp),
         )
         TeamSkeletonBox(
             modifier =
                 Modifier
-                    .width(36.dp)
-                    .height(18.dp),
+                    .width(28.dp)
+                    .height(13.dp),
             shape = RoundedCornerShape(6.dp),
         )
         TeamSkeletonBox(
             modifier =
                 Modifier
-                    .width(62.dp)
-                    .height(18.dp),
+                    .width(54.dp)
+                    .height(13.dp),
             shape = RoundedCornerShape(6.dp),
         )
     }

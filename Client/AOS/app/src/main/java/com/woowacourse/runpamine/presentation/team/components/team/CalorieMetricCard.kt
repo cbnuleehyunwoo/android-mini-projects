@@ -50,12 +50,12 @@ fun CalorieMetricCard(
         )
         Text(
             text = calories,
-            style = MaterialTheme.typography.titleMedium.copy(fontSize = 20.sp),
+            style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp),
             color = Color(0xFFEA580C),
         )
         Text(
             text = "kcal",
-            style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+            style = MaterialTheme.typography.bodySmall.copy(fontSize = 8.sp),
             color = Color(0xFFEA580C),
         )
     }

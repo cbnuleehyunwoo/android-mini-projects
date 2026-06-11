@@ -26,8 +26,6 @@ fun NoTeamScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        NoTeamIcon()
-        Spacer(modifier = Modifier.height(10.dp))
         NoTeamHeader()
         Spacer(modifier = Modifier.height(10.dp))
         NoTeamButtonSection(

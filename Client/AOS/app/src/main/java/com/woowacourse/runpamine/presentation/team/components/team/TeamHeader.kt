@@ -35,7 +35,7 @@ fun TeamHeader(
             modifier = Modifier.weight(1f),
             style =
                 MaterialTheme.typography.headlineLarge.copy(
-                    fontSize = 26.sp,
+                    fontSize = 30.sp,
                     lineHeight = 36.sp,
                 ),
             fontWeight = FontWeight.Black,

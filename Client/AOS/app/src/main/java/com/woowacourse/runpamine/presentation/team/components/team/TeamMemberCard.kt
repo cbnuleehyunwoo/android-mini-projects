@@ -48,7 +48,7 @@ fun TeamMemberCard(
                 ).background(
                     color = Color.White,
                     shape = cardShape,
-                ).padding(12.dp),
+                ).padding(25.dp),
     ) {
         Text(
             text = member.name,
