@@ -21,7 +21,6 @@ fun InviteTeamHeader(modifier: Modifier = Modifier) {
         Text(
             text = stringResource(R.string.invite_code_description),
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.surface,
         )
     }
 }
