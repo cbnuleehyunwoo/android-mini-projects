@@ -12,12 +12,10 @@ struct HomeView: View {
     var body: some View {
         VStack(spacing: 0) {
             HomeHeaderView(nickname: nickname, onOpenMyPage: onOpenMyPage)
-                .padding(.horizontal, 20)
-                .padding(.top, 26)
+                .padding(.trailing, 20)
 
             TeamStatusCard(team: team, onCreateTeam: onCreateTeam, onJoinTeam: onJoinTeam)
                 .padding(.horizontal, 20)
-                .padding(.top, 28)
 
             ZStack(alignment: .bottom) {
                 HomeMapView()
@@ -68,15 +66,13 @@ private struct HomeHeaderView: View {
     let onOpenMyPage: () -> Void
 
     var body: some View {
-        HStack(spacing: 10) {
-            Circle()
-                .fill(AppTheme.Colors.primary)
-                .frame(width: 34, height: 34)
-                .overlay {
-                    Image(systemName: "person.fill")
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(.white)
-                }
+        HStack(spacing: 1) {
+            Image("app_logo_face")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 90, height: 90)
+                .padding(.trailing, -12)
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("안녕하세요, \(nickname)님!")
