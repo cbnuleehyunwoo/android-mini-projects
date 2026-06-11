@@ -13,8 +13,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -90,7 +92,7 @@ private fun RankingContent(
     Column(
         modifier = modifier.fillMaxSize(),
     ) {
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(10.dp))
         RankingScopeTabs(
             selectedScope = uiState.selectedScope,
             onScopeSelect = onScopeSelect,
@@ -200,7 +202,7 @@ private fun RankingScopeTab(
         Text(
             text = scope.label,
             color = if (selected) Blue40 else Gray40,
-            style = MaterialTheme.typography.bodySmall.copy(fontSize = 18.sp),
+            style = MaterialTheme.typography.titleSmall.copy(fontSize = 18.sp),
             textAlign = TextAlign.Center,
         )
         if (selected) {
@@ -246,7 +248,7 @@ private fun RankingRow(
             text = item.valueText,
             color = if (item.isMine) Blue40 else Color(0xFFA2ACBA),
             fontSize = 18.sp,
-            fontWeight = FontWeight.ExtraBold,
+            fontWeight = FontWeight.Bold,
             textAlign = TextAlign.End,
         )
     }
@@ -311,7 +313,7 @@ private fun MyRankingCard(
         Text(
             text = item.name,
             color = Blue40,
-            fontSize = 16.sp,
+            fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.weight(1f),
         )
@@ -319,7 +321,7 @@ private fun MyRankingCard(
             text = item.highlightText,
             color = Blue40,
             fontSize = 20.sp,
-            fontWeight = FontWeight.ExtraBold,
+            fontWeight = FontWeight.Bold,
             textAlign = TextAlign.End,
         )
     }
@@ -404,30 +406,29 @@ private fun MyRankingSkeletonCard(modifier: Modifier = Modifier) {
             modifier
                 .clip(RoundedCornerShape(12.dp))
                 .background(Blue10)
-                .padding(horizontal = 24.dp, vertical = 28.dp),
+                .padding(horizontal = 16.dp, vertical = 28.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(20.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         RankingSkeletonBox(
             modifier =
                 Modifier
-                    .height(46.dp)
-                    .weight(0.18f),
+                    .size(34.dp),
             color = RankingSkeletonDarkColor,
-            shape = RoundedCornerShape(14.dp),
+            shape = RoundedCornerShape(10.dp),
         )
         RankingSkeletonBox(
             modifier =
                 Modifier
-                    .height(24.dp)
-                    .weight(0.42f),
+                    .width(78.dp)
+                    .height(22.dp),
         )
-        Spacer(modifier = Modifier.weight(0.12f))
+        Spacer(modifier = Modifier.weight(1f))
         RankingSkeletonBox(
             modifier =
                 Modifier
+                    .width(118.dp)
                     .height(24.dp)
-                    .weight(0.56f),
         )
     }
 }
@@ -442,23 +443,25 @@ private fun RankingListSkeletonCard(
         modifier = modifier.padding(horizontal = 20.dp, vertical = 22.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = selectedScope.skeletonTitle,
-                color = Color(0xFF111827),
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f),
-            )
-            Text(
-                text = selectedMetric.standardLabel(selectedScope),
-                color = Color(0xFFA6AFBD),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-            )
+        if (selectedScope == RankingScope.TEAM) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = selectedScope.skeletonTitle,
+                    color = Color(0xFF111827),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    text = selectedMetric.standardLabel(selectedScope),
+                    color = Color(0xFFA6AFBD),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
         }
         repeat(RANKING_SKELETON_ROW_COUNT) { index ->
             RankingRowSkeleton(selected = index == 1)
@@ -481,23 +484,22 @@ private fun RankingRowSkeleton(selected: Boolean) {
         RankingSkeletonBox(
             modifier =
                 Modifier
-                    .height(34.dp)
-                    .weight(0.16f),
+                    .size(34.dp),
             color = RankingSkeletonDarkColor,
             shape = RoundedCornerShape(10.dp),
         )
         RankingSkeletonBox(
             modifier =
                 Modifier
+                    .width(96.dp)
                     .height(22.dp)
-                    .weight(0.5f),
         )
-        Spacer(modifier = Modifier.weight(0.35f))
+        Spacer(modifier = Modifier.weight(1f))
         RankingSkeletonBox(
             modifier =
                 Modifier
+                    .width(68.dp)
                     .height(22.dp)
-                    .weight(0.55f),
         )
     }
 }
