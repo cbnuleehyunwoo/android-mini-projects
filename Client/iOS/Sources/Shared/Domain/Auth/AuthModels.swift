@@ -25,9 +25,11 @@ enum TermsAgreementID: String, CaseIterable, Codable {
 }
 
 enum AuthError: LocalizedError, Equatable {
+    case accountDeletionFailed
     case cancelled
     case invalidNickname
     case missingAppleIdentityToken
+    case missingAccountDeletionConfiguration
     case missingGoogleConfiguration
     case missingGoogleIDToken
     case missingLogoutConfiguration
@@ -37,12 +39,16 @@ enum AuthError: LocalizedError, Equatable {
 
     var errorDescription: String? {
         switch self {
+        case .accountDeletionFailed:
+            return "회원탈퇴에 실패했어요. 잠시 후 다시 시도해주세요."
         case .cancelled:
             return "로그인이 취소되었어요."
         case .invalidNickname:
             return "닉네임을 다시 확인해주세요."
         case .missingAppleIdentityToken:
             return "Apple 로그인 정보를 가져오지 못했어요."
+        case .missingAccountDeletionConfiguration:
+            return "회원탈퇴 설정을 확인해주세요."
         case .missingGoogleConfiguration:
             return "Google 로그인 설정을 확인해주세요."
         case .missingGoogleIDToken:

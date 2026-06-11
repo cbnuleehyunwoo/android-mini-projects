@@ -10,6 +10,7 @@ protocol AuthServiceProtocol {
     func loginWithApple(identityToken: String) async throws -> AuthSession
     func completeSignup(profile: SignupProfile) async throws -> AuthSession
     func logout(accessToken: String) async throws
+    func deleteAccount(accessToken: String) async throws
 }
 
 @MainActor
@@ -177,6 +178,34 @@ final class SupabaseAuthService: AuthServiceProtocol {
         try? await supabase?.auth.signOut(scope: .local)
     }
 
+    func deleteAccount(accessToken: String) async throws {
+        guard let apiBaseURL else {
+            throw AuthError.missingAccountDeletionConfiguration
+        }
+
+        let deletionAccessToken = await currentAccessToken() ?? accessToken
+        var request = URLRequest(url: apiBaseURL.appendingAPIPath("/account/me"))
+        request.httpMethod = "DELETE"
+        request.setValue("Bearer \(deletionAccessToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+
+        let (data, response) = try await session.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw AuthError.accountDeletionFailed
+        }
+
+        guard 200..<300 ~= httpResponse.statusCode else {
+            throw AuthError.accountDeletionFailed
+        }
+
+        let envelope = try decoder.decode(AuthDeleteAccountEnvelope.self, from: data)
+        guard envelope.data.deleted else {
+            throw AuthError.accountDeletionFailed
+        }
+
+        try? await supabase?.auth.signOut(scope: .local)
+    }
+
     private func currentAccessToken() async -> String? {
         guard let supabase else { return nil }
         return try? await supabase.auth.session.accessToken
@@ -241,6 +270,10 @@ final class MockAuthService: AuthServiceProtocol {
     func logout(accessToken: String) async throws {
         try await Task.sleep(nanoseconds: 250_000_000)
     }
+
+    func deleteAccount(accessToken: String) async throws {
+        try await Task.sleep(nanoseconds: 350_000_000)
+    }
 }
 
 enum AuthNonce {
@@ -273,6 +306,14 @@ private struct AuthLogoutEnvelope: Decodable {
 
 private struct AuthLogoutPayload: Decodable {
     let success: Bool
+}
+
+private struct AuthDeleteAccountEnvelope: Decodable {
+    let data: AuthDeleteAccountPayload
+}
+
+private struct AuthDeleteAccountPayload: Decodable {
+    let deleted: Bool
 }
 
 private extension Bundle {
