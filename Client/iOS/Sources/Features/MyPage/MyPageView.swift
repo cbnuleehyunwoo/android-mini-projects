@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MyPageView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
     @State private var isChangingNickname = false
     @State private var isDeletingAccount = false
     @State private var isLoggingOut = false
@@ -84,8 +85,12 @@ struct MyPageView: View {
 
                     sectionTitle("약관 및 정책")
                         .padding(.top, 4)
-                    settingsRow(icon: "shield.checkered", title: "개인정보처리방침", subtitle: "개인정보 수집 및 이용에 대한 안내", color: AppTheme.Colors.primary) {}
-                    settingsRow(icon: "doc.text", title: "이용약관", subtitle: "서비스 이용에 관한 약관을 확인하세요", color: AppTheme.Colors.primary) {}
+                    settingsRow(icon: "shield.checkered", title: "개인정보처리방침", subtitle: "개인정보 수집 및 이용에 대한 안내", color: AppTheme.Colors.primary) {
+                        openURL(TermsAgreementID.privacy.documentURL)
+                    }
+                    settingsRow(icon: "doc.text", title: "이용약관", subtitle: "서비스 이용에 관한 약관을 확인하세요", color: AppTheme.Colors.primary) {
+                        openURL(TermsAgreementID.service.documentURL)
+                    }
 
                     sectionTitle("기타")
                         .padding(.top, 4)

@@ -22,6 +22,15 @@ struct TermsAgreement: Identifiable, Equatable, Codable {
 enum TermsAgreementID: String, CaseIterable, Codable {
     case service
     case privacy
+
+    var documentURL: URL {
+        switch self {
+        case .service:
+            return URL(string: "https://sheer-mimosa-20f.notion.site/37958b8d8e6c8050b988fcc4e6279e25?pvs=74")!
+        case .privacy:
+            return URL(string: "https://sheer-mimosa-20f.notion.site/37958b8d8e6c80cdb6b8c29d6d6935f5?pvs=74")!
+        }
+    }
 }
 
 enum AuthError: LocalizedError, Equatable {
