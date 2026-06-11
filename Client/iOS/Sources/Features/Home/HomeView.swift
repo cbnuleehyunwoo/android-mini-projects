@@ -72,7 +72,8 @@ private struct HomeHeaderView: View {
             Image("app_logo_face")
                 .resizable()
                 .scaledToFit()
-                .frame(width: 34, height: 34)
+                .frame(width: 51, height: 51)
+                .padding(.leading, 6)
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 2) {
