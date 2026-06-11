@@ -50,7 +50,7 @@ struct NicknameSetupView: View {
                 .padding(.top, 18)
 
                 VStack(alignment: .leading, spacing: 10) {
-                    ValidationRuleRow(text: "2-6자 이내", isValid: viewModel.hasValidLength)
+                    ValidationRuleRow(text: NicknameValidator.lengthRuleText, isValid: viewModel.hasValidLength)
                     ValidationRuleRow(text: "한글, 영문, 숫자 사용 가능", isValid: viewModel.containsOnlyAllowedCharacters)
                     ValidationRuleRow(text: "특수문자 사용 불가", isValid: viewModel.doesNotContainSpecialCharacters)
                 }
@@ -68,7 +68,7 @@ struct NicknameSetupView: View {
                 Spacer()
 
                 PrimaryButton(
-                    title: "변경하기",
+                    title: "런파민 시작하기",
                     isLoading: viewModel.isLoading,
                     isDisabled: !viewModel.canSubmit
                 ) {

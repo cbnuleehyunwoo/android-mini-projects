@@ -68,7 +68,7 @@ struct MyNicknameChangeView: View {
                 .padding(.top, 18)
 
                 VStack(alignment: .leading, spacing: 10) {
-                    ValidationRuleRow(text: "2-6자 이내", isValid: NicknameValidator.hasValidLength(trimmedNickname))
+                    ValidationRuleRow(text: NicknameValidator.lengthRuleText, isValid: NicknameValidator.hasValidLength(trimmedNickname))
                     ValidationRuleRow(text: "한글, 영문, 숫자 사용 가능", isValid: !trimmedNickname.isEmpty && NicknameValidator.containsOnlyAllowedCharacters(trimmedNickname))
                     ValidationRuleRow(text: "특수문자 사용 불가", isValid: trimmedNickname.isEmpty || NicknameValidator.doesNotContainSpecialCharacters(trimmedNickname))
                 }
