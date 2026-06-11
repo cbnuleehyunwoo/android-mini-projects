@@ -10,6 +10,8 @@ class MissingAuthConfigurationRepository(
 ) : AuthRepository {
     override fun observeSession(): Flow<AuthSession?> = flowOf(null)
 
+    override suspend fun loadSessionFromStorage(): AuthSession? = null
+
     override suspend fun getCurrentSession(): AuthSession? = null
 
     override suspend fun signInWithGoogleIdToken(

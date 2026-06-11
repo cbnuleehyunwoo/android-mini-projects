@@ -10,6 +10,8 @@ class DefaultAuthRepository(
 ) : AuthRepository {
     override fun observeSession(): Flow<AuthSession?> = remoteDataSource.observeSession()
 
+    override suspend fun loadSessionFromStorage(): AuthSession? = remoteDataSource.loadSessionFromStorage()
+
     override suspend fun getCurrentSession(): AuthSession? = remoteDataSource.getCurrentSession()
 
     override suspend fun signInWithGoogleIdToken(

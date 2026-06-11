@@ -5,6 +5,8 @@ import kotlinx.coroutines.flow.Flow
 interface AuthRepository {
     fun observeSession(): Flow<AuthSession?>
 
+    suspend fun loadSessionFromStorage(): AuthSession?
+
     suspend fun getCurrentSession(): AuthSession?
 
     suspend fun signInWithGoogleIdToken(
