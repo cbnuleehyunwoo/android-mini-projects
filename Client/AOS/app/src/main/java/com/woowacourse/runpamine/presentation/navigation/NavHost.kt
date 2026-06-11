@@ -22,6 +22,7 @@ import com.woowacourse.runpamine.presentation.ranking.RankingScreen
 import com.woowacourse.runpamine.presentation.record.RecordScreen
 import com.woowacourse.runpamine.presentation.running.RunningScreen
 import com.woowacourse.runpamine.presentation.team.TeamScreen
+import com.woowacourse.runpamine.presentation.termsagreement.TermsAgreementScreen
 import java.util.Locale
 
 @Composable
@@ -43,7 +44,7 @@ fun NavHost(
                 onLoginSuccess = { destination ->
                     val route =
                         when (destination) {
-                            LoginDestination.NICKNAME -> AppRoute.ChangeNickname.route
+                            LoginDestination.NICKNAME -> AppRoute.TermsAgreement.route
                             LoginDestination.HOME -> AppRoute.Home.route
                         }
                     navController.navigate(route) {
@@ -178,6 +179,25 @@ fun NavHost(
                 onLogoutCompleted = {
                     navController.navigate(AppRoute.Login.route) {
                         popUpTo(navController.graph.id) {
+                            inclusive = true
+                        }
+                    }
+                },
+            )
+        }
+
+        composable(AppRoute.TermsAgreement.route) {
+            TermsAgreementScreen(
+                onBackClick = {
+                    navController.navigate(AppRoute.Login.route) {
+                        popUpTo(AppRoute.TermsAgreement.route) {
+                            inclusive = true
+                        }
+                    }
+                },
+                onJoinClick = {
+                    navController.navigate(AppRoute.ChangeNickname.route) {
+                        popUpTo(AppRoute.TermsAgreement.route) {
                             inclusive = true
                         }
                     }

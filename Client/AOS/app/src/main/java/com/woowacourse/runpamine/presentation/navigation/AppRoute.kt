@@ -63,6 +63,10 @@ sealed interface AppRoute {
         override val route = "join_team"
     }
 
+    data object TermsAgreement : AppRoute {
+        override val route = "terms_agreement"
+    }
+
     data object ChangeNickname : AppRoute {
         override val route = "change_nickname"
     }
