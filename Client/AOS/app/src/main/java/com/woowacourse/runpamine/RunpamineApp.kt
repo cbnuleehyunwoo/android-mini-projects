@@ -7,7 +7,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -52,11 +51,13 @@ fun RunpamineApp(
 private fun NavHostController.navigateToBottomTab(tab: RunpamineBottomTab) {
     if (currentDestination?.route == tab.route) return
 
+    RunpamineBottomTab.entries.forEach { bottomTab ->
+        popBackStack(
+            route = bottomTab.route,
+            inclusive = true,
+        )
+    }
     navigate(tab.route) {
-        popUpTo(graph.findStartDestination().id) {
-            saveState = true
-        }
         launchSingleTop = true
-        restoreState = true
     }
 }
