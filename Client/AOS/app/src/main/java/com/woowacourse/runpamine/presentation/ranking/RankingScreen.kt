@@ -88,9 +88,7 @@ private fun RankingContent(
     val myRanking = uiState.toMyRankingItem(rankingItems)
 
     Column(
-        modifier =
-            modifier
-                .fillMaxSize()
+        modifier = modifier.fillMaxSize(),
     ) {
         Spacer(modifier = Modifier.height(24.dp))
         RankingScopeTabs(
@@ -103,43 +101,52 @@ private fun RankingContent(
             selectedScope = uiState.selectedScope,
             selectedMetric = uiState.selectedMetric,
             onMetricSelect = onMetricSelect,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 22.dp),
-        )
-        Spacer(modifier = Modifier.height(28.dp))
-        MyRankingCard(
-            item = myRanking,
             modifier =
                 Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 22.dp),
         )
-        Spacer(modifier = Modifier.height(24.dp))
-        HorizontalDivider(
-            color = DividerDefaults.color.copy(alpha = 0.7f),
-            thickness = 1.dp,
-        )
-        Column(
-            modifier =
-                Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState()),
-        ) {
-            Spacer(modifier = Modifier.height(24.dp))
-            RankingListCard(
+        Spacer(modifier = Modifier.height(28.dp))
+        if (uiState.isLoading) {
+            RankingSkeletonBody(
                 selectedScope = uiState.selectedScope,
                 selectedMetric = uiState.selectedMetric,
-                items = rankingItems,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.weight(1f),
             )
-            RankingStateMessage(
-                isLoading = uiState.isLoading,
-                errorMessage = uiState.errorMessage,
-                isEmpty = rankingItems.isEmpty(),
-                onRetryClick = onRetryClick,
+        } else {
+            MyRankingCard(
+                item = myRanking,
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 22.dp),
             )
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+            HorizontalDivider(
+                color = DividerDefaults.color.copy(alpha = 0.7f),
+                thickness = 1.dp,
+            )
+            Column(
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState()),
+            ) {
+                Spacer(modifier = Modifier.height(24.dp))
+                RankingListCard(
+                    selectedScope = uiState.selectedScope,
+                    selectedMetric = uiState.selectedMetric,
+                    items = rankingItems,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                RankingStateMessage(
+                    isLoading = false,
+                    errorMessage = uiState.errorMessage,
+                    isEmpty = rankingItems.isEmpty(),
+                    onRetryClick = onRetryClick,
+                )
+                Spacer(modifier = Modifier.height(28.dp))
+            }
         }
     }
 }
@@ -355,6 +362,160 @@ private fun RankingListCard(
     }
 }
 
+@Composable
+private fun RankingSkeletonBody(
+    selectedScope: RankingScope,
+    selectedMetric: RankingMetric,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        MyRankingSkeletonCard(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 22.dp),
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+        HorizontalDivider(
+            color = DividerDefaults.color.copy(alpha = 0.7f),
+            thickness = 1.dp,
+        )
+        Column(
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState()),
+        ) {
+            Spacer(modifier = Modifier.height(24.dp))
+            RankingListSkeletonCard(
+                selectedScope = selectedScope,
+                selectedMetric = selectedMetric,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(modifier = Modifier.height(28.dp))
+        }
+    }
+}
+
+@Composable
+private fun MyRankingSkeletonCard(modifier: Modifier = Modifier) {
+    Row(
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(12.dp))
+                .background(Blue10)
+                .padding(horizontal = 24.dp, vertical = 28.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(20.dp),
+    ) {
+        RankingSkeletonBox(
+            modifier =
+                Modifier
+                    .height(46.dp)
+                    .weight(0.18f),
+            color = RankingSkeletonDarkColor,
+            shape = RoundedCornerShape(14.dp),
+        )
+        RankingSkeletonBox(
+            modifier =
+                Modifier
+                    .height(24.dp)
+                    .weight(0.42f),
+        )
+        Spacer(modifier = Modifier.weight(0.12f))
+        RankingSkeletonBox(
+            modifier =
+                Modifier
+                    .height(24.dp)
+                    .weight(0.56f),
+        )
+    }
+}
+
+@Composable
+private fun RankingListSkeletonCard(
+    selectedScope: RankingScope,
+    selectedMetric: RankingMetric,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.padding(horizontal = 20.dp, vertical = 22.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = selectedScope.skeletonTitle,
+                color = Color(0xFF111827),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f),
+            )
+            Text(
+                text = selectedMetric.standardLabel(selectedScope),
+                color = Color(0xFFA6AFBD),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+        repeat(RANKING_SKELETON_ROW_COUNT) { index ->
+            RankingRowSkeleton(selected = index == 1)
+        }
+    }
+}
+
+@Composable
+private fun RankingRowSkeleton(selected: Boolean) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(if (selected) Blue10 else Color(0xFFF8F8F8))
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        RankingSkeletonBox(
+            modifier =
+                Modifier
+                    .height(34.dp)
+                    .weight(0.16f),
+            color = RankingSkeletonDarkColor,
+            shape = RoundedCornerShape(10.dp),
+        )
+        RankingSkeletonBox(
+            modifier =
+                Modifier
+                    .height(22.dp)
+                    .weight(0.5f),
+        )
+        Spacer(modifier = Modifier.weight(0.35f))
+        RankingSkeletonBox(
+            modifier =
+                Modifier
+                    .height(22.dp)
+                    .weight(0.55f),
+        )
+    }
+}
+
+@Composable
+private fun RankingSkeletonBox(
+    modifier: Modifier = Modifier,
+    color: Color = RankingSkeletonColor,
+    shape: RoundedCornerShape = RoundedCornerShape(8.dp),
+) {
+    Box(
+        modifier =
+            modifier
+                .clip(shape)
+                .background(color),
+    )
+}
+
 private fun RankingUiState.toRankingItems(): List<RankingItem> =
     when (selectedScope) {
         RankingScope.TEAM ->
@@ -479,6 +640,24 @@ private val RankingMetric.teamStandardLabel: String
             RankingMetric.CONSISTENCY -> "평균 활동일 기준"
         }
 
+private val RankingScope.skeletonTitle: String
+    get() =
+        when (this) {
+            RankingScope.TEAM -> "전체 팀 순위"
+            RankingScope.PERSONAL -> "전체 개인 순위"
+        }
+
+private fun RankingMetric.standardLabel(scope: RankingScope): String =
+    when (scope) {
+        RankingScope.TEAM -> teamStandardLabel
+        RankingScope.PERSONAL ->
+            when (this) {
+                RankingMetric.DISTANCE -> "개인 총 거리 기준"
+                RankingMetric.PACE -> "개인 페이스 기준"
+                RankingMetric.CONSISTENCY -> "개인 횟수 기준"
+            }
+    }
+
 private data class RankingItem(
     val rank: Int?,
     val name: String,
@@ -551,6 +730,9 @@ private fun previewUiState(scope: RankingScope = RankingScope.PERSONAL): Ranking
 
 private const val METERS_PER_KILOMETER = 1_000.0
 private const val SECONDS_PER_MINUTE = 60
+private const val RANKING_SKELETON_ROW_COUNT = 6
+private val RankingSkeletonColor = Color(0xFFD8E1ED)
+private val RankingSkeletonDarkColor = Color(0xFFB8C4D4)
 
 @Preview(showBackground = true)
 @Composable

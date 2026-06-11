@@ -1,24 +1,32 @@
 package com.woowacourse.runpamine.presentation.team
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.woowacourse.runpamine.R
 import com.woowacourse.runpamine.di.runpamineContainer
 import com.woowacourse.runpamine.presentation.team.components.team.TeamContent
 import com.woowacourse.runpamine.presentation.team.model.TeamMember
@@ -59,21 +67,7 @@ private fun TeamScreenContent(
 ) {
     when {
         uiState.isLoading -> {
-            Column(
-                modifier = modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) {
-                CircularProgressIndicator(
-                    color = MaterialTheme.colorScheme.primary,
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                Text(
-                    text = stringResource(R.string.team_loading),
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-            }
+            TeamSkeletonContent(modifier = modifier.fillMaxSize())
         }
 
         uiState.hasTeam -> {
@@ -99,6 +93,200 @@ private fun TeamScreenContent(
         }
     }
 }
+
+@Composable
+private fun TeamSkeletonContent(modifier: Modifier = Modifier) {
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        item {
+            TeamHeaderSkeleton()
+        }
+        item {
+            TeamDateSkeleton()
+        }
+        item {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                TeamSummarySkeletonCard(modifier = Modifier.weight(1f))
+                TeamSummarySkeletonCard(modifier = Modifier.weight(1f))
+            }
+        }
+        items(TEAM_MEMBER_SKELETON_COUNT) {
+            TeamMemberSkeletonCard()
+        }
+    }
+}
+
+@Composable
+private fun TeamHeaderSkeleton(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        TeamSkeletonBox(
+            modifier =
+                Modifier
+                    .height(46.dp)
+                    .weight(1f),
+            shape = RoundedCornerShape(12.dp),
+        )
+        Spacer(modifier = Modifier.width(48.dp))
+        TeamSkeletonBox(
+            modifier = Modifier.size(50.dp),
+            shape = RoundedCornerShape(14.dp),
+        )
+    }
+}
+
+@Composable
+private fun TeamDateSkeleton(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center,
+    ) {
+        TeamSkeletonBox(
+            modifier =
+                Modifier
+                    .fillMaxWidth(0.62f)
+                    .height(32.dp),
+            shape = RoundedCornerShape(12.dp),
+        )
+    }
+}
+
+@Composable
+private fun TeamSummarySkeletonCard(modifier: Modifier = Modifier) {
+    Column(
+        modifier =
+            modifier
+                .height(96.dp)
+                .teamSkeletonCard(shape = RoundedCornerShape(14.dp)),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        TeamSkeletonBox(
+            modifier =
+                Modifier
+                    .fillMaxWidth(0.55f)
+                    .height(28.dp),
+            shape = RoundedCornerShape(10.dp),
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        TeamSkeletonBox(
+            modifier =
+                Modifier
+                    .fillMaxWidth(0.48f)
+                    .height(18.dp),
+            shape = RoundedCornerShape(8.dp),
+        )
+    }
+}
+
+@Composable
+private fun TeamMemberSkeletonCard(modifier: Modifier = Modifier) {
+    Column(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(196.dp)
+                .teamSkeletonCard(shape = RoundedCornerShape(18.dp))
+                .padding(16.dp),
+    ) {
+        TeamSkeletonBox(
+            modifier =
+                Modifier
+                    .fillMaxWidth(0.42f)
+                    .height(30.dp),
+            shape = RoundedCornerShape(10.dp),
+        )
+        Spacer(modifier = Modifier.height(26.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(15.dp),
+        ) {
+            TeamSkeletonBox(
+                modifier = Modifier.size(82.dp),
+                shape = RoundedCornerShape(0.dp),
+            )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                repeat(TEAM_MEMBER_METRIC_SKELETON_COUNT) {
+                    TeamMetricSkeletonRow()
+                }
+            }
+            TeamSkeletonBox(
+                modifier =
+                    Modifier
+                        .width(72.dp)
+                        .height(100.dp),
+                shape = RoundedCornerShape(20.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun TeamMetricSkeletonRow(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        TeamSkeletonBox(
+            modifier = Modifier.size(18.dp),
+            shape = RoundedCornerShape(5.dp),
+        )
+        TeamSkeletonBox(
+            modifier =
+                Modifier
+                    .width(36.dp)
+                    .height(18.dp),
+            shape = RoundedCornerShape(6.dp),
+        )
+        TeamSkeletonBox(
+            modifier =
+                Modifier
+                    .width(62.dp)
+                    .height(18.dp),
+            shape = RoundedCornerShape(6.dp),
+        )
+    }
+}
+
+@Composable
+private fun TeamSkeletonBox(
+    modifier: Modifier = Modifier,
+    shape: RoundedCornerShape = RoundedCornerShape(8.dp),
+) {
+    Box(
+        modifier =
+            modifier
+                .clip(shape)
+                .background(TeamSkeletonColor),
+    )
+}
+
+private fun Modifier.teamSkeletonCard(shape: RoundedCornerShape): Modifier =
+    shadow(
+        elevation = 8.dp,
+        shape = shape,
+        ambientColor = Color.Transparent,
+        spotColor = Color.Black.copy(alpha = 0.18f),
+    ).background(
+        color = Color.White,
+        shape = shape,
+    )
+
+private const val TEAM_MEMBER_SKELETON_COUNT = 4
+private const val TEAM_MEMBER_METRIC_SKELETON_COUNT = 3
+private val TeamSkeletonColor = Color(0xFFE8EEF6)
 
 @Preview(showBackground = true)
 @Composable
