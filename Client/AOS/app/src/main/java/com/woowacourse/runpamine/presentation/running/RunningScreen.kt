@@ -44,7 +44,7 @@ fun RunningScreen(
                     runTrackingRepository = container.runTrackingRepository,
                     runSyncRepository = container.runSyncRepository,
                 ),
-    )
+        )
     val state by viewModel.currentRunState.collectAsStateWithLifecycle()
     var completedSession by remember { mutableStateOf<RunSession?>(null) }
     var showStopDialog by rememberSaveable { mutableStateOf(false) }
