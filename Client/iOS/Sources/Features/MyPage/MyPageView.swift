@@ -3,7 +3,10 @@ import SwiftUI
 struct MyPageView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var isChangingNickname = false
+    @State private var isDeletingAccount = false
     @State private var isLoggingOut = false
+    @State private var isShowingDeleteAccountConfirmation = false
+    @State private var deleteAccountErrorMessage: String?
     @State private var logoutErrorMessage: String?
     @State private var nickname: String
     private let store: LocalAppStateStore
@@ -63,12 +66,14 @@ struct MyPageView: View {
                     settingsRow(icon: "square.and.pencil", title: "닉네임 변경", subtitle: "닉네임을 변경할 수 있습니다.", color: AppTheme.Colors.primary) {
                         isChangingNickname = true
                     }
+                    .disabled(isBusy)
+
                     settingsRow(icon: "rectangle.portrait.and.arrow.right", title: "로그아웃", subtitle: "계정에서 로그아웃합니다", color: AppTheme.Colors.danger) {
                         Task {
                             await logout()
                         }
                     }
-                    .disabled(isLoggingOut)
+                    .disabled(isBusy)
 
                     if let logoutErrorMessage {
                         Text(logoutErrorMessage)
@@ -90,11 +95,23 @@ struct MyPageView: View {
                 .padding(.top, 48)
 
                 Spacer()
+
+                deleteAccountButton
             }
         }
         .background(Color.white)
         .runpamineBackSwipe {
             dismiss()
+        }
+        .alert("회원탈퇴", isPresented: $isShowingDeleteAccountConfirmation) {
+            Button("취소", role: .cancel) {}
+            Button("탈퇴", role: .destructive) {
+                Task {
+                    await deleteAccount()
+                }
+            }
+        } message: {
+            Text("계정을 탈퇴하시겠습니까? 탈퇴 후에는 복구할 수 없습니다.")
         }
         .sheet(isPresented: $isChangingNickname) {
             MyNicknameChangeView(store: store, profileService: profileService, accessToken: accessToken) { nextNickname in
@@ -105,30 +122,81 @@ struct MyPageView: View {
         }
     }
 
+    private var isBusy: Bool {
+        isLoggingOut || isDeletingAccount
+    }
+
+    private var deleteAccountButton: some View {
+        VStack(alignment: .trailing, spacing: 8) {
+            if let deleteAccountErrorMessage {
+                Text(deleteAccountErrorMessage)
+                    .font(AppTheme.Typography.caption1)
+                    .foregroundStyle(AppTheme.Colors.danger)
+                    .multilineTextAlignment(.trailing)
+            }
+
+            Button {
+                isShowingDeleteAccountConfirmation = true
+            } label: {
+                Text(isDeletingAccount ? "처리 중..." : "회원탈퇴")
+                    .font(AppTheme.Typography.font(size: 14, weight: .medium))
+                    .foregroundStyle(AppTheme.Colors.danger)
+            }
+            .disabled(isBusy)
+        }
+        .frame(maxWidth: .infinity, alignment: .trailing)
+        .padding(.horizontal, AppTheme.Layout.horizontalPadding)
+        .padding(.bottom, 18)
+    }
+
     @MainActor
     private func logout() async {
-        guard !isLoggingOut else { return }
+        guard !isBusy else { return }
 
         guard let accessToken else {
-            completeLocalLogout()
+            completeLocalSessionRemoval()
             return
         }
 
         isLoggingOut = true
         logoutErrorMessage = nil
+        deleteAccountErrorMessage = nil
         defer {
             isLoggingOut = false
         }
 
         do {
             try await authService.logout(accessToken: accessToken)
-            completeLocalLogout()
+            completeLocalSessionRemoval()
         } catch {
             logoutErrorMessage = error.localizedDescription
         }
     }
 
-    private func completeLocalLogout() {
+    @MainActor
+    private func deleteAccount() async {
+        guard !isBusy else { return }
+        guard let accessToken else {
+            deleteAccountErrorMessage = AuthError.unavailable.localizedDescription
+            return
+        }
+
+        isDeletingAccount = true
+        deleteAccountErrorMessage = nil
+        logoutErrorMessage = nil
+        defer {
+            isDeletingAccount = false
+        }
+
+        do {
+            try await authService.deleteAccount(accessToken: accessToken)
+            completeLocalSessionRemoval()
+        } catch {
+            deleteAccountErrorMessage = error.localizedDescription
+        }
+    }
+
+    private func completeLocalSessionRemoval() {
         store.logout()
         dismiss()
         onLogoutCompleted()
