@@ -52,7 +52,10 @@ class RunpamineContainer(
     }
 
     private val authRemoteDataSource: AuthRemoteDataSource by lazy {
-        SupabaseAuthRemoteDataSource(supabaseClient)
+        SupabaseAuthRemoteDataSource(
+            supabaseClient = supabaseClient,
+            baseUrl = BuildConfig.BASE_URL,
+        )
     }
 
     val googleAuthCredentialDataSource: GoogleAuthCredentialDataSource by lazy {
