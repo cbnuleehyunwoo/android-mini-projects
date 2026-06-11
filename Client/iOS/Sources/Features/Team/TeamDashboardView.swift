@@ -30,12 +30,13 @@ struct TeamDashboardView: View {
     private var teamContent: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 0) {
-                HStack(alignment: .firstTextBaseline, spacing: 12) {
+                HStack(alignment: .center, spacing: 12) {
                     Text(displayTeam?.name ?? "")
-                        .font(AppTheme.Typography.font(size: 36, weight: .black))
+                        .font(AppTheme.Typography.font(size: 30, weight: .bold))
                         .foregroundStyle(AppTheme.Colors.primary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.72)
+                        .frame(height: 48, alignment: .center)
 
                     Spacer()
 
@@ -52,7 +53,7 @@ struct TeamDashboardView: View {
                 .padding(.top, 32)
 
                 Text(summaryDateText)
-                    .font(AppTheme.Typography.font(size: 24, weight: .black))
+                    .font(AppTheme.Typography.font(size: 18, weight: .medium))
                     .foregroundStyle(.black)
                     .padding(.top, 10)
 
@@ -82,7 +83,7 @@ struct TeamDashboardView: View {
     private func metricCard(value: String, label: String) -> some View {
         VStack(spacing: 4) {
             Text(value)
-                .font(AppTheme.Typography.font(size: 26, weight: .black))
+                .font(AppTheme.Typography.font(size: 26, weight: .bold))
                 .foregroundStyle(AppTheme.Colors.primary)
             Text(label)
                 .font(AppTheme.Typography.font(size: 14, weight: .medium))
@@ -464,7 +465,7 @@ private struct TeamMemberRunCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
             Text(member.name)
-                .font(AppTheme.Typography.font(size: 24, weight: .black))
+                .font(AppTheme.Typography.font(size: 24, weight: .bold))
                 .foregroundStyle(.black)
 
             HStack(spacing: 0) {
