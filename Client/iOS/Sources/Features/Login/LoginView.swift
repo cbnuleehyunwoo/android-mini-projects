@@ -20,7 +20,7 @@ struct LoginView: View {
                     AppLogoView(size: 88)
 
                     Text("RUNPAMINE")
-                        .font(AppTheme.Typography.font(size: 44, weight: .black))
+                        .font(AppTheme.Typography.font(size: 44, weight: .bold))
                         .foregroundStyle(AppTheme.Colors.textPrimary)
                         .minimumScaleFactor(0.72)
                 }

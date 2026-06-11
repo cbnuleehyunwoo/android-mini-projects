@@ -6,7 +6,7 @@ struct RunpamineLogoView: View {
             Image("character_no_bg")
                 .resizable()
                 .scaledToFit()
-                .frame(width: 180, height: 180)
+                .frame(width: 230, height: 230)
                 .accessibilityLabel("런파민 로고")
 
             Text("RUNPAMINE")
