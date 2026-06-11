@@ -404,20 +404,20 @@ private struct RankingSummarySkeletonCard: View {
         HStack(spacing: 18) {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(RankingSkeletonStyle.fill)
-                .frame(width: 44, height: 44)
+                .frame(width: 28, height: 28)
 
             RoundedRectangle(cornerRadius: 6, style: .continuous)
                 .fill(RankingSkeletonStyle.fill)
-                .frame(width: 96, height: 22)
+                .frame(width: 82, height: 14)
 
             Spacer(minLength: 12)
 
             RoundedRectangle(cornerRadius: 6, style: .continuous)
                 .fill(RankingSkeletonStyle.fill)
-                .frame(width: 132, height: 22)
+                .frame(width: 108, height: 14)
         }
-        .padding(.horizontal, 24)
-        .frame(height: 96)
+        .padding(.horizontal, 12)
+        .frame(height: 65)
         .background(Color(red: 0.92, green: 0.96, blue: 1.0))
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .allowsHitTesting(false)
@@ -442,30 +442,30 @@ private struct RankingRowSkeleton: View {
         HStack(spacing: 16) {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(RankingSkeletonStyle.badgeFill)
-                .frame(width: 44, height: 44)
+                .frame(width: 28, height: 28)
 
             RoundedRectangle(cornerRadius: 6, style: .continuous)
                 .fill(RankingSkeletonStyle.fill)
-                .frame(width: nameWidth, height: 20)
+                .frame(width: nameWidth, height: 14)
 
             Spacer(minLength: 12)
 
             RoundedRectangle(cornerRadius: 6, style: .continuous)
                 .fill(RankingSkeletonStyle.fill)
-                .frame(width: valueWidth, height: 20)
+                .frame(width: valueWidth, height: 14)
         }
         .padding(.horizontal, 18)
-        .frame(height: 64)
+        .frame(height: 52)
         .background(isHighlighted ? Color(red: 0.92, green: 0.96, blue: 1.0) : Color(red: 0.98, green: 0.98, blue: 0.99))
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
     private var nameWidth: CGFloat {
-        isHighlighted ? 92 : 76
+        isHighlighted ? 82 : 68
     }
 
     private var valueWidth: CGFloat {
-        isHighlighted ? 104 : 84
+        isHighlighted ? 92 : 76
     }
 }
 
