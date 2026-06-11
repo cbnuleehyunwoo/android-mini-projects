@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Application
 import android.content.Context
 import android.content.pm.PackageManager
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
@@ -11,15 +12,19 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.woowacourse.runpamine.R
 import com.woowacourse.runpamine.di.runpamineContainer
 import com.woowacourse.runpamine.domain.run.RunSession
+import com.woowacourse.runpamine.presentation.component.RunpamineConfirmationDialog
 import com.woowacourse.runpamine.presentation.running.components.RunningScreenContent
 import com.woowacourse.runpamine.presentation.running.viewmodel.RunTrackingViewModel
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
@@ -42,6 +47,7 @@ fun RunningScreen(
     )
     val state by viewModel.currentRunState.collectAsStateWithLifecycle()
     var completedSession by remember { mutableStateOf<RunSession?>(null) }
+    var showStopDialog by rememberSaveable { mutableStateOf(false) }
     val locationPermissionLauncher =
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.RequestMultiplePermissions(),
@@ -57,6 +63,10 @@ fun RunningScreen(
         } else {
             locationPermissionLauncher.launch(LOCATION_PERMISSIONS)
         }
+    }
+
+    BackHandler(enabled = state.isRunning && completedSession == null) {
+        showStopDialog = true
     }
 
     completedSession?.let { session ->
@@ -80,6 +90,22 @@ fun RunningScreen(
             }
         },
     )
+
+    if (showStopDialog) {
+        RunpamineConfirmationDialog(
+            title = stringResource(R.string.running_stop_title),
+            message = stringResource(R.string.running_stop_confirmation),
+            dismissText = stringResource(R.string.cancel),
+            confirmText = stringResource(R.string.running_stop),
+            onDismiss = { showStopDialog = false },
+            onConfirm = {
+                showStopDialog = false
+                viewModel.stopRun { session ->
+                    completedSession = session
+                }
+            },
+        )
+    }
 }
 
 private val LOCATION_PERMISSIONS =
