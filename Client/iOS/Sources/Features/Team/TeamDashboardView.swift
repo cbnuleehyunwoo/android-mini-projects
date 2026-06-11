@@ -160,22 +160,12 @@ private struct TeamEmptyStateView: View {
     let onJoinTeam: () -> Void
 
     var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Text("팀")
-                    .font(AppTheme.Typography.header1)
-                    .foregroundStyle(AppTheme.Colors.primary)
-                Spacer()
-            }
-            .padding(.horizontal, 24)
-            .padding(.top, 36)
-
-            Spacer()
-
+        VStack(spacing: 34) {
             VStack(spacing: 18) {
                 Text("아직 참여한 팀이 없어요")
                     .font(AppTheme.Typography.font(size: 25, weight: .black))
                     .foregroundStyle(AppTheme.Colors.textPrimary)
+                    .multilineTextAlignment(.center)
 
                 Text("팀을 만들거나 초대 코드로\n팀에 참가해보세요.")
                     .font(AppTheme.Typography.font(size: 16, weight: .semibold))
@@ -202,6 +192,7 @@ private struct TeamEmptyStateView: View {
                     }
                     .foregroundStyle(.white)
                     .padding(.horizontal, 22)
+                    .frame(maxWidth: .infinity)
                     .frame(height: 76)
                     .background(AppTheme.Colors.primary)
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -224,6 +215,7 @@ private struct TeamEmptyStateView: View {
                     }
                     .foregroundStyle(AppTheme.Colors.primary)
                     .padding(.horizontal, 22)
+                    .frame(maxWidth: .infinity)
                     .frame(height: 76)
                     .background(AppTheme.Colors.surface)
                     .overlay {
@@ -233,9 +225,8 @@ private struct TeamEmptyStateView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
             }
-            .padding(.horizontal, 24)
-            .padding(.top, 54)
-            .padding(.bottom, 98)
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 30)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.white)
