@@ -50,7 +50,7 @@ class MyPageViewModel(
     }
 
     fun logout() {
-        if (_uiState.value.isLoggingOut) return
+        if (_uiState.value.isBusy) return
 
         viewModelScope.launch {
             _uiState.update {
@@ -80,6 +80,37 @@ class MyPageViewModel(
         }
     }
 
+    fun deleteAccount() {
+        if (_uiState.value.isBusy) return
+
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isDeletingAccount = true,
+                    errorMessage = null,
+                )
+            }
+
+            runCatching {
+                authRepository.deleteAccount()
+            }.onSuccess {
+                _uiState.update {
+                    it.copy(
+                        isDeletingAccount = false,
+                        isLoggedOut = true,
+                    )
+                }
+            }.onFailure { throwable ->
+                _uiState.update {
+                    it.copy(
+                        isDeletingAccount = false,
+                        errorMessage = throwable.message ?: "회원 탈퇴에 실패했어요.",
+                    )
+                }
+            }
+        }
+    }
+
     class Factory(
         private val profileRepository: ProfileRepository,
         private val authRepository: AuthRepository,
@@ -94,3 +125,6 @@ class MyPageViewModel(
         }
     }
 }
+
+private val MyPageUiState.isBusy: Boolean
+    get() = isLoggingOut || isDeletingAccount

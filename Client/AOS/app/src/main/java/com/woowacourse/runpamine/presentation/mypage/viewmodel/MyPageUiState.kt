@@ -4,6 +4,7 @@ data class MyPageUiState(
     val nickname: String = "",
     val isLoading: Boolean = true,
     val isLoggingOut: Boolean = false,
+    val isDeletingAccount: Boolean = false,
     val isLoggedOut: Boolean = false,
     val errorMessage: String? = null,
 )

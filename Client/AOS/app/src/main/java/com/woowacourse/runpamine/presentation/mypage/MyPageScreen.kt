@@ -7,23 +7,30 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.woowacourse.runpamine.R
 import com.woowacourse.runpamine.di.runpamineContainer
+import com.woowacourse.runpamine.presentation.component.RunpamineConfirmationDialog
 import com.woowacourse.runpamine.presentation.component.ScreenTopBar
 import com.woowacourse.runpamine.presentation.mypage.components.MyPageMenuRow
 import com.woowacourse.runpamine.presentation.mypage.components.MyPageProfile
@@ -65,6 +72,7 @@ fun MyPageScreen(
         uiState = uiState,
         onChangeNicknameClick = onChangeNicknameClick,
         onLogoutClick = viewModel::logout,
+        onDeleteAccountClick = viewModel::deleteAccount,
         onBackClick = onBackClick,
         modifier = modifier,
     )
@@ -75,10 +83,12 @@ private fun MyPageContent(
     uiState: MyPageUiState,
     onChangeNicknameClick: () -> Unit,
     onLogoutClick: () -> Unit,
+    onDeleteAccountClick: () -> Unit,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val uriHandler = LocalUriHandler.current
+    var showDeleteAccountDialog by rememberSaveable { mutableStateOf(false) }
 
     Column(
         modifier =
@@ -143,7 +153,6 @@ private fun MyPageContent(
         Spacer(modifier = Modifier.height(24.dp))
         MyPageSection(
             title = "기타",
-            contentPadding = PaddingValues(bottom = 48.dp),
         ) {
             MyPageMenuRow(
                 iconResId = R.drawable.ic_infomation,
@@ -152,6 +161,32 @@ private fun MyPageContent(
                 showArrow = false,
             )
         }
+        Text(
+            text = if (uiState.isDeletingAccount) "회원 탈퇴 중입니다" else stringResource(R.string.delete_account),
+            color = Color(0xFFDC2626),
+            fontWeight = FontWeight.Bold,
+            modifier =
+                Modifier
+                    .align(Alignment.End)
+                    .padding(top = 18.dp, bottom = 48.dp)
+                    .clickable(enabled = !uiState.isDeletingAccount) {
+                        showDeleteAccountDialog = true
+                    },
+        )
+    }
+
+    if (showDeleteAccountDialog) {
+        RunpamineConfirmationDialog(
+            title = stringResource(R.string.delete_account),
+            message = stringResource(R.string.delete_account_confirmation),
+            dismissText = stringResource(R.string.cancel),
+            confirmText = stringResource(R.string.delete_account),
+            onDismiss = { showDeleteAccountDialog = false },
+            onConfirm = {
+                showDeleteAccountDialog = false
+                onDeleteAccountClick()
+            },
+        )
     }
 }
 
@@ -163,6 +198,7 @@ private fun MyPageScreenPreview() {
             uiState = MyPageUiState(nickname = "러너", isLoading = false),
             onChangeNicknameClick = {},
             onLogoutClick = {},
+            onDeleteAccountClick = {},
             onBackClick = {},
         )
     }
