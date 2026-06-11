@@ -9,7 +9,6 @@ import com.woowacourse.runpamine.domain.auth.AuthRepository
 import com.woowacourse.runpamine.domain.profile.ProfileRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -20,24 +19,6 @@ class LoginViewModel(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState = _uiState.asStateFlow()
-
-    init {
-        viewModelScope.launch {
-            runCatching {
-                authRepository.getCurrentSession()
-            }.onSuccess { session ->
-                if (session != null) {
-                    routeByProfile()
-                }
-            }
-
-            authRepository.observeSession().collectLatest { session ->
-                if (session != null) {
-                    routeByProfile()
-                }
-            }
-        }
-    }
 
     fun signInWithGoogle(context: Context) {
         viewModelScope.launch {

@@ -21,6 +21,8 @@ import com.woowacourse.runpamine.presentation.nickname.ChangeNicknameScreen
 import com.woowacourse.runpamine.presentation.ranking.RankingScreen
 import com.woowacourse.runpamine.presentation.record.RecordScreen
 import com.woowacourse.runpamine.presentation.running.RunningScreen
+import com.woowacourse.runpamine.presentation.splash.SplashDestination
+import com.woowacourse.runpamine.presentation.splash.SplashScreen
 import com.woowacourse.runpamine.presentation.team.TeamScreen
 import com.woowacourse.runpamine.presentation.termsagreement.TermsAgreementScreen
 import java.util.Locale
@@ -32,13 +34,31 @@ fun NavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = AppRoute.Login.route,
+        startDestination = AppRoute.Splash.route,
         modifier = modifier,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
         popExitTransition = { ExitTransition.None },
     ) {
+        composable(AppRoute.Splash.route) {
+            SplashScreen(
+                onSplashFinished = { destination ->
+                    val route =
+                        when (destination) {
+                            SplashDestination.LOGIN -> AppRoute.Login.route
+                            SplashDestination.TERMS_AGREEMENT -> AppRoute.TermsAgreement.route
+                            SplashDestination.HOME -> AppRoute.Home.route
+                        }
+                    navController.navigate(route) {
+                        popUpTo(AppRoute.Splash.route) {
+                            inclusive = true
+                        }
+                    }
+                },
+            )
+        }
+
         composable(AppRoute.Login.route) {
             LoginScreen(
                 onLoginSuccess = { destination ->

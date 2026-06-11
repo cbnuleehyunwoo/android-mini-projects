@@ -29,6 +29,15 @@ class SupabaseAuthRemoteDataSource(
             }
         }
 
+    override suspend fun loadSessionFromStorage(): AuthSession? {
+        val loaded = supabaseClient.auth.loadFromStorage()
+        return if (loaded) {
+            getCurrentSession()
+        } else {
+            null
+        }
+    }
+
     override suspend fun getCurrentSession(): AuthSession? = supabaseClient.auth.currentSessionOrNull()?.toDomain()
 
     override suspend fun signInWithGoogleIdToken(
