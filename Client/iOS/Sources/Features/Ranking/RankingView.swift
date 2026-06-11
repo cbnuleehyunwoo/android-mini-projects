@@ -29,23 +29,25 @@ struct RankingView: View {
     var body: some View {
         VStack(spacing: 0) {
             topControls
+                .padding(.top, 18)
+
+            metricControl
+                .padding(.horizontal, 22)
+                .padding(.top, 26)
+
+            summaryCard
+                .padding(.horizontal, 22)
+                .padding(.top, 28)
+
+            Divider()
+                .background(AppTheme.Colors.border)
+                .padding(.top, 24)
 
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 22) {
-                    if selectedScope == .personal {
-                        metricControl
-                            .padding(.top, 20)
-                    }
-
-                    summaryCard
-                        .padding(.top, selectedScope == .team ? 32 : 0)
-
-                    Divider()
-                        .background(AppTheme.Colors.border)
-
+                VStack(spacing: 0) {
                     rankingCard
                 }
-                .padding(.horizontal, 24)
+                .padding(.top, 24)
                 .padding(.bottom, 26)
             }
         }
@@ -66,24 +68,15 @@ struct RankingView: View {
             scopeButton(.team)
             scopeButton(.personal)
         }
-        .padding(4)
-        .frame(height: RankingLayout.filterOuterHeight)
-        .background(Color(red: 0.88, green: 0.88, blue: 0.88))
-        .clipShape(Capsule())
-        .padding(.horizontal, 58)
-        .padding(.top, 18)
+        .frame(height: 72)
     }
 
     private var metricControl: some View {
-        HStack(spacing: 0) {
-            metricButton(.distance, title: "KM")
+        HStack(spacing: 10) {
+            metricButton(.distance, title: "전체 거리")
             metricButton(.pace, title: "페이스")
-            metricButton(.consistency, title: "스트릭")
+            metricButton(.consistency, title: selectedScope == .team ? "평균 활동일" : "횟수")
         }
-        .padding(4)
-        .frame(height: RankingLayout.filterOuterHeight)
-        .background(Color(red: 0.88, green: 0.88, blue: 0.88))
-        .clipShape(Capsule())
     }
 
     private var summaryCard: some View {
@@ -128,13 +121,13 @@ struct RankingView: View {
     private var rankingCard: some View {
         VStack(spacing: 16) {
             HStack(alignment: .lastTextBaseline) {
-                Text(selectedScope == .team ? "전체 팀 순위" : personalTitle)
+                Text(selectedScope == .team ? "전체 팀 순위" : "전체 개인 순위")
                     .font(AppTheme.Typography.font(size: 20, weight: .black))
                     .foregroundStyle(AppTheme.Colors.textPrimary)
 
                 Spacer()
 
-                Text(selectedScope == .team ? "팀 총 거리 기준" : personalSubtitle)
+                Text(selectedScope == .team ? teamSubtitle : personalSubtitle)
                     .font(AppTheme.Typography.font(size: 14, weight: .medium))
                     .foregroundStyle(Color(red: 0.58, green: 0.63, blue: 0.70))
             }
@@ -156,11 +149,7 @@ struct RankingView: View {
             }
         }
         .padding(.horizontal, 22)
-        .padding(.top, 26)
         .padding(.bottom, 22)
-        .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .shadow(color: Color.black.opacity(0.08), radius: 20, x: 0, y: 10)
     }
 
     private func scopeButton(_ scope: RankingScope) -> some View {
@@ -169,17 +158,19 @@ struct RankingView: View {
                 selectedScope = scope
             }
         } label: {
-            Text(scope.title)
-                .font(AppTheme.Typography.font(size: 18, weight: .bold))
-                .foregroundStyle(selectedScope == scope ? Color.white : Color(red: 0.61, green: 0.66, blue: 0.73))
-                .frame(maxWidth: .infinity)
-                .frame(height: RankingLayout.filterInnerHeight)
-                .background {
-                    if selectedScope == scope {
-                        Capsule()
-                            .fill(AppTheme.Colors.primary)
-                    }
+            ZStack(alignment: .bottom) {
+                Text(scope.title)
+                    .font(AppTheme.Typography.font(size: 18, weight: .bold))
+                    .foregroundStyle(selectedScope == scope ? AppTheme.Colors.primary : Color(red: 0.62, green: 0.67, blue: 0.74))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 72)
+
+                if selectedScope == scope {
+                    Rectangle()
+                        .fill(AppTheme.Colors.primary)
+                        .frame(height: 4)
                 }
+            }
         }
         .buttonStyle(.plain)
     }
@@ -191,16 +182,18 @@ struct RankingView: View {
             }
         } label: {
             Text(title)
-                .font(AppTheme.Typography.font(size: 18, weight: .bold))
-                .foregroundStyle(selectedMetric == metric ? Color.white : Color(red: 0.61, green: 0.66, blue: 0.73))
+                .font(AppTheme.Typography.font(size: 13, weight: .black))
+                .foregroundStyle(selectedMetric == metric ? AppTheme.Colors.primary : Color(red: 0.42, green: 0.45, blue: 0.50))
+                .lineLimit(1)
+                .minimumScaleFactor(0.82)
                 .frame(maxWidth: .infinity)
-                .frame(height: RankingLayout.filterInnerHeight)
-                .background {
-                    if selectedMetric == metric {
-                        Capsule()
-                            .fill(AppTheme.Colors.primary)
-                    }
-                }
+                .frame(height: 50)
+                .background(selectedMetric == metric ? Color(red: 0.93, green: 0.95, blue: 1.0) : Color(red: 0.95, green: 0.95, blue: 0.96))
+                .clipShape(Capsule())
+                .overlay(
+                    Capsule()
+                        .stroke(selectedMetric == metric ? AppTheme.Colors.primary : Color.clear, lineWidth: 2)
+                )
         }
         .buttonStyle(.plain)
     }
@@ -208,16 +201,23 @@ struct RankingView: View {
     private var currentSummary: RankingSummaryRow? {
         switch selectedScope {
         case .team:
-            guard let entry = highlightedTeamEntry else { return nil }
+            guard let team else {
+                return RankingSummaryRow(rank: nil, name: "팀 없음", value: "랭킹 집계 전")
+            }
+            guard let entry = highlightedTeamEntry else {
+                return RankingSummaryRow(rank: nil, name: team.name, value: "랭킹 집계 전")
+            }
             return RankingSummaryRow(
                 rank: entry.rank,
                 name: entry.teamName,
-                value: "\(formatDistance(entry.distanceMeters, spaced: true)) (\(formatTopPercent(entry.topPercent)))"
+                value: "\(selectedMetric.value(from: entry)) (\(formatTopPercent(entry.topPercent)))"
             )
         case .personal:
             guard let summary = mySummary else { return highlightedUserEntry.map(summaryRow) }
-            guard let rank = selectedMetric.rank(from: summary) ?? highlightedUserEntry?.rank else { return nil }
-            let topPercent = selectedMetric.topPercent(from: summary) ?? highlightedUserEntry?.topPercent
+            guard let rank = selectedMetric.rank(from: summary) else {
+                return RankingSummaryRow(rank: nil, name: nickname, value: "-")
+            }
+            let topPercent = selectedMetric.topPercent(from: summary)
             return RankingSummaryRow(
                 rank: rank,
                 name: nickname,
@@ -233,16 +233,21 @@ struct RankingView: View {
             return entry
         }
 
-        return board.rankings.first(where: { $0.rank == 2 }) ?? board.rankings.first
+        return nil
     }
 
     private var highlightedUserEntry: UserRankingEntry? {
         guard let board = userBoard else { return nil }
         let summaryRank = mySummary.flatMap { selectedMetric.rank(from: $0) }
-        return board.rankings.first(where: { $0.nickname == nickname })
-            ?? board.rankings.first(where: { $0.rank == summaryRank })
-            ?? board.rankings.first(where: { $0.rank == 2 })
-            ?? board.rankings.first
+        if let entry = board.rankings.first(where: { $0.nickname == nickname }) {
+            return entry
+        }
+
+        if let summaryRank {
+            return board.rankings.first(where: { $0.rank == summaryRank })
+        }
+
+        return nil
     }
 
     private var rows: [RankingListRow] {
@@ -254,7 +259,7 @@ struct RankingView: View {
                     id: entry.teamID,
                     rank: entry.rank,
                     name: entry.teamName,
-                    value: formatDistance(entry.distanceMeters, spaced: false),
+                    value: selectedMetric.value(from: entry),
                     isHighlighted: entry.teamID == highlightedID
                 )
             }
@@ -272,14 +277,14 @@ struct RankingView: View {
         }
     }
 
-    private var personalTitle: String {
+    private var teamSubtitle: String {
         switch selectedMetric {
         case .distance:
-            return "개인 거리 순위"
+            return "팀 총 거리 기준"
         case .pace:
-            return "개인 페이스 순위"
+            return "팀 평균 페이스 기준"
         case .consistency:
-            return "개인 스트릭 순위"
+            return "평균 활동일 기준"
         }
     }
 
@@ -311,7 +316,7 @@ struct RankingView: View {
 
             switch selectedScope {
             case .team:
-                async let teamRanking = rankingService.fetchTeamRankings(seasonID: nil, accessToken: token)
+                async let teamRanking = rankingService.fetchTeamRankings(metric: selectedMetric, seasonID: nil, accessToken: token)
                 teamBoard = try await teamRanking
             case .personal:
                 async let userRanking = rankingService.fetchUserRankings(metric: selectedMetric, seasonID: nil, accessToken: token)
@@ -334,19 +339,9 @@ struct RankingView: View {
         )
     }
 
-    private func formatDistance(_ meters: Int, spaced: Bool) -> String {
-        let value = Double(meters) / 1_000
-        return String(format: spaced ? "%.1f km" : "%.1fkm", value)
-    }
-
     private func formatTopPercent(_ percent: Int) -> String {
         "상위 \(max(0, percent))%"
     }
-}
-
-private enum RankingLayout {
-    static let filterOuterHeight: CGFloat = 60
-    static let filterInnerHeight: CGFloat = 52
 }
 
 private enum RankingScope {
@@ -364,7 +359,7 @@ private enum RankingScope {
 }
 
 private struct RankingSummaryRow {
-    let rank: Int
+    let rank: Int?
     let name: String
     let value: String
 }
@@ -480,11 +475,11 @@ private enum RankingSkeletonStyle {
 }
 
 private struct RankBadge: View {
-    let rank: Int
+    let rank: Int?
     let isHighlighted: Bool
 
     var body: some View {
-        Text("\(rank)")
+        Text(rank.map(String.init) ?? "-")
             .font(AppTheme.Typography.font(size: 20, weight: .black))
             .foregroundStyle(Color.white)
             .frame(width: 44, height: 44)
@@ -494,6 +489,17 @@ private struct RankBadge: View {
 }
 
 private extension UserRankingMetric {
+    func value(from entry: TeamRankingEntry) -> String {
+        switch self {
+        case .distance:
+            return String(format: "%.1f km", Double(entry.distanceMeters) / 1_000)
+        case .pace:
+            return "\(formatPace(entry.averagePaceSecondsPerKilometer))/km"
+        case .consistency:
+            return formatActiveDays(entry.averageActiveDays)
+        }
+    }
+
     func value(from entry: UserRankingEntry) -> String {
         switch self {
         case .distance:
@@ -541,6 +547,14 @@ private extension UserRankingMetric {
     private func formatPace(_ seconds: Int?) -> String {
         guard let seconds else { return "--'--\"" }
         return String(format: "%d'%02d\"", max(0, seconds) / 60, max(0, seconds) % 60)
+    }
+
+    private func formatActiveDays(_ days: Double) -> String {
+        if days.rounded() == days {
+            return "\(Int(days))일"
+        }
+
+        return String(format: "%.1f일", days)
     }
 }
 

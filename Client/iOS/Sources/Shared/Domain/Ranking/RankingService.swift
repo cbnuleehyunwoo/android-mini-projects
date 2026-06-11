@@ -2,7 +2,7 @@ import Foundation
 
 protocol RankingServiceProtocol {
     func fetchCurrentSeason(date: Date?, accessToken: String) async throws -> RankingSeason
-    func fetchTeamRankings(seasonID: String?, accessToken: String) async throws -> TeamRankingBoard
+    func fetchTeamRankings(metric: UserRankingMetric, seasonID: String?, accessToken: String) async throws -> TeamRankingBoard
     func fetchUserRankings(metric: UserRankingMetric, seasonID: String?, accessToken: String) async throws -> UserRankingBoard
     func fetchMyRankingSummary(seasonID: String?, accessToken: String) async throws -> MyRankingSummary
 }
@@ -35,8 +35,10 @@ struct TeamRankingEntry: Identifiable, Equatable {
     let teamName: String
     let distanceMeters: Int
     let durationSeconds: Int
+    let averagePaceSecondsPerKilometer: Int?
     let runCount: Int
     let totalActiveDays: Int
+    let averageActiveDays: Double
 }
 
 enum UserRankingMetric: String, CaseIterable, Equatable {
@@ -127,9 +129,13 @@ final class RankingAPIService: RankingServiceProtocol {
         return response.data.domain
     }
 
-    func fetchTeamRankings(seasonID: String? = nil, accessToken: String) async throws -> TeamRankingBoard {
+    func fetchTeamRankings(
+        metric: UserRankingMetric,
+        seasonID: String? = nil,
+        accessToken: String
+    ) async throws -> TeamRankingBoard {
         let response: TeamRankingEnvelope = try await request(
-            path: "/rankings/teams",
+            path: metric.teamRankingPath,
             queryItems: seasonID.map { [URLQueryItem(name: "seasonId", value: $0)] } ?? [],
             accessToken: accessToken
         )
@@ -194,12 +200,16 @@ final class MockRankingService: RankingServiceProtocol {
         Self.sampleSeason
     }
 
-    func fetchTeamRankings(seasonID: String? = nil, accessToken: String) async throws -> TeamRankingBoard {
+    func fetchTeamRankings(
+        metric: UserRankingMetric,
+        seasonID: String? = nil,
+        accessToken: String
+    ) async throws -> TeamRankingBoard {
         TeamRankingBoard(
             season: Self.sampleSeason,
             requiredDistanceMeters: 10_000,
             eligibleCount: Self.sampleTeamRankings.count,
-            rankings: Self.sampleTeamRankings
+            rankings: Self.sampleTeams(for: metric)
         )
     }
 
@@ -253,18 +263,47 @@ final class MockRankingService: RankingServiceProtocol {
     )
 
     private static let sampleTeamRankings: [TeamRankingEntry] = [
-        TeamRankingEntry(rank: 1, topPercent: 0, eligibleCount: 12, teamID: "team-1", teamName: "롯23데", distanceMeters: 298_300, durationSeconds: 88_000, runCount: 200, totalActiveDays: 10),
-        TeamRankingEntry(rank: 2, topPercent: 1, eligibleCount: 12, teamID: "team-2", teamName: "김영희", distanceMeters: 253_100, durationSeconds: 77_563, runCount: 158, totalActiveDays: 9),
-        TeamRankingEntry(rank: 3, topPercent: 8, eligibleCount: 12, teamID: "team-3", teamName: "롯데55", distanceMeters: 241_800, durationSeconds: 76_000, runCount: 140, totalActiveDays: 8),
-        TeamRankingEntry(rank: 4, topPercent: 10, eligibleCount: 12, teamID: "team-4", teamName: "롯데", distanceMeters: 241_800, durationSeconds: 76_000, runCount: 140, totalActiveDays: 8),
-        TeamRankingEntry(rank: 5, topPercent: 15, eligibleCount: 12, teamID: "team-5", teamName: "롯데", distanceMeters: 241_800, durationSeconds: 76_000, runCount: 140, totalActiveDays: 8),
-        TeamRankingEntry(rank: 6, topPercent: 20, eligibleCount: 12, teamID: "team-6", teamName: "롯데", distanceMeters: 241_800, durationSeconds: 76_000, runCount: 140, totalActiveDays: 8),
-        TeamRankingEntry(rank: 7, topPercent: 25, eligibleCount: 12, teamID: "team-7", teamName: "롯데", distanceMeters: 241_800, durationSeconds: 76_000, runCount: 140, totalActiveDays: 8),
-        TeamRankingEntry(rank: 8, topPercent: 30, eligibleCount: 12, teamID: "team-8", teamName: "롯데", distanceMeters: 241_800, durationSeconds: 76_000, runCount: 140, totalActiveDays: 8),
-        TeamRankingEntry(rank: 9, topPercent: 35, eligibleCount: 12, teamID: "team-9", teamName: "롯데", distanceMeters: 241_800, durationSeconds: 76_000, runCount: 140, totalActiveDays: 8),
-        TeamRankingEntry(rank: 10, topPercent: 40, eligibleCount: 12, teamID: "team-10", teamName: "롯데", distanceMeters: 241_800, durationSeconds: 76_000, runCount: 140, totalActiveDays: 8),
-        TeamRankingEntry(rank: 11, topPercent: 45, eligibleCount: 12, teamID: "team-11", teamName: "롯데", distanceMeters: 241_800, durationSeconds: 76_000, runCount: 140, totalActiveDays: 8)
+        TeamRankingEntry(rank: 1, topPercent: 0, eligibleCount: 12, teamID: "team-1", teamName: "롯23데", distanceMeters: 298_300, durationSeconds: 88_000, averagePaceSecondsPerKilometer: 295, runCount: 200, totalActiveDays: 10, averageActiveDays: 2.4),
+        TeamRankingEntry(rank: 2, topPercent: 1, eligibleCount: 12, teamID: "team-2", teamName: "김영희", distanceMeters: 253_100, durationSeconds: 77_563, averagePaceSecondsPerKilometer: 307, runCount: 158, totalActiveDays: 9, averageActiveDays: 2.0),
+        TeamRankingEntry(rank: 3, topPercent: 8, eligibleCount: 12, teamID: "team-3", teamName: "롯데55", distanceMeters: 241_800, durationSeconds: 76_000, averagePaceSecondsPerKilometer: 318, runCount: 140, totalActiveDays: 8, averageActiveDays: 1.6),
+        TeamRankingEntry(rank: 4, topPercent: 10, eligibleCount: 12, teamID: "team-4", teamName: "롯데", distanceMeters: 241_800, durationSeconds: 76_000, averagePaceSecondsPerKilometer: 330, runCount: 140, totalActiveDays: 8, averageActiveDays: 1.5),
+        TeamRankingEntry(rank: 5, topPercent: 15, eligibleCount: 12, teamID: "team-5", teamName: "롯데", distanceMeters: 241_800, durationSeconds: 76_000, averagePaceSecondsPerKilometer: 342, runCount: 140, totalActiveDays: 8, averageActiveDays: 1.4),
+        TeamRankingEntry(rank: 6, topPercent: 20, eligibleCount: 12, teamID: "team-6", teamName: "롯데", distanceMeters: 241_800, durationSeconds: 76_000, averagePaceSecondsPerKilometer: 354, runCount: 140, totalActiveDays: 8, averageActiveDays: 1.3),
+        TeamRankingEntry(rank: 7, topPercent: 25, eligibleCount: 12, teamID: "team-7", teamName: "롯데", distanceMeters: 241_800, durationSeconds: 76_000, averagePaceSecondsPerKilometer: 366, runCount: 140, totalActiveDays: 8, averageActiveDays: 1.2),
+        TeamRankingEntry(rank: 8, topPercent: 30, eligibleCount: 12, teamID: "team-8", teamName: "롯데", distanceMeters: 241_800, durationSeconds: 76_000, averagePaceSecondsPerKilometer: 378, runCount: 140, totalActiveDays: 8, averageActiveDays: 1.1),
+        TeamRankingEntry(rank: 9, topPercent: 35, eligibleCount: 12, teamID: "team-9", teamName: "롯데", distanceMeters: 241_800, durationSeconds: 76_000, averagePaceSecondsPerKilometer: 390, runCount: 140, totalActiveDays: 8, averageActiveDays: 1.0),
+        TeamRankingEntry(rank: 10, topPercent: 40, eligibleCount: 12, teamID: "team-10", teamName: "롯데", distanceMeters: 241_800, durationSeconds: 76_000, averagePaceSecondsPerKilometer: 402, runCount: 140, totalActiveDays: 8, averageActiveDays: 0.9),
+        TeamRankingEntry(rank: 11, topPercent: 45, eligibleCount: 12, teamID: "team-11", teamName: "롯데", distanceMeters: 241_800, durationSeconds: 76_000, averagePaceSecondsPerKilometer: 414, runCount: 140, totalActiveDays: 8, averageActiveDays: 0.8)
     ]
+
+    private static func sampleTeams(for metric: UserRankingMetric) -> [TeamRankingEntry] {
+        switch metric {
+        case .distance:
+            return sampleTeamRankings
+        case .pace:
+            return reranked(sampleTeamRankings.sorted { ($0.averagePaceSecondsPerKilometer ?? Int.max) < ($1.averagePaceSecondsPerKilometer ?? Int.max) })
+        case .consistency:
+            return reranked(sampleTeamRankings.sorted { $0.averageActiveDays > $1.averageActiveDays })
+        }
+    }
+
+    private static func reranked(_ entries: [TeamRankingEntry]) -> [TeamRankingEntry] {
+        entries.enumerated().map { index, entry in
+            TeamRankingEntry(
+                rank: index + 1,
+                topPercent: entry.topPercent,
+                eligibleCount: entry.eligibleCount,
+                teamID: entry.teamID,
+                teamName: entry.teamName,
+                distanceMeters: entry.distanceMeters,
+                durationSeconds: entry.durationSeconds,
+                averagePaceSecondsPerKilometer: entry.averagePaceSecondsPerKilometer,
+                runCount: entry.runCount,
+                totalActiveDays: entry.totalActiveDays,
+                averageActiveDays: entry.averageActiveDays
+            )
+        }
+    }
 
     private static let sampleUsers: [UserRankingEntry] = [
         UserRankingEntry(rank: 1, topPercent: 0, eligibleCount: 25, userID: "user-1", nickname: "롯23데", avatarKey: nil, teamID: "team-1", teamName: "롯23데", distanceMeters: 298_300, durationSeconds: 87_016, averagePaceSecondsPerKilometer: 292, runCount: 200, activeDays: 10, elapsedDays: 10, consistencyRate: 100),
@@ -375,8 +414,10 @@ private struct TeamRankingEntryPayload: Decodable {
     let teamName: String
     let distanceMeters: Int
     let durationSeconds: Int
+    let averagePaceSecondsPerKm: Int?
     let runCount: Int
     let totalActiveDays: Int
+    let averageActiveDays: Double?
 
     var domain: TeamRankingEntry {
         TeamRankingEntry(
@@ -387,8 +428,10 @@ private struct TeamRankingEntryPayload: Decodable {
             teamName: teamName,
             distanceMeters: distanceMeters,
             durationSeconds: durationSeconds,
+            averagePaceSecondsPerKilometer: averagePaceSecondsPerKm,
             runCount: runCount,
-            totalActiveDays: totalActiveDays
+            totalActiveDays: totalActiveDays,
+            averageActiveDays: averageActiveDays ?? 0
         )
     }
 }
@@ -638,6 +681,17 @@ private extension KeyedDecodingContainer {
 }
 
 private extension UserRankingMetric {
+    var teamRankingPath: String {
+        switch self {
+        case .distance:
+            return "/rankings/teams/distance"
+        case .pace:
+            return "/rankings/teams/pace"
+        case .consistency:
+            return "/rankings/teams/count"
+        }
+    }
+
     var rankingPath: String {
         switch self {
         case .distance:
@@ -645,7 +699,7 @@ private extension UserRankingMetric {
         case .pace:
             return "/rankings/users/pace"
         case .consistency:
-            return "/rankings/users/consistency"
+            return "/rankings/users/count"
         }
     }
 }
