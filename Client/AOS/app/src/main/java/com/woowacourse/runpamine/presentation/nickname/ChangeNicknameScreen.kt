@@ -97,7 +97,6 @@ private fun ChangeNicknameContent(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .statusBarsPadding()
                     .height(64.dp),
         )
         Spacer(modifier = Modifier.height(15.dp))

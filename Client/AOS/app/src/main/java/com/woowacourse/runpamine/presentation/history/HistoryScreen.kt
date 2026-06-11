@@ -36,10 +36,7 @@ fun HistoryScreen(
             ScreenTopBar(
                 title = stringResource(R.string.history_title),
                 onBackClick = onBack,
-                modifier =
-                    Modifier
-                        .statusBarsPadding()
-                        .padding(horizontal = 12.dp),
+                modifier = Modifier.padding(horizontal = 12.dp),
             )
         },
     ) { innerPadding ->

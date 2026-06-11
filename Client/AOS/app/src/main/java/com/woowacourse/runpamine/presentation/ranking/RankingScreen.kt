@@ -1,23 +1,23 @@
 package com.woowacourse.runpamine.presentation.ranking
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -50,6 +50,7 @@ import com.woowacourse.runpamine.presentation.ranking.model.RankingUiState
 import com.woowacourse.runpamine.presentation.ranking.viewmodel.RankingViewModel
 import com.woowacourse.runpamine.ui.theme.Blue10
 import com.woowacourse.runpamine.ui.theme.Blue40
+import com.woowacourse.runpamine.ui.theme.Gray40
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 import java.util.Locale
 
@@ -90,7 +91,6 @@ private fun RankingContent(
         modifier =
             modifier
                 .fillMaxSize()
-                .statusBarsPadding()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 22.dp),
     ) {
@@ -100,14 +100,13 @@ private fun RankingContent(
             onScopeSelect = onScopeSelect,
             modifier = Modifier.fillMaxWidth(),
         )
-        if (uiState.selectedScope == RankingScope.PERSONAL) {
-            Spacer(modifier = Modifier.height(26.dp))
-            PersonalMetricTabs(
-                selectedMetric = uiState.selectedMetric,
-                onMetricSelect = onMetricSelect,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
+        Spacer(modifier = Modifier.height(26.dp))
+        RankingMetricTabs(
+            selectedScope = uiState.selectedScope,
+            selectedMetric = uiState.selectedMetric,
+            onMetricSelect = onMetricSelect,
+            modifier = Modifier.fillMaxWidth(),
+        )
         Spacer(modifier = Modifier.height(28.dp))
         MyRankingCard(
             item = myRanking,
@@ -140,56 +139,67 @@ fun RankingScopeTabs(
     onScopeSelect: (RankingScope) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    SegmentedTabs(
-        items = RankingScope.entries,
-        selectedItem = selectedScope,
-        label = RankingScope::label,
-        onItemSelect = onScopeSelect,
+    Column(
         modifier = modifier,
-    )
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = "랭킹",
+            color = Color.Black,
+            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 24.sp),
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(72.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            RankingScope.entries.forEach { scope ->
+                RankingScopeTab(
+                    scope = scope,
+                    selected = scope == selectedScope,
+                    onClick = { onScopeSelect(scope) },
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+    }
 }
 
 @Composable
-private fun <T> SegmentedTabs(
-    items: List<T>,
-    selectedItem: T,
-    label: (T) -> String,
-    onItemSelect: (T) -> Unit,
+private fun RankingScopeTab(
+    scope: RankingScope,
+    selected: Boolean,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(4.dp),
 ) {
-    Row(
+    Box(
         modifier =
             modifier
-                .height(54.dp)
-                .clip(RoundedCornerShape(28.dp))
-                .background(Color(0xFFE0E0E0))
-                .padding(contentPadding),
-        verticalAlignment = Alignment.CenterVertically,
+                .height(72.dp)
+                .clickable(
+                    role = Role.Tab,
+                    onClick = onClick,
+                ),
+        contentAlignment = Alignment.Center,
     ) {
-        items.forEach { item ->
-            val selected = item == selectedItem
+        Text(
+            text = scope.label,
+            color = if (selected) Blue40 else Gray40,
+            style = MaterialTheme.typography.bodySmall.copy(fontSize = 16.sp),
+            textAlign = TextAlign.Center,
+        )
+        if (selected) {
             Box(
                 modifier =
                     Modifier
-                        .weight(1f)
-                        .height(48.dp)
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(if (selected) Blue40 else Color.Transparent)
-                        .clickable(
-                            role = Role.Tab,
-                            onClick = { onItemSelect(item) },
-                        ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = label(item),
-                    color = if (selected) Color.White else Color(0xFF9AA3B2),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                )
-            }
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .height(4.dp)
+                        .background(Blue40),
+            )
         }
     }
 }
@@ -231,19 +241,41 @@ private fun RankingRow(
 }
 
 @Composable
-private fun PersonalMetricTabs(
+private fun RankingMetricTabs(
+    selectedScope: RankingScope,
     selectedMetric: RankingMetric,
     onMetricSelect: (RankingMetric) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    SegmentedTabs(
-        items = RankingMetric.entries,
-        selectedItem = selectedMetric,
-        label = RankingMetric::label,
-        onItemSelect = onMetricSelect,
+    Row(
         modifier = modifier,
-        contentPadding = PaddingValues(2.dp),
-    )
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RankingMetric.entries.forEach { metric ->
+            val selected = metric == selectedMetric
+            val tabShape = RoundedCornerShape(32.dp)
+            Box(
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .height(50.dp)
+                        .clip(tabShape)
+                        .background(if (selected) Blue10 else Color(0xFFF2F3F6))
+                        .border(if (selected) 2.dp else 0.dp, if (selected) Blue40 else Color.Transparent, tabShape)
+                        .clickable(role = Role.Tab, onClick = { onMetricSelect(metric) }),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = metric.label(selectedScope),
+                    color = if (selected) Blue40 else Color(0xFF6B7280),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    textAlign = TextAlign.Center,
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -304,7 +336,7 @@ private fun RankingListCard(
                     modifier = Modifier.weight(1f),
                 )
                 Text(
-                    text = "팀 총 거리 기준",
+                    text = selectedScope.teamStandardLabel,
                     color = Color(0xFFA6AFBD),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
@@ -320,11 +352,15 @@ private fun RankingListCard(
 private fun RankingUiState.toRankingItems(): List<RankingItem> =
     when (selectedScope) {
         RankingScope.TEAM ->
-            teamRankings.map { ranking ->
-                ranking.toRankingItem(
-                    isMine = ranking.teamId == homeState?.team?.id,
-                )
-            }
+            teamRankings
+                .sortedFor(selectedMetric)
+                .mapIndexed { index, ranking ->
+                    ranking.toRankingItem(
+                        metric = selectedMetric,
+                        rank = index + 1,
+                        isMine = ranking.teamId == homeState?.team?.id,
+                    )
+                }
 
         RankingScope.PERSONAL ->
             userRankings.map { ranking ->
@@ -346,7 +382,7 @@ private fun RankingUiState.toMyRankingItem(items: List<RankingItem>): RankingIte
             RankingItem(
                 rank = null,
                 name = homeState?.team?.name ?: "내 팀",
-                valueText = "10km 이상 필요",
+                valueText = "랭킹 집계 전",
                 isMine = true,
             )
 
@@ -361,13 +397,31 @@ private fun RankingUiState.toMyRankingItem(items: List<RankingItem>): RankingIte
     }
 }
 
-private fun TeamRanking.toRankingItem(isMine: Boolean): RankingItem =
+private fun TeamRanking.toRankingItem(
+    metric: RankingMetric,
+    rank: Int,
+    isMine: Boolean,
+): RankingItem =
     RankingItem(
         rank = rank,
         name = teamName,
-        valueText = distanceMeters.toKilometerText(),
+        valueText = valueTextFor(metric),
         isMine = isMine,
     )
+
+private fun List<TeamRanking>.sortedFor(metric: RankingMetric): List<TeamRanking> =
+    when (metric) {
+        RankingMetric.DISTANCE -> sortedByDescending { it.distanceMeters }
+        RankingMetric.PACE -> sortedBy { it.averagePaceSecondsPerKm }
+        RankingMetric.CONSISTENCY -> sortedByDescending { it.averageRunCount }
+    }
+
+private fun TeamRanking.valueTextFor(metric: RankingMetric): String =
+    when (metric) {
+        RankingMetric.DISTANCE -> distanceMeters.toKilometerText()
+        RankingMetric.PACE -> averagePaceSecondsPerKm.toPaceText()
+        RankingMetric.CONSISTENCY -> averageRunCount.toRunCountText()
+    }
 
 private fun UserRanking.toRankingItem(
     metric: RankingMetric,
@@ -415,12 +469,18 @@ private fun Double.toPercentText(): String =
         String.format(Locale.getDefault(), "%.1f", this)
     }
 
-private val RankingMetric.label: String
+private fun RankingMetric.label(scope: RankingScope): String =
+    when (this) {
+        RankingMetric.DISTANCE -> "전체 거리"
+        RankingMetric.PACE -> if (scope == RankingScope.TEAM) "평균 페이스" else "페이스"
+        RankingMetric.CONSISTENCY -> if (scope == RankingScope.TEAM) "평균 횟수" else "횟수"
+    }
+
+private val RankingScope.teamStandardLabel: String
     get() =
         when (this) {
-            RankingMetric.DISTANCE -> "KM"
-            RankingMetric.PACE -> "페이스"
-            RankingMetric.CONSISTENCY -> "횟수"
+            RankingScope.TEAM -> "선택 기준"
+            RankingScope.PERSONAL -> ""
         }
 
 private data class RankingItem(
@@ -442,6 +502,22 @@ private fun Int.toPaceText(): String {
     val seconds = this % SECONDS_PER_MINUTE
     return String.format(Locale.getDefault(), "%d'%02d\"/km", minutes, seconds)
 }
+
+private val TeamRanking.averagePaceSecondsPerKm: Int
+    get() {
+        if (distanceMeters <= 0 || durationSeconds <= 0L) return 0
+        return (durationSeconds / (distanceMeters / METERS_PER_KILOMETER)).toInt()
+    }
+
+private val TeamRanking.averageRunCount: Double
+    get() = if (totalActiveDays <= 0) 0.0 else runCount.toDouble() / totalActiveDays
+
+private fun Double.toRunCountText(): String =
+    if (this % 1.0 == 0.0) {
+        "${toInt()}회"
+    } else {
+        String.format(Locale.getDefault(), "%.1f회", this)
+    }
 
 private fun previewUiState(scope: RankingScope = RankingScope.PERSONAL): RankingUiState =
     RankingUiState(
