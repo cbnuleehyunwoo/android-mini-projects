@@ -7,6 +7,7 @@ import UIKit
 protocol AuthServiceProtocol {
     func restoreSession() async throws -> AuthSession?
     func loginWithGoogle() async throws -> AuthSession
+    func loginWithApple(identityToken: String, nonce: String?) async throws -> AuthSession
     func completeSignup(profile: SignupProfile) async throws -> AuthSession
 }
 
@@ -57,12 +58,12 @@ final class SupabaseAuthService: AuthServiceProtocol {
         do {
             GIDSignIn.sharedInstance.configuration = googleConfiguration
 
-            let nonce = Self.makeNonce()
+            let nonce = AuthNonce.make()
             let signInResult = try await GIDSignIn.sharedInstance.signIn(
                 withPresenting: presentingViewController,
                 hint: nil,
                 additionalScopes: nil,
-                nonce: Self.sha256Hex(nonce)
+                nonce: AuthNonce.sha256Hex(nonce)
             )
             guard let idToken = signInResult.user.idToken?.tokenString else {
                 throw AuthError.missingGoogleIDToken
@@ -92,19 +93,25 @@ final class SupabaseAuthService: AuthServiceProtocol {
         }
     }
 
-    private static func makeNonce(length: Int = 32) -> String {
-        let characters = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
-        var generator = SystemRandomNumberGenerator()
+    func loginWithApple(identityToken: String, nonce: String?) async throws -> AuthSession {
+        guard let supabase else {
+            throw AuthError.missingSupabaseConfiguration
+        }
 
-        return String((0..<length).map { _ in
-            characters.randomElement(using: &generator) ?? "0"
-        })
-    }
+        let session = try await supabase.auth.signInWithIdToken(
+            credentials: .init(
+                provider: .apple,
+                idToken: identityToken,
+                nonce: nonce
+            )
+        )
 
-    private static func sha256Hex(_ value: String) -> String {
-        SHA256.hash(data: Data(value.utf8))
-            .map { String(format: "%02x", $0) }
-            .joined()
+        return AuthSession(
+            accessToken: session.accessToken,
+            refreshToken: session.refreshToken,
+            userID: session.user.id.uuidString,
+            needsSignup: !store.hasCompletedSignup
+        )
     }
 
     func completeSignup(profile: SignupProfile) async throws -> AuthSession {
@@ -153,6 +160,16 @@ final class MockAuthService: AuthServiceProtocol {
         )
     }
 
+    func loginWithApple(identityToken: String, nonce: String?) async throws -> AuthSession {
+        try await Task.sleep(nanoseconds: 450_000_000)
+        return AuthSession(
+            accessToken: "mock-access-token",
+            refreshToken: "mock-refresh-token",
+            userID: UUID().uuidString,
+            needsSignup: !store.hasCompletedSignup
+        )
+    }
+
     func completeSignup(profile: SignupProfile) async throws -> AuthSession {
         try await Task.sleep(nanoseconds: 350_000_000)
 
@@ -168,6 +185,23 @@ final class MockAuthService: AuthServiceProtocol {
             userID: UUID().uuidString,
             needsSignup: false
         )
+    }
+}
+
+enum AuthNonce {
+    static func make(length: Int = 32) -> String {
+        let characters = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
+        var generator = SystemRandomNumberGenerator()
+
+        return String((0..<length).map { _ in
+            characters.randomElement(using: &generator) ?? "0"
+        })
+    }
+
+    static func sha256Hex(_ value: String) -> String {
+        SHA256.hash(data: Data(value.utf8))
+            .map { String(format: "%02x", $0) }
+            .joined()
     }
 }
 

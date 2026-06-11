@@ -26,13 +26,24 @@ struct LoginView: View {
                 }
                 .padding(.bottom, 50)
 
-                GoogleLoginButton(isLoading: viewModel.isLoading) {
-                    Task {
-                        await viewModel.loginWithGoogle()
-                        if let session = viewModel.session {
-                            onLoginCompleted(session)
+                VStack(spacing: 12) {
+                    GoogleLoginButton(isLoading: viewModel.isLoading) {
+                        Task {
+                            await viewModel.loginWithGoogle()
+                            completeLoginIfNeeded()
                         }
                     }
+
+                    AppleLoginButton(
+                        isLoading: viewModel.isLoading,
+                        onRequest: viewModel.configureAppleLoginRequest,
+                        onCompletion: { result in
+                            Task {
+                                await viewModel.loginWithApple(result: result)
+                                completeLoginIfNeeded()
+                            }
+                        }
+                    )
                 }
                 .padding(.horizontal, AppTheme.Layout.horizontalPadding)
 
@@ -46,6 +57,12 @@ struct LoginView: View {
                 Spacer()
                     .frame(height: 290)
             }
+        }
+    }
+
+    private func completeLoginIfNeeded() {
+        if let session = viewModel.session {
+            onLoginCompleted(session)
         }
     }
 }

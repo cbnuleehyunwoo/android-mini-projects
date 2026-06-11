@@ -14,6 +14,7 @@
 		7A1000010000000000000005 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000105 /* LoginView.swift */; };
 		7A1000010000000000000006 /* LoginViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000106 /* LoginViewModel.swift */; };
 		7A1000010000000000000007 /* GoogleLoginButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000107 /* GoogleLoginButton.swift */; };
+		7A1590010000000000000001 /* AppleLoginButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1590010000000000000101 /* AppleLoginButton.swift */; };
 		7A1000010000000000000008 /* AppLogoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000108 /* AppLogoView.swift */; };
 		7A1000010000000000000009 /* AuthModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000109 /* AuthModels.swift */; };
 		7A100001000000000000000A /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000010A /* AuthService.swift */; };
@@ -87,6 +88,8 @@
 		7A1000010000000000000105 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		7A1000010000000000000106 /* LoginViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewModel.swift; sourceTree = "<group>"; };
 		7A1000010000000000000107 /* GoogleLoginButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleLoginButton.swift; sourceTree = "<group>"; };
+		7A1590010000000000000101 /* AppleLoginButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleLoginButton.swift; sourceTree = "<group>"; };
+		7A1590010000000000000102 /* Runpamine.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runpamine.entitlements; sourceTree = "<group>"; };
 		7A1000010000000000000108 /* AppLogoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogoView.swift; sourceTree = "<group>"; };
 		7A1000010000000000000109 /* AuthModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthModels.swift; sourceTree = "<group>"; };
 		7A100001000000000000010A /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
@@ -171,6 +174,7 @@
 				7A1000010000000000000302 /* Sources */,
 				7A1000010000000000000320 /* Resources */,
 				7A100001000000000000012F /* Info.plist */,
+				7A1590010000000000000102 /* Runpamine.entitlements */,
 				7A1000010000000000000303 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -268,6 +272,7 @@
 				7A1000010000000000000105 /* LoginView.swift */,
 				7A1000010000000000000106 /* LoginViewModel.swift */,
 				7A1000010000000000000107 /* GoogleLoginButton.swift */,
+				7A1590010000000000000101 /* AppleLoginButton.swift */,
 			);
 			path = Login;
 			sourceTree = "<group>";
@@ -546,6 +551,7 @@
 				7A1000010000000000000005 /* LoginView.swift in Sources */,
 				7A1000010000000000000006 /* LoginViewModel.swift in Sources */,
 				7A1000010000000000000007 /* GoogleLoginButton.swift in Sources */,
+				7A1590010000000000000001 /* AppleLoginButton.swift in Sources */,
 				7A1000010000000000000008 /* AppLogoView.swift in Sources */,
 				7A1000010000000000000009 /* AuthModels.swift in Sources */,
 				7A100001000000000000000A /* AuthService.swift in Sources */,
@@ -718,6 +724,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CODE_SIGN_ENTITLEMENTS = Runpamine.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
@@ -748,6 +755,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CODE_SIGN_ENTITLEMENTS = Runpamine.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
