@@ -147,14 +147,20 @@ final class SupabaseAuthService: AuthServiceProtocol {
             throw AuthError.missingLogoutConfiguration
         }
 
+        let logoutAccessToken = await currentAccessToken() ?? accessToken
         var request = URLRequest(url: apiBaseURL.appendingAPIPath("/auth/logout"))
         request.httpMethod = "POST"
-        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("Bearer \(logoutAccessToken)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
         let (data, response) = try await session.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
             throw AuthError.logoutFailed
+        }
+
+        if [401, 403].contains(httpResponse.statusCode) {
+            try? await supabase?.auth.signOut(scope: .local)
+            return
         }
 
         guard 200..<300 ~= httpResponse.statusCode else {
@@ -168,7 +174,12 @@ final class SupabaseAuthService: AuthServiceProtocol {
             }
         }
 
-        try await supabase?.auth.signOut(scope: .local)
+        try? await supabase?.auth.signOut(scope: .local)
+    }
+
+    private func currentAccessToken() async -> String? {
+        guard let supabase else { return nil }
+        return try? await supabase.auth.session.accessToken
     }
 }
 
