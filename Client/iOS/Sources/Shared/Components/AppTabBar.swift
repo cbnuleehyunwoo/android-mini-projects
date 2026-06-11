@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct AppTabBar: View {
-    static let height: CGFloat = 104
+    static let height: CGFloat = 75
 
     @Binding var selectedTab: MainTab
 
@@ -20,28 +20,33 @@ struct AppTabBar: View {
         .padding(.bottom, 8)
         .background(Color.white.ignoresSafeArea(.container, edges: .bottom))
         .frame(height: Self.height)
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(AppTheme.Colors.border.opacity(0.6))
+                .frame(height: 1)
+        }
     }
 
     private func tabButton(_ tab: MainTab, title: String, systemIcon: String? = nil, assetIcon: String? = nil) -> some View {
         Button {
             selectedTab = tab
         } label: {
-            VStack(spacing: 12) {
+            VStack(spacing: 8) {
                 if let assetIcon {
                     Image(assetIcon)
                         .resizable()
                         .renderingMode(.template)
                         .scaledToFit()
-                        .frame(width: 36, height: 36)
+                        .frame(width: 24, height: 24)
                 } else if let systemIcon {
                     Image(systemName: systemIcon)
-                        .font(.system(size: 36, weight: .semibold))
+                        .font(.system(size: 24, weight: .semibold))
                 }
                 Text(title)
                     .font(AppTheme.Typography.font(size: 16, weight: .medium))
             }
             .foregroundStyle(selectedTab == tab ? AppTheme.Colors.primary : Color.gray)
-            .frame(width: 74, height: 86)
+            .frame(width: 74, height: 30)
         }
     }
 }
