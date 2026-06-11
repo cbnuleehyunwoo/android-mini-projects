@@ -16,11 +16,11 @@ struct RunpamineConfirmationDialog: View {
 
             VStack(spacing: 0) {
                 Text(title)
-                    .font(AppTheme.Typography.font(size: 24, weight: .black))
+                    .font(AppTheme.Typography.font(size: 24, weight: .semibold))
                     .foregroundStyle(AppTheme.Colors.primary)
 
                 Text(message)
-                    .font(AppTheme.Typography.font(size: 20, weight: .semibold))
+                    .font(AppTheme.Typography.font(size: 20, weight: .regular))
                     .foregroundStyle(.black)
                     .padding(.top, 20)
 
@@ -30,8 +30,8 @@ struct RunpamineConfirmationDialog: View {
                 }
                 .padding(.top, 36)
             }
-            .padding(.horizontal, 32)
-            .padding(.vertical, 34)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 30)
             .frame(maxWidth: 432)
             .background(Color.white)
             .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
