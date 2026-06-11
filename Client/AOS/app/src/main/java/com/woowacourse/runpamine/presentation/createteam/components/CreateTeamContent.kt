@@ -55,7 +55,6 @@ fun CreateTeamContent(
         ScreenTopBar(
             title = stringResource(R.string.create_team_bar),
             onBackClick = onBackClick,
-            modifier = Modifier.statusBarsPadding(),
         )
         Text(
             text = stringResource(R.string.create_team_header),

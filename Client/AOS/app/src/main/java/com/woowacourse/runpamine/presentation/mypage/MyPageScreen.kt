@@ -104,7 +104,6 @@ private fun MyPageContent(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .statusBarsPadding()
                     .padding(vertical = 16.dp),
         )
         MyPageProfile(

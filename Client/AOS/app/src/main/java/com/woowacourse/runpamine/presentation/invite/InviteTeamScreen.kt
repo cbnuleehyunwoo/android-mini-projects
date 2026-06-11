@@ -37,7 +37,6 @@ fun InviteTeamScreen(
         ScreenTopBar(
             title = stringResource(R.string.invite_team_bar),
             onBackClick = onBackClick,
-            modifier = Modifier.statusBarsPadding(),
         )
         Spacer(
             modifier = Modifier.height(15.dp),

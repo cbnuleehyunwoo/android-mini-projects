@@ -74,7 +74,6 @@ private fun JoinContent(
         ScreenTopBar(
             title = stringResource(R.string.join_team_bar),
             onBackClick = onBackClick,
-            modifier = Modifier.statusBarsPadding(),
         )
         Spacer(
             modifier = Modifier.height(15.dp),
