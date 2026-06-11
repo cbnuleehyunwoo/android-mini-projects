@@ -6,7 +6,10 @@ import com.woowacourse.runpamine.domain.ranking.TeamRanking
 import com.woowacourse.runpamine.domain.ranking.UserRanking
 
 interface RankingRemoteDataSource {
-    suspend fun getTeamRankings(accessToken: String): List<TeamRanking>
+    suspend fun getTeamRankings(
+        accessToken: String,
+        metric: RankingMetric,
+    ): List<TeamRanking>
 
     suspend fun getUserRankings(
         accessToken: String,
