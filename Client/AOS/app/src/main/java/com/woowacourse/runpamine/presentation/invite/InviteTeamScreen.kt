@@ -43,7 +43,9 @@ fun InviteTeamScreen(
             modifier = Modifier.height(15.dp),
         )
         InviteTeamHeader(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 20.dp),
         )
         Spacer(
             modifier = Modifier.height(24.dp),

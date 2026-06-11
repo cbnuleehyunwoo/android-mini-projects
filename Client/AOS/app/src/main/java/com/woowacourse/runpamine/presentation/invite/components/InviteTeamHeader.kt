@@ -19,13 +19,8 @@ fun InviteTeamHeader(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Text(
-            text = stringResource(R.string.invite_code),
-            style = MaterialTheme.typography.headlineLarge,
-        )
-        Text(
             text = stringResource(R.string.invite_code_description),
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.surface,
         )
     }
 }
