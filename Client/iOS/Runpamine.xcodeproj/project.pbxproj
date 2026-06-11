@@ -60,6 +60,7 @@
 		7A1420010000000000000001 /* RankingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1420010000000000000101 /* RankingService.swift */; };
 		7A1420010000000000000002 /* RankingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1420010000000000000102 /* RankingView.swift */; };
 		7A1350010000000000000001 /* RunpamineLottieView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1350010000000000000101 /* RunpamineLottieView.swift */; };
+		7A1670010000000000000001 /* RunpamineConfirmationDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1670010000000000000101 /* RunpamineConfirmationDialog.swift */; };
 		7A1000010000000000000040 /* pretendard_black.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000140 /* pretendard_black.otf */; };
 		7A1000010000000000000041 /* pretendard_bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000141 /* pretendard_bold.otf */; };
 		7A1000010000000000000042 /* pretendard_extra_bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000142 /* pretendard_extra_bold.otf */; };
@@ -134,6 +135,7 @@
 		7A1420010000000000000101 /* RankingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RankingService.swift; sourceTree = "<group>"; };
 		7A1420010000000000000102 /* RankingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RankingView.swift; sourceTree = "<group>"; };
 		7A1350010000000000000101 /* RunpamineLottieView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunpamineLottieView.swift; sourceTree = "<group>"; };
+		7A1670010000000000000101 /* RunpamineConfirmationDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunpamineConfirmationDialog.swift; sourceTree = "<group>"; };
 		7A1000010000000000000140 /* pretendard_black.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_black.otf; sourceTree = "<group>"; };
 		7A1000010000000000000141 /* pretendard_bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_bold.otf; sourceTree = "<group>"; };
 		7A1000010000000000000142 /* pretendard_extra_bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_extra_bold.otf; sourceTree = "<group>"; };
@@ -247,6 +249,7 @@
 				7A1000010000000000000119 /* ValidationRuleRow.swift */,
 				7A1000010000000000000121 /* MapPlaceholderView.swift */,
 				7A1350010000000000000101 /* RunpamineLottieView.swift */,
+				7A1670010000000000000101 /* RunpamineConfirmationDialog.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -589,6 +592,7 @@
 				7A1420010000000000000001 /* RankingService.swift in Sources */,
 				7A1420010000000000000002 /* RankingView.swift in Sources */,
 				7A1350010000000000000001 /* RunpamineLottieView.swift in Sources */,
+				7A1670010000000000000001 /* RunpamineConfirmationDialog.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
