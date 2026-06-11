@@ -176,9 +176,12 @@ private struct TeamEmptyStateView: View {
 
             VStack(spacing: 12) {
                 Button(action: onCreateTeam) {
-                    HStack(spacing: 12) {
-                        Image(systemName: "plus")
-                            .font(.system(size: 21, weight: .black))
+                    HStack(spacing: 26) {
+                        Image("icon_team_plus")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 32, height: 32)
+
                         VStack(alignment: .leading, spacing: 3) {
                             Text("팀 생성하기")
                                 .font(AppTheme.Typography.font(size: 18, weight: .black))
@@ -188,20 +191,24 @@ private struct TeamEmptyStateView: View {
                         }
                         Spacer()
                         Image(systemName: "chevron.right")
-                            .font(.system(size: 16, weight: .black))
+                            .font(.system(size: 24, weight: .black))
                     }
                     .foregroundStyle(.white)
-                    .padding(.horizontal, 22)
+                    .padding(.horizontal, 24)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 76)
+                    .frame(height: 94)
                     .background(AppTheme.Colors.primary)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
                 }
 
                 Button(action: onJoinTeam) {
-                    HStack(spacing: 12) {
-                        Image(systemName: "key.fill")
-                            .font(.system(size: 20, weight: .black))
+                    HStack(spacing: 26) {
+                        Image("icon_team_key")
+                            .resizable()
+                            .renderingMode(.template)
+                            .scaledToFit()
+                            .frame(width: 24, height: 24)
+
                         VStack(alignment: .leading, spacing: 3) {
                             Text("팀 참가하기")
                                 .font(AppTheme.Typography.font(size: 18, weight: .black))
@@ -211,18 +218,18 @@ private struct TeamEmptyStateView: View {
                         }
                         Spacer()
                         Image(systemName: "chevron.right")
-                            .font(.system(size: 16, weight: .black))
+                            .font(.system(size: 24, weight: .black))
                     }
                     .foregroundStyle(AppTheme.Colors.primary)
-                    .padding(.horizontal, 22)
+                    .padding(.horizontal, 24)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 76)
+                    .frame(height: 94)
                     .background(AppTheme.Colors.surface)
                     .overlay {
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        RoundedRectangle(cornerRadius: 22, style: .continuous)
                             .stroke(AppTheme.Colors.primary, lineWidth: 1.5)
                     }
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
                 }
             }
             .frame(maxWidth: .infinity)
