@@ -55,7 +55,7 @@ class RankingViewModel(
                         RankingLoadResult(
                             homeState = homeState,
                             mySummary = mySummary,
-                            teamRankings = rankingRepository.getTeamRankings(),
+                            teamRankings = rankingRepository.getTeamRankings(metric),
                         )
 
                     RankingScope.PERSONAL ->

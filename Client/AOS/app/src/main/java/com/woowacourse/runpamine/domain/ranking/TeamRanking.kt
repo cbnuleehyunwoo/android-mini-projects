@@ -6,6 +6,8 @@ data class TeamRanking(
     val teamName: String,
     val distanceMeters: Int,
     val durationSeconds: Long,
+    val averagePaceSecondsPerKm: Int,
     val runCount: Int,
     val totalActiveDays: Int,
+    val averageActiveDays: Double,
 )

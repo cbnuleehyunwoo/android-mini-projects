@@ -17,11 +17,14 @@ class ApiRankingRemoteDataSource(
 ) : RankingRemoteDataSource {
     private val apiBaseUrl = baseUrl.toApiBaseUrl()
 
-    override suspend fun getTeamRankings(accessToken: String): List<TeamRanking> =
+    override suspend fun getTeamRankings(
+        accessToken: String,
+        metric: RankingMetric,
+    ): List<TeamRanking> =
         withContext(Dispatchers.IO) {
             val response =
                 request(
-                    path = "/rankings/teams",
+                    path = "/rankings/teams/${metric.pathSegment}",
                     method = "GET",
                     accessToken = accessToken,
                 )
@@ -116,7 +119,7 @@ private val RankingMetric.pathSegment: String
         when (this) {
             RankingMetric.DISTANCE -> "distance"
             RankingMetric.PACE -> "pace"
-            RankingMetric.CONSISTENCY -> "consistency"
+            RankingMetric.CONSISTENCY -> "count"
         }
 
 private fun JSONObject.toTeamRanking(): TeamRanking =
@@ -126,8 +129,10 @@ private fun JSONObject.toTeamRanking(): TeamRanking =
         teamName = getString("teamName"),
         distanceMeters = getInt("distanceMeters"),
         durationSeconds = optLong("durationSeconds", 0L),
+        averagePaceSecondsPerKm = optInt("averagePaceSecondsPerKm", 0),
         runCount = optInt("runCount", 0),
         totalActiveDays = optInt("totalActiveDays", 0),
+        averageActiveDays = optDouble("averageActiveDays", 0.0),
     )
 
 private fun JSONObject.toUserRanking(): UserRanking =

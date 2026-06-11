@@ -12,7 +12,11 @@ class DefaultRankingRepository(
     private val authRepository: AuthRepository,
     private val remoteDataSource: RankingRemoteDataSource,
 ) : RankingRepository {
-    override suspend fun getTeamRankings(): List<TeamRanking> = remoteDataSource.getTeamRankings(requireAccessToken())
+    override suspend fun getTeamRankings(metric: RankingMetric): List<TeamRanking> =
+        remoteDataSource.getTeamRankings(
+            accessToken = requireAccessToken(),
+            metric = metric,
+        )
 
     override suspend fun getUserRankings(metric: RankingMetric): List<UserRanking> =
         remoteDataSource.getUserRankings(
