@@ -173,19 +173,9 @@ private struct TeamEmptyStateView: View {
             Spacer()
 
             VStack(spacing: 18) {
-                ZStack {
-                    Circle()
-                        .fill(AppTheme.Colors.primary.opacity(0.10))
-                        .frame(width: 94, height: 94)
-                    Image(systemName: "person.3.fill")
-                        .font(.system(size: 38, weight: .semibold))
-                        .foregroundStyle(AppTheme.Colors.primary)
-                }
-
                 Text("아직 참여한 팀이 없어요")
                     .font(AppTheme.Typography.font(size: 25, weight: .black))
                     .foregroundStyle(AppTheme.Colors.textPrimary)
-                    .padding(.top, 8)
 
                 Text("팀을 만들거나 초대 코드로\n팀에 참가해보세요.")
                     .font(AppTheme.Typography.font(size: 16, weight: .semibold))
