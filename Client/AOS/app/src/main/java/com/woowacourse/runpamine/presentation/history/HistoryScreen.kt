@@ -5,8 +5,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -35,7 +36,10 @@ fun HistoryScreen(
             ScreenTopBar(
                 title = stringResource(R.string.history_title),
                 onBackClick = onBack,
-                modifier = Modifier.padding(horizontal = 12.dp),
+                modifier =
+                    Modifier
+                        .statusBarsPadding()
+                        .padding(horizontal = 12.dp),
             )
         },
     ) { innerPadding ->
@@ -44,7 +48,7 @@ fun HistoryScreen(
                 Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .safeDrawingPadding()
+                    .navigationBarsPadding()
                     .padding(horizontal = 24.dp, vertical = 28.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {

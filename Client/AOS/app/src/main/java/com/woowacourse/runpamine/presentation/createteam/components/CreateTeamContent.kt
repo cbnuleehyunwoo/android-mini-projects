@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -53,6 +55,7 @@ fun CreateTeamContent(
         ScreenTopBar(
             title = stringResource(R.string.create_team_bar),
             onBackClick = onBackClick,
+            modifier = Modifier.statusBarsPadding(),
         )
         Text(
             text = stringResource(R.string.create_team_header),
@@ -84,7 +87,10 @@ fun CreateTeamContent(
         BottomButton(
             text = stringResource(R.string.create_team),
             onClick = onCreateClick,
-            modifier = Modifier.fillMaxWidth(),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding(),
             enabled = !isLoading,
         )
     }
