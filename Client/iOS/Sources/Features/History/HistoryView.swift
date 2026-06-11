@@ -27,10 +27,10 @@ struct HistoryView: View {
 
                 HStack(alignment: .lastTextBaseline, spacing: 8) {
                     Text(totalDistanceText)
-                        .font(AppTheme.Typography.font(size: 68, weight: .black))
+                        .font(AppTheme.Typography.font(size: 55, weight: .bold))
                         .foregroundStyle(AppTheme.Colors.primary)
                     Text("KM")
-                        .font(AppTheme.Typography.font(size: 18, weight: .black))
+                        .font(AppTheme.Typography.font(size: 18, weight: .medium))
                         .foregroundStyle(Color.gray)
                 }
                 .padding(.horizontal, 30)
@@ -266,7 +266,7 @@ private struct HistoryPeriodControl: View {
             selectedPeriod = period
         } label: {
             Text(period.rawValue)
-                .font(AppTheme.Typography.font(size: 16, weight: .black))
+                .font(AppTheme.Typography.font(size: 14, weight: .semibold))
                 .foregroundStyle(selectedPeriod == period ? Color.white : Color.gray)
                 .frame(maxWidth: .infinity)
                 .frame(height: 34)
@@ -291,7 +291,7 @@ private struct WeekDotsView: View {
 
                     Circle()
                         .fill(item.hasRun ? AppTheme.Colors.primary : Color.gray)
-                        .frame(width: 42, height: 42)
+                        .frame(width: 36, height: 36)
                 }
                 .frame(maxWidth: .infinity)
             }
@@ -343,7 +343,7 @@ private struct MonthCalendarView: View {
                 .buttonStyle(.plain)
 
                 Text(monthTitle)
-                    .font(AppTheme.Typography.font(size: 28, weight: .black))
+                    .font(AppTheme.Typography.font(size: 20, weight: .bold))
                     .foregroundStyle(AppTheme.Colors.textPrimary)
 
                 Button(action: onNextMonth) {
@@ -362,7 +362,7 @@ private struct MonthCalendarView: View {
             LazyVGrid(columns: columns, spacing: 20) {
                 ForEach(weekdayItems) { item in
                     Text(item.label)
-                        .font(AppTheme.Typography.font(size: 16, weight: .black))
+                        .font(AppTheme.Typography.font(size: 14, weight: .bold))
                         .foregroundStyle(item.color)
                         .frame(maxWidth: .infinity)
                 }
@@ -475,7 +475,7 @@ private struct RunningRecordCard: View {
                     .foregroundStyle(Color.gray)
 
                 Text("\(record.distanceKilometers.formatted(.number.precision(.fractionLength(1))))KM")
-                    .font(AppTheme.Typography.font(size: 24, weight: .black))
+                    .font(AppTheme.Typography.font(size: 22, weight: .bold))
                     .foregroundStyle(.black)
 
                 HStack(spacing: 16) {
