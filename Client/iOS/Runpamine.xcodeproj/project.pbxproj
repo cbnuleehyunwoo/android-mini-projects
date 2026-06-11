@@ -51,16 +51,8 @@
 		7A100001000000000000002A /* TeamJoinViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000012B /* TeamJoinViewModel.swift */; };
 		7A100001000000000000002B /* TeamNameValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000012C /* TeamNameValidator.swift */; };
 		7A100001000000000000002C /* TeamService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000012D /* TeamService.swift */; };
-		7A1040010000000000000001 /* ProfileModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1040010000000000000101 /* ProfileModels.swift */; };
-		7A1040010000000000000002 /* ProfileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1040010000000000000102 /* ProfileService.swift */; };
-		7A1070010000000000000001 /* RunModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1070010000000000000101 /* RunModels.swift */; };
-		7A1070010000000000000002 /* RunService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1070010000000000000102 /* RunService.swift */; };
 		7A100001000000000000002D /* TeamDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000130 /* TeamDashboardView.swift */; };
 		7A100001000000000000002E /* InviteMemberView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000131 /* InviteMemberView.swift */; };
-		7A1420010000000000000001 /* RankingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1420010000000000000101 /* RankingService.swift */; };
-		7A1420010000000000000002 /* RankingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1420010000000000000102 /* RankingView.swift */; };
-		7A1350010000000000000001 /* RunpamineLottieView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1350010000000000000101 /* RunpamineLottieView.swift */; };
-		7A1670010000000000000001 /* RunpamineConfirmationDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1670010000000000000101 /* RunpamineConfirmationDialog.swift */; };
 		7A1000010000000000000040 /* pretendard_black.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000140 /* pretendard_black.otf */; };
 		7A1000010000000000000041 /* pretendard_bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000141 /* pretendard_bold.otf */; };
 		7A1000010000000000000042 /* pretendard_extra_bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000142 /* pretendard_extra_bold.otf */; };
@@ -75,8 +67,17 @@
 		7A100001000000000000004B /* encho.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000151 /* encho.png */; };
 		7A100001000000000000004C /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 7A1000010000000000000901 /* Supabase */; };
 		7A100001000000000000004D /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 7A1000010000000000000903 /* GoogleSignIn */; };
+		7A1040010000000000000001 /* ProfileModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1040010000000000000101 /* ProfileModels.swift */; };
+		7A1040010000000000000002 /* ProfileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1040010000000000000102 /* ProfileService.swift */; };
+		7A1070010000000000000001 /* RunModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1070010000000000000101 /* RunModels.swift */; };
+		7A1070010000000000000002 /* RunService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1070010000000000000102 /* RunService.swift */; };
+		7A1350010000000000000001 /* RunpamineLottieView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1350010000000000000101 /* RunpamineLottieView.swift */; };
 		7A1350010000000000000040 /* lottie in Resources */ = {isa = PBXBuildFile; fileRef = 7A1350010000000000000140 /* lottie */; };
 		7A1350010000000000000041 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 7A1350010000000000000901 /* Lottie */; };
+		7A1420010000000000000001 /* RankingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1420010000000000000101 /* RankingService.swift */; };
+		7A1420010000000000000002 /* RankingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1420010000000000000102 /* RankingView.swift */; };
+		7A1590010000000000000001 /* AppleLoginButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1590010000000000000101 /* AppleLoginButton.swift */; };
+		7A1670010000000000000001 /* RunpamineConfirmationDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1670010000000000000101 /* RunpamineConfirmationDialog.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -126,16 +127,8 @@
 		7A100001000000000000012C /* TeamNameValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamNameValidator.swift; sourceTree = "<group>"; };
 		7A100001000000000000012D /* TeamService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamService.swift; sourceTree = "<group>"; };
 		7A100001000000000000012F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		7A1040010000000000000101 /* ProfileModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileModels.swift; sourceTree = "<group>"; };
-		7A1040010000000000000102 /* ProfileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileService.swift; sourceTree = "<group>"; };
-		7A1070010000000000000101 /* RunModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunModels.swift; sourceTree = "<group>"; };
-		7A1070010000000000000102 /* RunService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunService.swift; sourceTree = "<group>"; };
 		7A1000010000000000000130 /* TeamDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamDashboardView.swift; sourceTree = "<group>"; };
 		7A1000010000000000000131 /* InviteMemberView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteMemberView.swift; sourceTree = "<group>"; };
-		7A1420010000000000000101 /* RankingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RankingService.swift; sourceTree = "<group>"; };
-		7A1420010000000000000102 /* RankingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RankingView.swift; sourceTree = "<group>"; };
-		7A1350010000000000000101 /* RunpamineLottieView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunpamineLottieView.swift; sourceTree = "<group>"; };
-		7A1670010000000000000101 /* RunpamineConfirmationDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunpamineConfirmationDialog.swift; sourceTree = "<group>"; };
 		7A1000010000000000000140 /* pretendard_black.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_black.otf; sourceTree = "<group>"; };
 		7A1000010000000000000141 /* pretendard_bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_bold.otf; sourceTree = "<group>"; };
 		7A1000010000000000000142 /* pretendard_extra_bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_extra_bold.otf; sourceTree = "<group>"; };
@@ -148,7 +141,17 @@
 		7A1000010000000000000149 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7A1000010000000000000150 /* bk.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = bk.png; sourceTree = SOURCE_ROOT; };
 		7A1000010000000000000151 /* encho.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = encho.png; sourceTree = SOURCE_ROOT; };
+		7A1040010000000000000101 /* ProfileModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileModels.swift; sourceTree = "<group>"; };
+		7A1040010000000000000102 /* ProfileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileService.swift; sourceTree = "<group>"; };
+		7A1070010000000000000101 /* RunModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunModels.swift; sourceTree = "<group>"; };
+		7A1070010000000000000102 /* RunService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunService.swift; sourceTree = "<group>"; };
+		7A1350010000000000000101 /* RunpamineLottieView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunpamineLottieView.swift; sourceTree = "<group>"; };
 		7A1350010000000000000140 /* lottie */ = {isa = PBXFileReference; lastKnownFileType = folder; path = lottie; sourceTree = "<group>"; };
+		7A1420010000000000000101 /* RankingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RankingService.swift; sourceTree = "<group>"; };
+		7A1420010000000000000102 /* RankingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RankingView.swift; sourceTree = "<group>"; };
+		7A1590010000000000000101 /* AppleLoginButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleLoginButton.swift; sourceTree = "<group>"; };
+		7A1590010000000000000102 /* Runpamine.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runpamine.entitlements; sourceTree = "<group>"; };
+		7A1670010000000000000101 /* RunpamineConfirmationDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunpamineConfirmationDialog.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -171,6 +174,7 @@
 				7A1000010000000000000302 /* Sources */,
 				7A1000010000000000000320 /* Resources */,
 				7A100001000000000000012F /* Info.plist */,
+				7A1590010000000000000102 /* Runpamine.entitlements */,
 				7A1000010000000000000303 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -268,6 +272,7 @@
 				7A1000010000000000000105 /* LoginView.swift */,
 				7A1000010000000000000106 /* LoginViewModel.swift */,
 				7A1000010000000000000107 /* GoogleLoginButton.swift */,
+				7A1590010000000000000101 /* AppleLoginButton.swift */,
 			);
 			path = Login;
 			sourceTree = "<group>";
@@ -350,15 +355,6 @@
 			path = Persistence;
 			sourceTree = "<group>";
 		};
-		7A1040010000000000000301 /* Profile */ = {
-			isa = PBXGroup;
-			children = (
-				7A1040010000000000000101 /* ProfileModels.swift */,
-				7A1040010000000000000102 /* ProfileService.swift */,
-			);
-			path = Profile;
-			sourceTree = "<group>";
-		};
 		7A1000010000000000000319 /* Running */ = {
 			isa = PBXGroup;
 			children = (
@@ -404,22 +400,6 @@
 			path = Team;
 			sourceTree = "<group>";
 		};
-		7A1420010000000000000301 /* Ranking */ = {
-			isa = PBXGroup;
-			children = (
-				7A1420010000000000000101 /* RankingService.swift */,
-			);
-			path = Ranking;
-			sourceTree = "<group>";
-		};
-		7A1420010000000000000302 /* Ranking */ = {
-			isa = PBXGroup;
-			children = (
-				7A1420010000000000000102 /* RankingView.swift */,
-			);
-			path = Ranking;
-			sourceTree = "<group>";
-		};
 		7A1000010000000000000320 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
@@ -446,6 +426,31 @@
 				7A1000010000000000000148 /* pretendard_thin.otf */,
 			);
 			path = Fonts;
+			sourceTree = "<group>";
+		};
+		7A1040010000000000000301 /* Profile */ = {
+			isa = PBXGroup;
+			children = (
+				7A1040010000000000000101 /* ProfileModels.swift */,
+				7A1040010000000000000102 /* ProfileService.swift */,
+			);
+			path = Profile;
+			sourceTree = "<group>";
+		};
+		7A1420010000000000000301 /* Ranking */ = {
+			isa = PBXGroup;
+			children = (
+				7A1420010000000000000101 /* RankingService.swift */,
+			);
+			path = Ranking;
+			sourceTree = "<group>";
+		};
+		7A1420010000000000000302 /* Ranking */ = {
+			isa = PBXGroup;
+			children = (
+				7A1420010000000000000102 /* RankingView.swift */,
+			);
+			path = Ranking;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -546,6 +551,7 @@
 				7A1000010000000000000005 /* LoginView.swift in Sources */,
 				7A1000010000000000000006 /* LoginViewModel.swift in Sources */,
 				7A1000010000000000000007 /* GoogleLoginButton.swift in Sources */,
+				7A1590010000000000000001 /* AppleLoginButton.swift in Sources */,
 				7A1000010000000000000008 /* AppLogoView.swift in Sources */,
 				7A1000010000000000000009 /* AuthModels.swift in Sources */,
 				7A100001000000000000000A /* AuthService.swift in Sources */,
@@ -718,6 +724,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CODE_SIGN_ENTITLEMENTS = Runpamine.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
@@ -732,7 +739,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.woowacourse.runpamine;
+				PRODUCT_BUNDLE_IDENTIFIER = com.runpamine.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -748,6 +755,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CODE_SIGN_ENTITLEMENTS = Runpamine.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
@@ -762,7 +770,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.woowacourse.runpamine;
+				PRODUCT_BUNDLE_IDENTIFIER = com.runpamine.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
