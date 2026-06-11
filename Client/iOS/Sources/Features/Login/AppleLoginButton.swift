@@ -21,7 +21,7 @@ struct AppleLoginButton: View {
                     .background(Color.black.opacity(0.72))
             }
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: LoginButtonLayout.width)
         .frame(height: LoginButtonLayout.height)
         .clipShape(RoundedRectangle(cornerRadius: LoginButtonLayout.cornerRadius, style: .continuous))
         .disabled(isLoading)
