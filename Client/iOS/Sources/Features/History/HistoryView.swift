@@ -531,7 +531,7 @@ private struct RunningRouteThumbnailView: View {
                 .mapStyle(.standard(elevation: .flat))
                 .allowsHitTesting(false)
             } else {
-                MapPlaceholderView()
+                RouteThumbnailSkeletonView()
             }
         }
         .onChange(of: routeSignature) { _, _ in
@@ -565,6 +565,29 @@ private struct RunningRouteThumbnailView: View {
             first.map { "\($0.latitude),\($0.longitude)" } ?? "",
             last.map { "\($0.latitude),\($0.longitude)" } ?? ""
         ].joined(separator: "|")
+    }
+}
+
+private struct RouteThumbnailSkeletonView: View {
+    @State private var isPulsing = false
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: 8, style: .continuous)
+            .fill(Color(red: 0.92, green: 0.94, blue: 0.97))
+            .overlay(alignment: .topLeading) {
+                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                    .fill(Color.white.opacity(0.48))
+                    .frame(width: 42, height: 10)
+                    .padding(12)
+            }
+            .opacity(isPulsing ? 0.62 : 1)
+            .animation(
+                .easeInOut(duration: 0.85).repeatForever(autoreverses: true),
+                value: isPulsing
+            )
+            .onAppear {
+                isPulsing = true
+            }
     }
 }
 
