@@ -48,6 +48,7 @@ import com.woowacourse.runpamine.presentation.ranking.components.RankingStateMes
 import com.woowacourse.runpamine.presentation.ranking.model.RankingScope
 import com.woowacourse.runpamine.presentation.ranking.model.RankingUiState
 import com.woowacourse.runpamine.presentation.ranking.viewmodel.RankingViewModel
+import com.woowacourse.runpamine.ui.theme.Blue10
 import com.woowacourse.runpamine.ui.theme.Blue40
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 import java.util.Locale
@@ -203,7 +204,7 @@ private fun RankingRow(
             modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp))
-                .background(if (item.isMine) Color(0xFFEAF4FF) else Color(0xFFF8F8F8))
+                .background(if (item.isMine) Blue10 else Color(0xFFF8F8F8))
                 .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -254,7 +255,7 @@ private fun MyRankingCard(
         modifier =
             modifier
                 .clip(RoundedCornerShape(12.dp))
-                .background(Color(0xFFEAF4FF))
+                .background(Blue10)
                 .padding(horizontal = 16.dp, vertical = 28.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
