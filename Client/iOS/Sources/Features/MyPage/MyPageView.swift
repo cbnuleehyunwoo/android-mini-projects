@@ -3,21 +3,29 @@ import SwiftUI
 struct MyPageView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var isChangingNickname = false
+    @State private var isLoggingOut = false
+    @State private var logoutErrorMessage: String?
     @State private var nickname: String
     private let store: LocalAppStateStore
     private let profileService: ProfileServiceProtocol
+    private let authService: AuthServiceProtocol
     private let accessToken: String?
+    private let onLogoutCompleted: () -> Void
     private let onNicknameChanged: (String) -> Void
 
     init(
         store: LocalAppStateStore,
         profileService: ProfileServiceProtocol = MockProfileService(),
+        authService: AuthServiceProtocol = MockAuthService(),
         accessToken: String? = nil,
+        onLogoutCompleted: @escaping () -> Void = {},
         onNicknameChanged: @escaping (String) -> Void = { _ in }
     ) {
         self.store = store
         self.profileService = profileService
+        self.authService = authService
         self.accessToken = accessToken
+        self.onLogoutCompleted = onLogoutCompleted
         self.onNicknameChanged = onNicknameChanged
         _nickname = State(initialValue: store.nickname)
     }
@@ -56,8 +64,17 @@ struct MyPageView: View {
                         isChangingNickname = true
                     }
                     settingsRow(icon: "rectangle.portrait.and.arrow.right", title: "로그아웃", subtitle: "계정에서 로그아웃합니다", color: AppTheme.Colors.danger) {
-                        store.logout()
-                        dismiss()
+                        Task {
+                            await logout()
+                        }
+                    }
+                    .disabled(isLoggingOut)
+
+                    if let logoutErrorMessage {
+                        Text(logoutErrorMessage)
+                            .font(AppTheme.Typography.caption1)
+                            .foregroundStyle(AppTheme.Colors.danger)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
                     sectionTitle("약관 및 정책")
@@ -86,6 +103,35 @@ struct MyPageView: View {
                 isChangingNickname = false
             }
         }
+    }
+
+    @MainActor
+    private func logout() async {
+        guard !isLoggingOut else { return }
+
+        guard let accessToken else {
+            completeLocalLogout()
+            return
+        }
+
+        isLoggingOut = true
+        logoutErrorMessage = nil
+        defer {
+            isLoggingOut = false
+        }
+
+        do {
+            try await authService.logout(accessToken: accessToken)
+            completeLocalLogout()
+        } catch {
+            logoutErrorMessage = error.localizedDescription
+        }
+    }
+
+    private func completeLocalLogout() {
+        store.logout()
+        dismiss()
+        onLogoutCompleted()
     }
 
     private func sectionTitle(_ title: String) -> some View {

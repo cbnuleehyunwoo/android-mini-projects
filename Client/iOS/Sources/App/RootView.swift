@@ -69,7 +69,9 @@ struct RootView: View {
                     runService: runService,
                     teamService: teamService,
                     rankingService: rankingService,
-                    accessToken: currentSession?.accessToken
+                    authService: authService,
+                    accessToken: currentSession?.accessToken,
+                    onLogout: handleLogoutCompleted
                 )
             }
         }
@@ -103,6 +105,13 @@ struct RootView: View {
         } catch {
             route = session.needsSignup ? .terms : .main
         }
+    }
+
+    @MainActor
+    private func handleLogoutCompleted() {
+        currentSession = nil
+        acceptedTerms = []
+        route = .login
     }
 
     private func apply(_ homeState: HomeState) {
