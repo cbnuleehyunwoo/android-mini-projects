@@ -54,10 +54,28 @@ class SupabaseAuthRemoteDataSource(
         supabaseClient.auth.signOut()
     }
 
+    override suspend fun deleteAccount() {
+        val accessToken =
+            requireNotNull(supabaseClient.auth.currentSessionOrNull()?.accessToken) {
+                "로그인이 필요해요."
+            }
+        requestDeleteAccount(accessToken)
+        runCatching {
+            supabaseClient.auth.signOut()
+        }
+    }
+
     private suspend fun requestLogout(accessToken: String) {
         withContext(Dispatchers.IO) {
             val connection = URL("$apiBaseUrl/auth/logout").openConnection() as HttpURLConnection
             connection.useLogoutRequest(accessToken)
+        }
+    }
+
+    private suspend fun requestDeleteAccount(accessToken: String) {
+        withContext(Dispatchers.IO) {
+            val connection = URL("$apiBaseUrl/account/me").openConnection() as HttpURLConnection
+            connection.useDeleteAccountRequest(accessToken)
         }
     }
 }
@@ -85,6 +103,29 @@ private fun HttpURLConnection.useLogoutRequest(accessToken: String) {
     }
 }
 
+private fun HttpURLConnection.useDeleteAccountRequest(accessToken: String) {
+    try {
+        requestMethod = "DELETE"
+        connectTimeout = CONNECT_TIMEOUT_MILLIS
+        readTimeout = READ_TIMEOUT_MILLIS
+        setRequestProperty("Authorization", "Bearer $accessToken")
+        setRequestProperty("Accept", "application/json")
+
+        val responseText =
+            if (responseCode in 200..299) {
+                inputStream.bufferedReader().use { it.readText() }
+            } else {
+                val errorText = errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
+                throw IllegalStateException(errorText.toApiErrorMessage(responseCode))
+            }
+
+        val deleted = JSONObject(responseText).getJSONObject("data").getBoolean("deleted")
+        check(deleted) { "회원 탈퇴에 실패했어요." }
+    } finally {
+        disconnect()
+    }
+}
+
 private fun io.github.jan.supabase.auth.user.UserSession.toDomain(): AuthSession =
     AuthSession(
         accessToken = accessToken,
@@ -99,7 +140,7 @@ private fun io.github.jan.supabase.auth.user.UserSession.toDomain(): AuthSession
 private fun String.toApiErrorMessage(responseCode: Int): String =
     runCatching {
         JSONObject(this).getJSONObject("error").getString("message")
-    }.getOrDefault("로그아웃에 실패했어요. ($responseCode)")
+    }.getOrDefault("요청에 실패했어요. ($responseCode)")
 
 private fun String.toApiBaseUrl(): String {
     val normalized = trim().trimEnd('/')

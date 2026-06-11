@@ -24,4 +24,8 @@ class DefaultAuthRepository(
     override suspend fun signOut() {
         remoteDataSource.signOut()
     }
+
+    override suspend fun deleteAccount() {
+        remoteDataSource.deleteAccount()
+    }
 }

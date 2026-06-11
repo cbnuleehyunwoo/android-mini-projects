@@ -14,4 +14,6 @@ interface AuthRemoteDataSource {
     ): AuthSession
 
     suspend fun signOut()
+
+    suspend fun deleteAccount()
 }

@@ -18,4 +18,6 @@ class MissingAuthConfigurationRepository(
     ): AuthSession = throw IllegalStateException("${missingKeys.joinToString()} 설정이 local.properties에 필요해요.")
 
     override suspend fun signOut() = Unit
+
+    override suspend fun deleteAccount() = Unit
 }
