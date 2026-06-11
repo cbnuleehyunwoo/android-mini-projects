@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,21 +45,31 @@ fun RunpamineBottomBar(
     onTabClick: (RunpamineBottomTab) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
+    Column(
         modifier =
             modifier
                 .fillMaxWidth()
-                .navigationBarsPadding()
-                .height(80.dp),
-        horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically,
+                .navigationBarsPadding(),
     ) {
-        RunpamineBottomTab.entries.forEach { tab ->
-            RunpamineBottomBarItem(
-                tab = tab,
-                selected = selectedTab == tab,
-                onClick = { onTabClick(tab) },
-            )
+        HorizontalDivider(
+            thickness = 1.dp,
+            color = Color(0xFFE5E7EB),
+        )
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(75.dp),
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            RunpamineBottomTab.entries.forEach { tab ->
+                RunpamineBottomBarItem(
+                    tab = tab,
+                    selected = selectedTab == tab,
+                    onClick = { onTabClick(tab) },
+                )
+            }
         }
     }
 }
@@ -88,7 +99,7 @@ private fun RunpamineBottomBarItem(
         BottomTabIcon(
             tab = tab,
             tint = color,
-            modifier = Modifier.size(34.dp),
+            modifier = Modifier.size(24.dp),
         )
         Spacer(modifier = Modifier.height(10.dp))
         Text(
