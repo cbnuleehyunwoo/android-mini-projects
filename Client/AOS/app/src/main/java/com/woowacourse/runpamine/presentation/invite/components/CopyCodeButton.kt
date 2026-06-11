@@ -15,13 +15,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.woowacourse.runpamine.R
+import com.woowacourse.runpamine.ui.theme.Blue10
+import com.woowacourse.runpamine.ui.theme.Blue40
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
 @Composable
@@ -38,8 +39,8 @@ fun CopyCodeButton(
         shape = RoundedCornerShape(18.dp),
         colors =
             ButtonDefaults.buttonColors(
-                containerColor = CopyButtonBackground,
-                contentColor = CopyButtonContent,
+                containerColor = Blue10,
+                contentColor = Blue40,
             ),
         contentPadding = ButtonDefaults.ContentPadding,
     ) {
@@ -58,15 +59,12 @@ fun CopyCodeButton(
                     MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                     ),
-                color = CopyButtonContent,
+                color = Blue40,
                 modifier = Modifier.padding(vertical = 8.dp),
             )
         }
     }
 }
-
-private val CopyButtonBackground = Color(0xFFEEF2FF)
-private val CopyButtonContent = Color(0xFF6366F1)
 
 @Preview
 @Composable
