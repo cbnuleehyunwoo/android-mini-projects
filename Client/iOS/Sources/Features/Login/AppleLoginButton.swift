@@ -10,6 +10,9 @@ struct AppleLoginButton: View {
         ZStack {
             SignInWithAppleButton(.signIn, onRequest: onRequest, onCompletion: onCompletion)
                 .signInWithAppleButtonStyle(.black)
+                .frame(maxWidth: .infinity)
+                .frame(height: LoginButtonLayout.height)
+                .cornerRadius(LoginButtonLayout.cornerRadius)
 
             if isLoading {
                 ProgressView()
@@ -19,8 +22,8 @@ struct AppleLoginButton: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 56)
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .frame(height: LoginButtonLayout.height)
+        .clipShape(RoundedRectangle(cornerRadius: LoginButtonLayout.cornerRadius, style: .continuous))
         .disabled(isLoading)
     }
 }

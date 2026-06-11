@@ -19,8 +19,15 @@ struct GoogleLoginButton: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 56)
+            .frame(height: LoginButtonLayout.height)
         }
+        .frame(maxWidth: .infinity)
+        .frame(height: LoginButtonLayout.height)
         .disabled(isLoading)
     }
+}
+
+enum LoginButtonLayout {
+    static let height: CGFloat = 56
+    static let cornerRadius: CGFloat = 8
 }
