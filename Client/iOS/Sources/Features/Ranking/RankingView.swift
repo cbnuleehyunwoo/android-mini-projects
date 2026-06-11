@@ -33,7 +33,7 @@ struct RankingView: View {
 
             metricControl
                 .padding(.horizontal, 22)
-                .padding(.top, 26)
+                .padding(.top, 15)
 
             summaryCard
                 .padding(.horizontal, 22)
@@ -88,20 +88,20 @@ struct RankingView: View {
                     RankBadge(rank: summary.rank, isHighlighted: true)
 
                     Text(summary.name)
-                        .font(AppTheme.Typography.font(size: 20, weight: .bold))
+                        .font(AppTheme.Typography.font(size: 14, weight: .bold))
                         .foregroundStyle(AppTheme.Colors.primary)
                         .lineLimit(1)
 
                     Spacer(minLength: 12)
 
                     Text(summary.value)
-                        .font(AppTheme.Typography.font(size: 20, weight: .bold))
+                        .font(AppTheme.Typography.font(size: 14, weight: .bold))
                         .foregroundStyle(AppTheme.Colors.primary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.78)
                 }
-                .padding(.horizontal, 24)
-                .frame(height: 96)
+                .padding(.horizontal, 12)
+                .frame(height: 65)
                 .background(Color(red: 0.92, green: 0.96, blue: 1.0))
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             } else {
@@ -122,13 +122,13 @@ struct RankingView: View {
         VStack(spacing: 16) {
             HStack(alignment: .lastTextBaseline) {
                 Text(selectedScope == .team ? "전체 팀 순위" : "전체 개인 순위")
-                    .font(AppTheme.Typography.font(size: 20, weight: .black))
+                    .font(AppTheme.Typography.font(size: 20, weight: .bold))
                     .foregroundStyle(AppTheme.Colors.textPrimary)
 
                 Spacer()
 
                 Text(selectedScope == .team ? teamSubtitle : personalSubtitle)
-                    .font(AppTheme.Typography.font(size: 14, weight: .medium))
+                    .font(AppTheme.Typography.font(size: 12, weight: .regular))
                     .foregroundStyle(Color(red: 0.58, green: 0.63, blue: 0.70))
             }
 
@@ -160,10 +160,10 @@ struct RankingView: View {
         } label: {
             ZStack(alignment: .bottom) {
                 Text(scope.title)
-                    .font(AppTheme.Typography.font(size: 18, weight: .bold))
+                    .font(AppTheme.Typography.font(size: 15, weight: .bold))
                     .foregroundStyle(selectedScope == scope ? AppTheme.Colors.primary : Color(red: 0.62, green: 0.67, blue: 0.74))
                     .frame(maxWidth: .infinity)
-                    .frame(height: 72)
+                    .frame(height: 45)
 
                 if selectedScope == scope {
                     Rectangle()
@@ -182,12 +182,12 @@ struct RankingView: View {
             }
         } label: {
             Text(title)
-                .font(AppTheme.Typography.font(size: 13, weight: .black))
+                .font(AppTheme.Typography.font(size: 13, weight: .bold))
                 .foregroundStyle(selectedMetric == metric ? AppTheme.Colors.primary : Color(red: 0.42, green: 0.45, blue: 0.50))
                 .lineLimit(1)
                 .minimumScaleFactor(0.82)
                 .frame(maxWidth: .infinity)
-                .frame(height: 50)
+                .frame(height: 38)
                 .background(selectedMetric == metric ? Color(red: 0.93, green: 0.95, blue: 1.0) : Color(red: 0.95, green: 0.95, blue: 0.96))
                 .clipShape(Capsule())
                 .overlay(
@@ -380,20 +380,20 @@ private struct RankingRow: View {
             RankBadge(rank: row.rank, isHighlighted: row.isHighlighted)
 
             Text(row.name)
-                .font(AppTheme.Typography.font(size: 18, weight: .bold))
+                .font(AppTheme.Typography.font(size: 14, weight: .bold))
                 .foregroundStyle(row.isHighlighted ? AppTheme.Colors.primary : Color(red: 0.22, green: 0.27, blue: 0.36))
                 .lineLimit(1)
 
             Spacer(minLength: 12)
 
             Text(row.value)
-                .font(AppTheme.Typography.font(size: 18, weight: .bold))
+                .font(AppTheme.Typography.font(size: 14, weight: .semibold))
                 .foregroundStyle(row.isHighlighted ? AppTheme.Colors.primary : Color(red: 0.60, green: 0.65, blue: 0.72))
                 .lineLimit(1)
                 .minimumScaleFactor(0.78)
         }
         .padding(.horizontal, 18)
-        .frame(height: 64)
+        .frame(height: 52)
         .background(row.isHighlighted ? Color(red: 0.92, green: 0.96, blue: 1.0) : Color(red: 0.98, green: 0.98, blue: 0.99))
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
@@ -480,9 +480,9 @@ private struct RankBadge: View {
 
     var body: some View {
         Text(rank.map(String.init) ?? "-")
-            .font(AppTheme.Typography.font(size: 20, weight: .black))
+            .font(AppTheme.Typography.font(size: 14, weight: .black))
             .foregroundStyle(Color.white)
-            .frame(width: 44, height: 44)
+            .frame(width: 28, height: 28)
             .background(isHighlighted ? AppTheme.Colors.primary : Color(red: 0.62, green: 0.67, blue: 0.74))
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
