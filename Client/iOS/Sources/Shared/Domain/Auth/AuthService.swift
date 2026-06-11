@@ -7,7 +7,7 @@ import UIKit
 protocol AuthServiceProtocol {
     func restoreSession() async throws -> AuthSession?
     func loginWithGoogle() async throws -> AuthSession
-    func loginWithApple(identityToken: String, nonce: String?) async throws -> AuthSession
+    func loginWithApple(identityToken: String) async throws -> AuthSession
     func completeSignup(profile: SignupProfile) async throws -> AuthSession
 }
 
@@ -93,7 +93,7 @@ final class SupabaseAuthService: AuthServiceProtocol {
         }
     }
 
-    func loginWithApple(identityToken: String, nonce: String?) async throws -> AuthSession {
+    func loginWithApple(identityToken: String) async throws -> AuthSession {
         guard let supabase else {
             throw AuthError.missingSupabaseConfiguration
         }
@@ -101,8 +101,7 @@ final class SupabaseAuthService: AuthServiceProtocol {
         let session = try await supabase.auth.signInWithIdToken(
             credentials: .init(
                 provider: .apple,
-                idToken: identityToken,
-                nonce: nonce
+                idToken: identityToken
             )
         )
 
@@ -160,7 +159,7 @@ final class MockAuthService: AuthServiceProtocol {
         )
     }
 
-    func loginWithApple(identityToken: String, nonce: String?) async throws -> AuthSession {
+    func loginWithApple(identityToken: String) async throws -> AuthSession {
         try await Task.sleep(nanoseconds: 450_000_000)
         return AuthSession(
             accessToken: "mock-access-token",
