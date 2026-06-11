@@ -175,6 +175,13 @@ fun NavHost(
                 onChangeNicknameClick = {
                     navController.navigate(AppRoute.ChangeNickname.route)
                 },
+                onLogoutCompleted = {
+                    navController.navigate(AppRoute.Login.route) {
+                        popUpTo(navController.graph.id) {
+                            inclusive = true
+                        }
+                    }
+                },
             )
         }
 

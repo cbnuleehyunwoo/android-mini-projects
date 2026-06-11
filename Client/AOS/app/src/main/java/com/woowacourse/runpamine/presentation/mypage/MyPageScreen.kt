@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,18 +41,30 @@ private const val TERMS_OF_SERVICE_URL =
 fun MyPageScreen(
     onChangeNicknameClick: () -> Unit,
     onBackClick: () -> Unit,
+    onLogoutCompleted: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val container = LocalContext.current.runpamineContainer
     val viewModel: MyPageViewModel =
         viewModel(
-            factory = MyPageViewModel.Factory(container.profileRepository),
+            factory =
+                MyPageViewModel.Factory(
+                    profileRepository = container.profileRepository,
+                    authRepository = container.authRepository,
+                ),
         )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(uiState.isLoggedOut) {
+        if (uiState.isLoggedOut) {
+            onLogoutCompleted()
+        }
+    }
 
     MyPageContent(
         uiState = uiState,
         onChangeNicknameClick = onChangeNicknameClick,
+        onLogoutClick = viewModel::logout,
         onBackClick = onBackClick,
         modifier = modifier,
     )
@@ -60,6 +74,7 @@ fun MyPageScreen(
 private fun MyPageContent(
     uiState: MyPageUiState,
     onChangeNicknameClick: () -> Unit,
+    onLogoutClick: () -> Unit,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -84,6 +99,13 @@ private fun MyPageContent(
             name = uiState.nickname.ifBlank { "러너" },
             modifier = Modifier.align(Alignment.CenterHorizontally),
         )
+        uiState.errorMessage?.let { message ->
+            Text(
+                text = message,
+                color = Color(0xFFDC2626),
+                modifier = Modifier.padding(top = 12.dp),
+            )
+        }
         MyPageSection(
             title = "계정 설정",
         ) {
@@ -96,8 +118,9 @@ private fun MyPageContent(
             MyPageMenuRow(
                 iconResId = R.drawable.ic_logout,
                 title = "로그아웃",
-                description = "계정에서 로그아웃합니다",
+                description = if (uiState.isLoggingOut) "로그아웃 중입니다" else "계정에서 로그아웃합니다",
                 titleColor = Color(0xFFDC2626),
+                onClick = onLogoutClick,
             )
         }
         Spacer(modifier = Modifier.height(24.dp))
@@ -139,6 +162,7 @@ private fun MyPageScreenPreview() {
         MyPageContent(
             uiState = MyPageUiState(nickname = "러너", isLoading = false),
             onChangeNicknameClick = {},
+            onLogoutClick = {},
             onBackClick = {},
         )
     }
