@@ -17,10 +17,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,10 +39,15 @@ private val WEEKDAYS = listOf("일", "월", "화", "수", "목", "금", "토")
 fun MonthCalendar(
     recordedDates: Set<LocalDate>,
     modifier: Modifier = Modifier,
+    anchorMonth: YearMonth = YearMonth.from(LocalDate.now()),
     today: LocalDate = LocalDate.now(),
+    onMonthChange: (YearMonth) -> Unit = {},
 ) {
     val currentMonth = remember(today) { YearMonth.from(today) }
-    var displayedMonth by remember(currentMonth) { mutableStateOf(currentMonth) }
+    val displayedMonth =
+        remember(anchorMonth, currentMonth) {
+            if (anchorMonth.isAfter(currentMonth)) currentMonth else anchorMonth
+        }
 
     Column(
         modifier = modifier,
@@ -54,8 +56,8 @@ fun MonthCalendar(
         MonthHeader(
             month = displayedMonth,
             canGoNext = displayedMonth.isBefore(currentMonth),
-            onPrevious = { displayedMonth = displayedMonth.minusMonths(1) },
-            onNext = { displayedMonth = displayedMonth.plusMonths(1) },
+            onPrevious = { onMonthChange(displayedMonth.minusMonths(1)) },
+            onNext = { onMonthChange(displayedMonth.plusMonths(1)) },
         )
         WeekdayHeader()
         MonthGrid(

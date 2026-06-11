@@ -7,11 +7,15 @@ import com.woowacourse.runpamine.domain.run.RunRecordRepository
 import com.woowacourse.runpamine.domain.run.RunSession
 import com.woowacourse.runpamine.presentation.record.model.RecordPeriod
 import com.woowacourse.runpamine.presentation.record.model.RunningRecord
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.DayOfWeek
+import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
 import java.util.Locale
@@ -21,6 +25,7 @@ class RecordViewModel(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(RecordUiState(isLoading = true))
     val uiState: StateFlow<RecordUiState> = _uiState.asStateFlow()
+    private var loadJob: Job? = null
 
     init {
         loadRecords()
@@ -34,6 +39,14 @@ class RecordViewModel(
         loadRecords()
     }
 
+    fun moveTo(anchorDate: LocalDate) {
+        if (_uiState.value.anchorDate == anchorDate) return
+        _uiState.update { state ->
+            state.copy(anchorDate = anchorDate)
+        }
+        loadRecords()
+    }
+
     fun retry() {
         loadRecords()
     }
@@ -42,35 +55,47 @@ class RecordViewModel(
         val period = _uiState.value.period
         val anchorDate = _uiState.value.anchorDate
 
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            runCatching {
-                when (period) {
-                    RecordPeriod.WEEK -> runRecordRepository.getWeeklyRuns(anchorDate)
-                    RecordPeriod.MONTH -> runRecordRepository.getMonthlyRuns(YearMonth.from(anchorDate))
-                }
-            }.onSuccess { summary ->
-                _uiState.update {
-                    it.copy(
-                        records = summary.runs.map { run -> run.toRunningRecord() },
-                        recordedDates =
-                            summary.days
-                                .filter { day -> day.hasRun }
-                                .map { day -> day.date }
-                                .toSet(),
-                        totalDistanceKm = summary.totalDistanceMeters / METERS_PER_KILOMETER,
-                        isLoading = false,
-                    )
-                }
-            }.onFailure { throwable ->
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMessage = throwable.message ?: "러닝 기록을 불러오지 못했어요.",
-                    )
+        loadJob?.cancel()
+        loadJob =
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+                runCatching {
+                    when (period) {
+                        RecordPeriod.WEEK -> runRecordRepository.getWeeklyRuns(anchorDate)
+                        RecordPeriod.MONTH -> runRecordRepository.getMonthlyRuns(YearMonth.from(anchorDate))
+                    }
+                }.onSuccess { summary ->
+                    val visibleDays = summary.days.filter { day -> day.date in period.dateRange(anchorDate) }
+                    val visibleRuns = summary.runs.filter { run -> run.localDate in period.dateRange(anchorDate) }
+                    val totalDistanceMeters =
+                        visibleDays
+                            .takeIf { it.isNotEmpty() }
+                            ?.sumOf { day -> day.distanceMeters }
+                            ?: visibleRuns.sumOf { run -> run.distanceMeters }
+
+                    _uiState.update {
+                        it.copy(
+                            records = visibleRuns.map { run -> run.toRunningRecord() },
+                            recordedDates =
+                                visibleDays
+                                    .filter { day -> day.hasRun }
+                                    .map { day -> day.date }
+                                    .toSet() + visibleRuns.map { run -> run.localDate },
+                            totalDistanceKm = totalDistanceMeters / METERS_PER_KILOMETER,
+                            isLoading = false,
+                        )
+                    }
+                }.onFailure { throwable ->
+                    if (throwable is CancellationException) throw throwable
+
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = throwable.message ?: "러닝 기록을 불러오지 못했어요.",
+                        )
+                    }
                 }
             }
-        }
     }
 
     class Factory(
@@ -84,10 +109,28 @@ class RecordViewModel(
     }
 }
 
+private fun RecordPeriod.dateRange(anchorDate: LocalDate): ClosedRange<LocalDate> =
+    when (this) {
+        RecordPeriod.WEEK -> {
+            val start = anchorDate.startOfWeek()
+            start..start.plusDays(6)
+        }
+
+        RecordPeriod.MONTH -> {
+            val month = YearMonth.from(anchorDate)
+            month.atDay(1)..month.atEndOfMonth()
+        }
+    }
+
+private fun LocalDate.startOfWeek(): LocalDate = minusDays((dayOfWeek.value - DayOfWeek.MONDAY.value).toLong())
+
+private val RunSession.localDate: LocalDate
+    get() = startedAt.atZone(ZoneId.systemDefault()).toLocalDate()
+
 private fun RunSession.toRunningRecord(): RunningRecord =
     RunningRecord(
         id = id,
-        date = startedAt.atZone(ZoneId.systemDefault()).toLocalDate(),
+        date = localDate,
         distanceKm = distanceMeters / METERS_PER_KILOMETER,
         duration = durationSeconds.toDurationText(),
         pace = averagePaceSecondsPerKm.toPaceText(),

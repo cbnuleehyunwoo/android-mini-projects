@@ -55,6 +55,7 @@ fun RecordScreen(
     RecordContent(
         uiState = uiState,
         onPeriodSelect = viewModel::selectPeriod,
+        onAnchorDateChange = viewModel::moveTo,
         onRetryClick = viewModel::retry,
         onRecordClick = onRecordClick,
         modifier = modifier,
@@ -65,6 +66,7 @@ fun RecordScreen(
 private fun RecordContent(
     uiState: RecordUiState,
     onPeriodSelect: (RecordPeriod) -> Unit,
+    onAnchorDateChange: (LocalDate) -> Unit,
     onRetryClick: () -> Unit,
     onRecordClick: (RunningRecord) -> Unit,
     modifier: Modifier = Modifier,
@@ -92,14 +94,16 @@ private fun RecordContent(
                 RecordPeriod.WEEK ->
                     WeekCalendar(
                         recordedDates = uiState.recordedDates,
-                        today = uiState.anchorDate,
+                        anchorDate = uiState.anchorDate,
+                        onWeekChange = onAnchorDateChange,
                         modifier = Modifier.fillMaxWidth(),
                     )
 
                 RecordPeriod.MONTH ->
                     MonthCalendar(
                         recordedDates = uiState.recordedDates,
-                        today = uiState.anchorDate,
+                        anchorMonth = java.time.YearMonth.from(uiState.anchorDate),
+                        onMonthChange = { month -> onAnchorDateChange(month.atDay(1)) },
                         modifier = Modifier.fillMaxWidth(),
                     )
             }
@@ -202,6 +206,7 @@ private fun RecordScreenPreview() {
                     totalDistanceKm = records.sumOf { it.distanceKm },
                 ),
             onPeriodSelect = {},
+            onAnchorDateChange = {},
             onRetryClick = {},
             onRecordClick = {},
         )
