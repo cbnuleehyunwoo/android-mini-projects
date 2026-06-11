@@ -34,7 +34,7 @@ struct RankingView: View {
                 VStack(spacing: 22) {
                     if selectedScope == .personal {
                         metricControl
-                            .padding(.top, 32)
+                            .padding(.top, 20)
                     }
 
                     summaryCard
@@ -66,7 +66,7 @@ struct RankingView: View {
             scopeButton(.team)
             scopeButton(.personal)
         }
-        .padding(RankingLayout.filterPadding)
+        .padding(4)
         .frame(height: RankingLayout.filterOuterHeight)
         .background(Color(red: 0.88, green: 0.88, blue: 0.88))
         .clipShape(Capsule())
@@ -80,7 +80,7 @@ struct RankingView: View {
             metricButton(.pace, title: "페이스")
             metricButton(.consistency, title: "스트릭")
         }
-        .padding(RankingLayout.filterPadding)
+        .padding(4)
         .frame(height: RankingLayout.filterOuterHeight)
         .background(Color(red: 0.88, green: 0.88, blue: 0.88))
         .clipShape(Capsule())
@@ -170,7 +170,7 @@ struct RankingView: View {
             }
         } label: {
             Text(scope.title)
-                .font(AppTheme.Typography.font(size: RankingLayout.scopeFontSize, weight: .bold))
+                .font(AppTheme.Typography.font(size: 18, weight: .bold))
                 .foregroundStyle(selectedScope == scope ? Color.white : Color(red: 0.61, green: 0.66, blue: 0.73))
                 .frame(maxWidth: .infinity)
                 .frame(height: RankingLayout.filterInnerHeight)
@@ -191,7 +191,7 @@ struct RankingView: View {
             }
         } label: {
             Text(title)
-                .font(AppTheme.Typography.font(size: RankingLayout.metricFontSize, weight: .bold))
+                .font(AppTheme.Typography.font(size: 18, weight: .bold))
                 .foregroundStyle(selectedMetric == metric ? Color.white : Color(red: 0.61, green: 0.66, blue: 0.73))
                 .frame(maxWidth: .infinity)
                 .frame(height: RankingLayout.filterInnerHeight)
@@ -345,13 +345,8 @@ struct RankingView: View {
 }
 
 private enum RankingLayout {
-    private static let filterScale: CGFloat = 1.5
-
-    static let filterPadding: CGFloat = 4 * filterScale
-    static let filterOuterHeight: CGFloat = 42 * filterScale
-    static let filterInnerHeight: CGFloat = 34 * filterScale
-    static let scopeFontSize: CGFloat = 18 * filterScale
-    static let metricFontSize: CGFloat = 16 * filterScale
+    static let filterOuterHeight: CGFloat = 60
+    static let filterInnerHeight: CGFloat = 52
 }
 
 private enum RankingScope {
