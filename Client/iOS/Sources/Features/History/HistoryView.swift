@@ -8,6 +8,8 @@ struct HistoryView: View {
     @State private var daySummaries: [RunDaySummary] = []
     @State private var totalDistanceMeters: Int?
     @State private var selectedRecord: RunningRecord?
+    @State private var thumbnailRecordsByID: [UUID: RunningRecord] = [:]
+    @State private var thumbnailFetchIDs: Set<UUID> = []
 
     private let runService: RunServiceProtocol
     private let accessToken: String?
@@ -60,7 +62,10 @@ struct HistoryView: View {
                                     await openRecord(record)
                                 }
                             } label: {
-                                RunningRecordCard(record: record)
+                                RunningRecordCard(
+                                    record: record,
+                                    thumbnailRecord: thumbnailRecordsByID[record.id] ?? record
+                                )
                             }
                             .buttonStyle(.plain)
                         }
@@ -77,6 +82,9 @@ struct HistoryView: View {
         }
         .task(id: refreshIdentifier) {
             await refreshRecords()
+        }
+        .task(id: thumbnailRefreshIdentifier) {
+            await refreshThumbnailRecords()
         }
         .runpamineFullScreenCover(item: $selectedRecord) { record in
             RunningSummaryView(record: record) {
@@ -119,6 +127,12 @@ struct HistoryView: View {
     private var refreshIdentifier: String {
         let components = calendar.dateComponents([.year, .month], from: displayedMonth)
         return "\(selectedPeriod.rawValue)-\(components.year ?? 0)-\(components.month ?? 0)"
+    }
+
+    private var thumbnailRefreshIdentifier: String {
+        selectedRecords
+            .map(\.id.uuidString)
+            .joined(separator: "|")
     }
 
     private var emptyState: some View {
@@ -166,6 +180,7 @@ struct HistoryView: View {
             records = summary.runs
             daySummaries = summary.days
             totalDistanceMeters = summary.totalDistanceMeters
+            pruneThumbnailCache(for: summary.runs)
         } catch {
             useLocalRecords()
         }
@@ -175,6 +190,41 @@ struct HistoryView: View {
         records = RunningHistoryStore().load()
         daySummaries = []
         totalDistanceMeters = nil
+        pruneThumbnailCache(for: records)
+    }
+
+    @MainActor
+    private func refreshThumbnailRecords() async {
+        guard let accessToken else { return }
+
+        let recordsNeedingRoute = selectedRecords.filter { record in
+            let cachedRouteCount = thumbnailRecordsByID[record.id]?.routeCoordinates.count ?? 0
+            return record.routeCoordinates.count < 2
+                && cachedRouteCount < 2
+                && !thumbnailFetchIDs.contains(record.id)
+        }
+
+        for record in recordsNeedingRoute {
+            thumbnailFetchIDs.insert(record.id)
+
+            do {
+                let detail = try await runService.fetchRunDetail(
+                    runID: record.id.uuidString,
+                    accessToken: accessToken
+                )
+                thumbnailRecordsByID[record.id] = detail
+            } catch {
+                thumbnailRecordsByID.removeValue(forKey: record.id)
+            }
+
+            thumbnailFetchIDs.remove(record.id)
+        }
+    }
+
+    private func pruneThumbnailCache(for records: [RunningRecord]) {
+        let currentIDs = Set(records.map(\.id))
+        thumbnailRecordsByID = thumbnailRecordsByID.filter { currentIDs.contains($0.key) }
+        thumbnailFetchIDs = thumbnailFetchIDs.intersection(currentIDs)
     }
 
     @MainActor
@@ -411,10 +461,11 @@ private struct MonthCalendarDayView: View {
 
 private struct RunningRecordCard: View {
     let record: RunningRecord
+    let thumbnailRecord: RunningRecord
 
     var body: some View {
         HStack(spacing: 18) {
-            RunningRouteThumbnailView(record: record)
+            RunningRouteThumbnailView(record: thumbnailRecord)
                 .frame(width: 96, height: 96)
                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
 
@@ -471,14 +522,21 @@ private struct RunningRouteThumbnailView: View {
     }
 
     var body: some View {
-        Map(position: $cameraPosition) {
+        Group {
             if record.routeCoordinates.count >= 2 {
-                MapPolyline(coordinates: record.routeCoordinates)
-                    .stroke(AppTheme.Colors.primary, lineWidth: 4)
+                Map(position: $cameraPosition) {
+                    MapPolyline(coordinates: record.routeCoordinates)
+                        .stroke(AppTheme.Colors.primary, lineWidth: 4)
+                }
+                .mapStyle(.standard(elevation: .flat))
+                .allowsHitTesting(false)
+            } else {
+                MapPlaceholderView()
             }
         }
-        .mapStyle(.standard(elevation: .flat))
-        .allowsHitTesting(false)
+        .onChange(of: routeSignature) { _, _ in
+            cameraPosition = Self.initialCameraPosition(for: record.routeCoordinates)
+        }
         .overlay {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .stroke(Color.black.opacity(0.05), lineWidth: 1)
@@ -496,6 +554,17 @@ private struct RunningRouteThumbnailView: View {
         }
 
         return RunningMapView.cameraPosition(fitting: coordinates)
+    }
+
+    private var routeSignature: String {
+        let first = record.routeCoordinates.first
+        let last = record.routeCoordinates.last
+        return [
+            record.id.uuidString,
+            "\(record.routeCoordinates.count)",
+            first.map { "\($0.latitude),\($0.longitude)" } ?? "",
+            last.map { "\($0.latitude),\($0.longitude)" } ?? ""
+        ].joined(separator: "|")
     }
 }
 
