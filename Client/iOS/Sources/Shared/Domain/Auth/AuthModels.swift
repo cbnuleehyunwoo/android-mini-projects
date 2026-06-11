@@ -30,7 +30,9 @@ enum AuthError: LocalizedError, Equatable {
     case missingAppleIdentityToken
     case missingGoogleConfiguration
     case missingGoogleIDToken
+    case missingLogoutConfiguration
     case missingSupabaseConfiguration
+    case logoutFailed
     case unavailable
 
     var errorDescription: String? {
@@ -45,8 +47,12 @@ enum AuthError: LocalizedError, Equatable {
             return "Google 로그인 설정을 확인해주세요."
         case .missingGoogleIDToken:
             return "Google 로그인 정보를 가져오지 못했어요."
+        case .missingLogoutConfiguration:
+            return "로그아웃 설정을 확인해주세요."
         case .missingSupabaseConfiguration:
             return "Supabase 로그인 설정을 확인해주세요."
+        case .logoutFailed:
+            return "로그아웃에 실패했어요. 잠시 후 다시 시도해주세요."
         case .unavailable:
             return "잠시 후 다시 시도해주세요."
         }

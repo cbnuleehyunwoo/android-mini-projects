@@ -12,7 +12,9 @@ struct MainTabView: View {
     private let profileService: ProfileServiceProtocol
     private let runService: RunServiceProtocol
     private let rankingService: RankingServiceProtocol
+    private let authService: AuthServiceProtocol
     private let accessToken: String?
+    private let onLogout: () -> Void
     private let store: LocalAppStateStore
 
     init(
@@ -21,13 +23,17 @@ struct MainTabView: View {
         runService: RunServiceProtocol = MockRunService(),
         teamService: TeamServiceProtocol? = nil,
         rankingService: RankingServiceProtocol = MockRankingService(),
-        accessToken: String? = nil
+        authService: AuthServiceProtocol = MockAuthService(),
+        accessToken: String? = nil,
+        onLogout: @escaping () -> Void = {}
     ) {
         self.store = store
         self.profileService = profileService
         self.runService = runService
         self.rankingService = rankingService
+        self.authService = authService
         self.accessToken = accessToken
+        self.onLogout = onLogout
         self.teamService = teamService ?? MockTeamService(store: store)
         _nickname = State(initialValue: store.nickname)
         _team = State(initialValue: store.loadTeam())
@@ -93,7 +99,13 @@ struct MainTabView: View {
             }
         }
         .sheet(isPresented: $isShowingMyPage) {
-            MyPageView(store: store, profileService: profileService, accessToken: accessToken) { updatedNickname in
+            MyPageView(
+                store: store,
+                profileService: profileService,
+                authService: authService,
+                accessToken: accessToken,
+                onLogoutCompleted: onLogout
+            ) { updatedNickname in
                 nickname = updatedNickname
             }
         }

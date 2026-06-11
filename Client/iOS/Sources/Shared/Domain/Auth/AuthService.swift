@@ -9,16 +9,28 @@ protocol AuthServiceProtocol {
     func loginWithGoogle() async throws -> AuthSession
     func loginWithApple(identityToken: String) async throws -> AuthSession
     func completeSignup(profile: SignupProfile) async throws -> AuthSession
+    func logout(accessToken: String) async throws
 }
 
 @MainActor
 final class SupabaseAuthService: AuthServiceProtocol {
     private let store: LocalAppStateStore
     private let supabase: SupabaseClient?
+    private let apiBaseURL: URL?
+    private let session: URLSession
+    private let decoder: JSONDecoder
 
-    init(store: LocalAppStateStore = LocalAppStateStore()) {
+    init(
+        store: LocalAppStateStore = LocalAppStateStore(),
+        bundle: Bundle = .main,
+        session: URLSession = .shared,
+        decoder: JSONDecoder = JSONDecoder()
+    ) {
         self.store = store
-        supabase = Bundle.main.supabaseConfiguration.map {
+        self.session = session
+        self.decoder = decoder
+        apiBaseURL = bundle.authAPIBaseURL?.apiBaseURL
+        supabase = bundle.supabaseConfiguration.map {
             SupabaseClient(
                 supabaseURL: $0.url,
                 supabaseKey: $0.anonKey,
@@ -129,6 +141,35 @@ final class SupabaseAuthService: AuthServiceProtocol {
             needsSignup: false
         )
     }
+
+    func logout(accessToken: String) async throws {
+        guard let apiBaseURL else {
+            throw AuthError.missingLogoutConfiguration
+        }
+
+        var request = URLRequest(url: apiBaseURL.appendingAPIPath("/auth/logout"))
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+
+        let (data, response) = try await session.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw AuthError.logoutFailed
+        }
+
+        guard 200..<300 ~= httpResponse.statusCode else {
+            throw AuthError.logoutFailed
+        }
+
+        if !data.isEmpty {
+            let envelope = try decoder.decode(AuthLogoutEnvelope.self, from: data)
+            guard envelope.data.success else {
+                throw AuthError.logoutFailed
+            }
+        }
+
+        try await supabase?.auth.signOut(scope: .local)
+    }
 }
 
 final class MockAuthService: AuthServiceProtocol {
@@ -185,6 +226,10 @@ final class MockAuthService: AuthServiceProtocol {
             needsSignup: false
         )
     }
+
+    func logout(accessToken: String) async throws {
+        try await Task.sleep(nanoseconds: 250_000_000)
+    }
 }
 
 enum AuthNonce {
@@ -211,7 +256,27 @@ private struct SupabaseConfiguration {
     let anonKey: String
 }
 
+private struct AuthLogoutEnvelope: Decodable {
+    let data: AuthLogoutPayload
+}
+
+private struct AuthLogoutPayload: Decodable {
+    let success: Bool
+}
+
 private extension Bundle {
+    var authAPIBaseURL: URL? {
+        guard
+            let baseURLString = object(forInfoDictionaryKey: "ProfileAPIBaseURL") as? String,
+            !baseURLString.isEmpty,
+            !baseURLString.hasPrefix("$(")
+        else {
+            return nil
+        }
+
+        return URL(string: baseURLString)
+    }
+
     var googleSignInConfiguration: GIDConfiguration? {
         guard
             let clientID = object(forInfoDictionaryKey: "GIDClientID") as? String,
@@ -236,6 +301,25 @@ private extension Bundle {
         }
 
         return SupabaseConfiguration(url: baseURL, anonKey: anonKey)
+    }
+}
+
+private extension URL {
+    var apiBaseURL: URL {
+        let normalizedURL = absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        guard host?.hasSuffix(".supabase.co") == true, path.isEmpty || path == "/" else {
+            return URL(string: normalizedURL) ?? self
+        }
+
+        return URL(string: "\(normalizedURL)/functions/v1/api") ?? self
+    }
+
+    func appendingAPIPath(_ path: String) -> URL {
+        var url = self
+        path
+            .split(separator: "/")
+            .forEach { url.appendPathComponent(String($0)) }
+        return url
     }
 }
 
