@@ -7,6 +7,7 @@ struct HomeView: View {
     let onJoinTeam: () -> Void
     let onOpenMyPage: () -> Void
     let onStartRunning: () -> Void
+    @State private var isShowingStartDialog = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -24,7 +25,9 @@ struct HomeView: View {
                     .frame(maxHeight: .infinity)
                     .padding(.horizontal, 8)
 
-                Button(action: onStartRunning) {
+                Button {
+                    isShowingStartDialog = true
+                } label: {
                     Text("시작")
                         .font(AppTheme.Typography.font(size: 24, weight: .bold))
                         .foregroundStyle(.white)
@@ -39,6 +42,23 @@ struct HomeView: View {
             .frame(maxHeight: .infinity)
         }
         .background(Color.white)
+        .overlay {
+            if isShowingStartDialog {
+                RunpamineConfirmationDialog(
+                    title: "러닝 시작",
+                    message: "러닝을 시작하시겠습니까?",
+                    dismissText: "취소",
+                    confirmText: "시작",
+                    onDismiss: {
+                        isShowingStartDialog = false
+                    },
+                    onConfirm: {
+                        isShowingStartDialog = false
+                        onStartRunning()
+                    }
+                )
+            }
+        }
     }
 
 }

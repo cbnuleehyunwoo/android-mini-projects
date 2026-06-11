@@ -4,6 +4,7 @@ struct RunningView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var tracker = RunningTracker()
     @State private var finishedRecord: RunningRecord?
+    @State private var isShowingStopDialog = false
     private let runService: RunServiceProtocol
     private let accessToken: String?
 
@@ -22,6 +23,21 @@ struct RunningView: View {
                 activeRunningView
             }
         }
+        .interactiveDismissDisabled(finishedRecord == nil)
+        .overlay {
+            if isShowingStopDialog {
+                RunpamineConfirmationDialog(
+                    title: "러닝 종료",
+                    message: "러닝을 종료하시겠습니까?",
+                    dismissText: "취소",
+                    confirmText: "종료",
+                    onDismiss: {
+                        isShowingStopDialog = false
+                    },
+                    onConfirm: finishRunning
+                )
+            }
+        }
         .task {
             if tracker.trackingState == .idle {
                 tracker.start()
@@ -37,6 +53,9 @@ struct RunningView: View {
                 Spacer()
                 runningContentPanel
             }
+        }
+        .runpamineBackSwipe {
+            requestFinishRunning()
         }
     }
 
@@ -182,7 +201,14 @@ struct RunningView: View {
         }
     }
 
+    private func requestFinishRunning() {
+        guard finishedRecord == nil else { return }
+        isShowingStopDialog = true
+    }
+
     private func finishRunning() {
+        isShowingStopDialog = false
+
         let record: RunningRecord
         if let completedRecord = tracker.end() {
             record = completedRecord
