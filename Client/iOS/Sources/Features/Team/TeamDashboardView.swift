@@ -246,7 +246,8 @@ private struct TeamDashboardSkeletonView: View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 0) {
                 HStack(spacing: 12) {
-                    skeletonBlock(width: 220, height: 42, cornerRadius: 8)
+                    skeletonBlock(width: 210, height: 34, cornerRadius: 8)
+                        .frame(height: 48, alignment: .center)
 
                     Spacer()
 
@@ -255,7 +256,7 @@ private struct TeamDashboardSkeletonView: View {
                 .padding(.horizontal, 24)
                 .padding(.top, 32)
 
-                skeletonBlock(width: 230, height: 30, cornerRadius: 8)
+                skeletonBlock(width: 190, height: 22, cornerRadius: 8)
                     .padding(.top, 10)
 
                 HStack(spacing: 8) {
