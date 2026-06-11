@@ -69,14 +69,11 @@ private struct HomeHeaderView: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Circle()
-                .fill(AppTheme.Colors.primary)
+            Image("app_logo_face")
+                .resizable()
+                .scaledToFit()
                 .frame(width: 34, height: 34)
-                .overlay {
-                    Image(systemName: "person.fill")
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(.white)
-                }
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("안녕하세요, \(nickname)님!")
