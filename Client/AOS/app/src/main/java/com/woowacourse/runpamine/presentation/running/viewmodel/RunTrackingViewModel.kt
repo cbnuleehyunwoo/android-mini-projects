@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.woowacourse.runpamine.domain.run.RunSession
 import com.woowacourse.runpamine.domain.run.RunSyncRepository
 import com.woowacourse.runpamine.domain.run.RunTrackingRepository
 import com.woowacourse.runpamine.service.RunTrackingService
@@ -54,18 +55,19 @@ class RunTrackingViewModel(
         )
     }
 
-    fun stopRun(onStopped: () -> Unit = {}) {
+    fun stopRun(onStopped: (RunSession?) -> Unit = {}) {
         viewModelScope.launch {
             val context = getApplication<Application>()
             val finishedSession = runTrackingRepository.stopRun()
             context.stopService(Intent(context, RunTrackingService::class.java))
+
+            onStopped(finishedSession)
 
             if (finishedSession != null) {
                 runSyncRepository
                     .syncRun(finishedSession.id)
                     .onFailure { errorMessage.value = it.message }
             }
-            onStopped()
         }
     }
 

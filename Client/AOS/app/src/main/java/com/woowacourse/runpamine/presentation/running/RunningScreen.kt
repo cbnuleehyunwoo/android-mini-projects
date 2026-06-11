@@ -9,6 +9,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -36,8 +39,9 @@ fun RunningScreen(
                     runTrackingRepository = container.runTrackingRepository,
                     runSyncRepository = container.runSyncRepository,
                 ),
-        )
+    )
     val state by viewModel.currentRunState.collectAsStateWithLifecycle()
+    var completedSession by remember { mutableStateOf<RunSession?>(null) }
     val locationPermissionLauncher =
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.RequestMultiplePermissions(),
@@ -55,14 +59,25 @@ fun RunningScreen(
         }
     }
 
-    RunningScreenContent(
+    completedSession?.let { session ->
+        RunningCompleteScreen(
+            distance = session.distanceText(),
+            time = session.durationSeconds.elapsedTimeText(),
+            pace = session.paceText(),
+            calories = session.calories.toString(),
+            onCompleteClick = onStopCompleted,
+            modifier = modifier,
+        )
+    } ?: RunningScreenContent(
         session = state.session,
         elapsedSeconds = state.elapsedSeconds,
         isPaused = state.isPaused,
         modifier = modifier,
         onPauseClick = viewModel::togglePause,
         onStopClick = {
-            viewModel.stopRun(onStopped = onStopCompleted)
+            viewModel.stopRun { session ->
+                completedSession = session
+            }
         },
     )
 }
@@ -83,6 +98,25 @@ private fun Map<String, Boolean>.hasLocationPermission(): Boolean =
         this[permission] == true
     }
 
+private fun RunSession.distanceText(): String {
+    val distanceKm = distanceMeters / METERS_PER_KILOMETER
+    return String.format("%.2f", distanceKm)
+}
+
+private fun Long.elapsedTimeText(): String {
+    val minutes = this / SECONDS_PER_MINUTE
+    val seconds = this % SECONDS_PER_MINUTE
+    return "%02d:%02d".format(minutes, seconds)
+}
+
+private fun RunSession.paceText(): String {
+    if (averagePaceSecondsPerKm <= 0) return "0'00\""
+
+    val minutes = averagePaceSecondsPerKm / SECONDS_PER_MINUTE
+    val seconds = averagePaceSecondsPerKm % SECONDS_PER_MINUTE
+    return "%d'%02d\"".format(minutes, seconds)
+}
+
 @Preview(showBackground = true, widthDp = 393, heightDp = 852)
 @Composable
 private fun RunningScreenPreview() {
@@ -100,3 +134,6 @@ private fun RunningScreenPreview() {
         )
     }
 }
+
+private const val METERS_PER_KILOMETER = 1_000.0
+private const val SECONDS_PER_MINUTE = 60
