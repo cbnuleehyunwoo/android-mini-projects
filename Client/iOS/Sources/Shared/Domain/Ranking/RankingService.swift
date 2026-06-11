@@ -428,6 +428,43 @@ private struct UserRankingEntryPayload: Decodable {
     let elapsedDays: Int
     let consistencyRate: Int
 
+    private enum CodingKeys: String, CodingKey {
+        case rank
+        case topPercent
+        case eligibleCount
+        case userId
+        case nickname
+        case avatarKey
+        case teamId
+        case teamName
+        case distanceMeters
+        case durationSeconds
+        case averagePaceSecondsPerKm
+        case runCount
+        case activeDays
+        case elapsedDays
+        case consistencyRate
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        rank = try container.decodeLossyInt(forKey: .rank)
+        topPercent = try container.decodeLossyIntIfPresent(forKey: .topPercent) ?? 0
+        eligibleCount = try container.decodeLossyIntIfPresent(forKey: .eligibleCount) ?? 0
+        userId = try container.decode(String.self, forKey: .userId)
+        nickname = try container.decode(String.self, forKey: .nickname)
+        avatarKey = try container.decodeStringIfPresent(forKey: .avatarKey)
+        teamId = try container.decodeStringIfPresent(forKey: .teamId)
+        teamName = try container.decodeStringIfPresent(forKey: .teamName)
+        distanceMeters = try container.decodeLossyInt(forKey: .distanceMeters)
+        durationSeconds = try container.decodeLossyIntIfPresent(forKey: .durationSeconds) ?? 0
+        averagePaceSecondsPerKm = try container.decodeLossyIntIfPresent(forKey: .averagePaceSecondsPerKm)
+        runCount = try container.decodeLossyIntIfPresent(forKey: .runCount) ?? 0
+        activeDays = try container.decodeLossyIntIfPresent(forKey: .activeDays) ?? 0
+        elapsedDays = try container.decodeLossyIntIfPresent(forKey: .elapsedDays) ?? 0
+        consistencyRate = try container.decodeLossyIntIfPresent(forKey: .consistencyRate) ?? 0
+    }
+
     var domain: UserRankingEntry {
         UserRankingEntry(
             rank: rank,
@@ -470,6 +507,51 @@ private struct MyRankingSummaryPayload: Decodable {
     let consistencyTopPercent: Int?
     let consistencyEligibleCount: Int
 
+    private enum CodingKeys: String, CodingKey {
+        case season
+        case eligible
+        case requiredDistanceMeters
+        case distanceMeters
+        case remainingDistanceMeters
+        case durationSeconds
+        case averagePaceSecondsPerKm
+        case runCount
+        case activeDays
+        case consistencyRate
+        case distanceRank
+        case distanceTopPercent
+        case distanceEligibleCount
+        case paceRank
+        case paceTopPercent
+        case paceEligibleCount
+        case consistencyRank
+        case consistencyTopPercent
+        case consistencyEligibleCount
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        season = try container.decode(SeasonPayload.self, forKey: .season)
+        eligible = (try? container.decode(Bool.self, forKey: .eligible)) ?? false
+        requiredDistanceMeters = try container.decodeLossyIntIfPresent(forKey: .requiredDistanceMeters) ?? 0
+        distanceMeters = try container.decodeLossyIntIfPresent(forKey: .distanceMeters) ?? 0
+        remainingDistanceMeters = try container.decodeLossyIntIfPresent(forKey: .remainingDistanceMeters) ?? 0
+        durationSeconds = try container.decodeLossyIntIfPresent(forKey: .durationSeconds) ?? 0
+        averagePaceSecondsPerKm = try container.decodeLossyIntIfPresent(forKey: .averagePaceSecondsPerKm)
+        runCount = try container.decodeLossyIntIfPresent(forKey: .runCount) ?? 0
+        activeDays = try container.decodeLossyIntIfPresent(forKey: .activeDays) ?? 0
+        consistencyRate = try container.decodeLossyIntIfPresent(forKey: .consistencyRate) ?? 0
+        distanceRank = try container.decodeLossyIntIfPresent(forKey: .distanceRank)
+        distanceTopPercent = try container.decodeLossyIntIfPresent(forKey: .distanceTopPercent)
+        distanceEligibleCount = try container.decodeLossyIntIfPresent(forKey: .distanceEligibleCount) ?? 0
+        paceRank = try container.decodeLossyIntIfPresent(forKey: .paceRank)
+        paceTopPercent = try container.decodeLossyIntIfPresent(forKey: .paceTopPercent)
+        paceEligibleCount = try container.decodeLossyIntIfPresent(forKey: .paceEligibleCount) ?? 0
+        consistencyRank = try container.decodeLossyIntIfPresent(forKey: .consistencyRank)
+        consistencyTopPercent = try container.decodeLossyIntIfPresent(forKey: .consistencyTopPercent)
+        consistencyEligibleCount = try container.decodeLossyIntIfPresent(forKey: .consistencyEligibleCount) ?? 0
+    }
+
     var domain: MyRankingSummary {
         MyRankingSummary(
             season: season.domain,
@@ -501,6 +583,58 @@ private struct RankingAPIErrorEnvelope: Decodable {
 
 private struct RankingAPIErrorPayload: Decodable {
     let message: String
+}
+
+private extension KeyedDecodingContainer {
+    func decodeLossyInt(forKey key: Key) throws -> Int {
+        if let value = try? decode(Int.self, forKey: key) {
+            return value
+        }
+
+        if let value = try? decode(Double.self, forKey: key) {
+            return Int(value.rounded())
+        }
+
+        if let value = try? decode(String.self, forKey: key), let number = Double(value) {
+            return Int(number.rounded())
+        }
+
+        throw DecodingError.typeMismatch(
+            Int.self,
+            DecodingError.Context(
+                codingPath: codingPath + [key],
+                debugDescription: "Expected Int-compatible value."
+            )
+        )
+    }
+
+    func decodeLossyIntIfPresent(forKey key: Key) throws -> Int? {
+        guard contains(key), try !decodeNil(forKey: key) else { return nil }
+
+        if let value = try? decode(Int.self, forKey: key) {
+            return value
+        }
+
+        if let value = try? decode(Double.self, forKey: key) {
+            return Int(value.rounded())
+        }
+
+        if let value = try? decode(String.self, forKey: key), let number = Double(value) {
+            return Int(number.rounded())
+        }
+
+        return nil
+    }
+
+    func decodeStringIfPresent(forKey key: Key) throws -> String? {
+        guard contains(key), try !decodeNil(forKey: key) else { return nil }
+
+        if let value = try? decode(String.self, forKey: key) {
+            return value.isEmpty ? nil : value
+        }
+
+        return nil
+    }
 }
 
 private extension UserRankingMetric {
