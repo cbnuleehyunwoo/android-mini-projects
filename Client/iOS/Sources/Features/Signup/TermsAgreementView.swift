@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct TermsAgreementView: View {
+    @Environment(\.openURL) private var openURL
     @StateObject private var viewModel: TermsAgreementViewModel
     let onBack: () -> Void
     let onComplete: ([TermsAgreement]) -> Void
@@ -57,7 +58,10 @@ struct TermsAgreementView: View {
                         AgreementRow(
                             title: agreement.title,
                             isRequired: agreement.isRequired,
-                            isAccepted: agreement.isAccepted
+                            isAccepted: agreement.isAccepted,
+                            onOpenDetail: {
+                                openURL(agreement.id.documentURL)
+                            }
                         ) {
                             viewModel.toggle(agreement.id)
                         }

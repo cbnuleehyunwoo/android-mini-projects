@@ -5,6 +5,7 @@ struct AgreementRow: View {
     let isRequired: Bool
     let isAccepted: Bool
     var showsDisclosure = true
+    var onOpenDetail: (() -> Void)?
     let onToggle: () -> Void
 
     var body: some View {
@@ -16,6 +17,20 @@ struct AgreementRow: View {
             }
             .accessibilityLabel("\(title) 동의")
 
+            if let onOpenDetail {
+                Button(action: onOpenDetail) {
+                    detailContent
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("\(title) 보기")
+            } else {
+                detailContent
+            }
+        }
+    }
+
+    private var detailContent: some View {
+        HStack(spacing: 14) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(AppTheme.Typography.font(size: 16, weight: .semibold))
@@ -36,5 +51,6 @@ struct AgreementRow: View {
                     .foregroundStyle(AppTheme.Colors.textSecondary.opacity(0.65))
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
