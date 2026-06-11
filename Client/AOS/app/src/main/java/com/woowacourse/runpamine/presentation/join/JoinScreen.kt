@@ -2,9 +2,12 @@ package com.woowacourse.runpamine.presentation.join
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -65,11 +68,13 @@ private fun JoinContent(
     Column(
         modifier =
             modifier
+                .fillMaxSize()
                 .padding(horizontal = 24.dp, vertical = 14.dp),
     ) {
         ScreenTopBar(
             title = stringResource(R.string.join_team_bar),
             onBackClick = onBackClick,
+            modifier = Modifier.statusBarsPadding(),
         )
         Spacer(
             modifier = Modifier.height(15.dp),
@@ -103,7 +108,10 @@ private fun JoinContent(
         BottomButton(
             text = stringResource(R.string.join_team),
             onClick = onJoinClick,
-            modifier = Modifier.fillMaxWidth(),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding(),
             enabled = !uiState.isLoading && uiState.code.length == JOIN_CODE_MAX_LENGTH,
         )
     }
