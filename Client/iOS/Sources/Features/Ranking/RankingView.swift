@@ -34,7 +34,7 @@ struct RankingView: View {
                 VStack(spacing: 22) {
                     if selectedScope == .personal {
                         metricControl
-                            .padding(.top, 32)
+                            .padding(.top, 20)
                     }
 
                     summaryCard
@@ -191,7 +191,7 @@ struct RankingView: View {
             }
         } label: {
             Text(title)
-                .font(AppTheme.Typography.font(size: 16, weight: .bold))
+                .font(AppTheme.Typography.font(size: 18, weight: .bold))
                 .foregroundStyle(selectedMetric == metric ? Color.white : Color(red: 0.61, green: 0.66, blue: 0.73))
                 .frame(maxWidth: .infinity)
                 .frame(height: RankingLayout.filterInnerHeight)
@@ -345,8 +345,8 @@ struct RankingView: View {
 }
 
 private enum RankingLayout {
-    static let filterOuterHeight: CGFloat = 42
-    static let filterInnerHeight: CGFloat = 34
+    static let filterOuterHeight: CGFloat = 60
+    static let filterInnerHeight: CGFloat = 52
 }
 
 private enum RankingScope {
