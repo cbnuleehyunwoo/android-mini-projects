@@ -4,9 +4,10 @@ import SwiftUI
 struct HistoryView: View {
     @State private var selectedPeriod: HistoryPeriod = .week
     @State private var displayedMonth = Date()
-    @State private var records: [RunningRecord] = RunningHistoryStore().load()
+    @State private var records: [RunningRecord]
     @State private var daySummaries: [RunDaySummary] = []
     @State private var totalDistanceMeters: Int?
+    @State private var loadedRefreshIdentifier: String?
     @State private var selectedRecord: RunningRecord?
     @State private var thumbnailRecordsByID: [UUID: RunningRecord] = [:]
     @State private var thumbnailFetchIDs: Set<UUID> = []
@@ -18,6 +19,7 @@ struct HistoryView: View {
     init(runService: RunServiceProtocol = MockRunService(), accessToken: String? = nil) {
         self.runService = runService
         self.accessToken = accessToken
+        _records = State(initialValue: RunningHistoryStore().load())
     }
 
     var body: some View {
@@ -37,14 +39,14 @@ struct HistoryView: View {
                 .padding(.top, 20)
 
                 if selectedPeriod == .week {
-                    WeekDotsView(records: records, daySummaries: daySummaries)
+                    WeekDotsView(records: visibleRecords, daySummaries: visibleDaySummaries)
                         .padding(.horizontal, 30)
                         .padding(.top, 28)
                 } else {
                     MonthCalendarView(
                         month: displayedMonth,
-                        records: records,
-                        daySummaries: daySummaries,
+                        records: visibleRecords,
+                        daySummaries: visibleDaySummaries,
                         onPreviousMonth: moveToPreviousMonth,
                         onNextMonth: moveToNextMonth
                     )
@@ -53,10 +55,12 @@ struct HistoryView: View {
                 }
 
                 VStack(spacing: 22) {
-                    if selectedRecords.isEmpty {
+                    if isWaitingForRemoteRecords {
+                        loadingState
+                    } else if visibleSelectedRecords.isEmpty {
                         emptyState
                     } else {
-                        ForEach(selectedRecords) { record in
+                        ForEach(visibleSelectedRecords) { record in
                             Button {
                                 Task {
                                     await openRecord(record)
@@ -78,7 +82,9 @@ struct HistoryView: View {
         }
         .background(Color.white)
         .onAppear {
-            records = RunningHistoryStore().load()
+            if accessToken == nil {
+                records = RunningHistoryStore().load()
+            }
         }
         .task(id: refreshIdentifier) {
             await refreshRecords()
@@ -108,7 +114,25 @@ struct HistoryView: View {
         .padding(.top, 34)
     }
 
-    private var selectedRecords: [RunningRecord] {
+    private var visibleSelectedRecords: [RunningRecord] {
+        records(in: visibleRecords)
+    }
+
+    private var visibleRecords: [RunningRecord] {
+        guard accessToken != nil else { return records }
+        return loadedRefreshIdentifier == refreshIdentifier ? records : []
+    }
+
+    private var visibleDaySummaries: [RunDaySummary] {
+        guard accessToken != nil else { return daySummaries }
+        return loadedRefreshIdentifier == refreshIdentifier ? daySummaries : []
+    }
+
+    private var isWaitingForRemoteRecords: Bool {
+        accessToken != nil && loadedRefreshIdentifier != refreshIdentifier
+    }
+
+    private func records(in records: [RunningRecord]) -> [RunningRecord] {
         records.filter { record in
             switch selectedPeriod {
             case .week:
@@ -120,7 +144,9 @@ struct HistoryView: View {
     }
 
     private var totalDistanceText: String {
-        let total = totalDistanceMeters.map { Double($0) / 1_000 } ?? selectedRecords.reduce(0) { $0 + $1.distanceKilometers }
+        guard !isWaitingForRemoteRecords else { return "0.0" }
+
+        let total = totalDistanceMeters.map { Double($0) / 1_000 } ?? visibleSelectedRecords.reduce(0) { $0 + $1.distanceKilometers }
         return total.formatted(.number.precision(.fractionLength(1)))
     }
 
@@ -130,7 +156,7 @@ struct HistoryView: View {
     }
 
     private var thumbnailRefreshIdentifier: String {
-        selectedRecords
+        visibleSelectedRecords
             .map(\.id.uuidString)
             .joined(separator: "|")
     }
@@ -141,6 +167,18 @@ struct HistoryView: View {
                 .font(.system(size: 34, weight: .semibold))
                 .foregroundStyle(Color.gray)
             Text(selectedPeriod == .week ? "이번 주 러닝 기록이 없어요" : "이번 달 러닝 기록이 없어요")
+                .font(AppTheme.Typography.font(size: 15, weight: .bold))
+                .foregroundStyle(AppTheme.Colors.textSecondary)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 160)
+    }
+
+    private var loadingState: some View {
+        VStack(spacing: 12) {
+            ProgressView()
+                .tint(AppTheme.Colors.primary)
+            Text("러닝 기록을 불러오는 중이에요")
                 .font(AppTheme.Typography.font(size: 15, weight: .bold))
                 .foregroundStyle(AppTheme.Colors.textSecondary)
         }
@@ -163,6 +201,13 @@ struct HistoryView: View {
             return
         }
 
+        let requestIdentifier = refreshIdentifier
+        loadedRefreshIdentifier = nil
+        records = []
+        daySummaries = []
+        totalDistanceMeters = 0
+        pruneThumbnailCache(for: [])
+
         do {
             let summary: RunPeriodSummary
             switch selectedPeriod {
@@ -177,16 +222,26 @@ struct HistoryView: View {
                 )
             }
 
+            guard requestIdentifier == refreshIdentifier else { return }
+
             records = summary.runs
             daySummaries = summary.days
             totalDistanceMeters = summary.totalDistanceMeters
+            loadedRefreshIdentifier = requestIdentifier
             pruneThumbnailCache(for: summary.runs)
         } catch {
-            useLocalRecords()
+            guard requestIdentifier == refreshIdentifier else { return }
+
+            records = []
+            daySummaries = []
+            totalDistanceMeters = 0
+            loadedRefreshIdentifier = requestIdentifier
+            pruneThumbnailCache(for: [])
         }
     }
 
     private func useLocalRecords() {
+        loadedRefreshIdentifier = nil
         records = RunningHistoryStore().load()
         daySummaries = []
         totalDistanceMeters = nil
@@ -197,7 +252,7 @@ struct HistoryView: View {
     private func refreshThumbnailRecords() async {
         guard let accessToken else { return }
 
-        let recordsNeedingRoute = selectedRecords.filter { record in
+        let recordsNeedingRoute = visibleSelectedRecords.filter { record in
             let cachedRouteCount = thumbnailRecordsByID[record.id]?.routeCoordinates.count ?? 0
             return record.routeCoordinates.count < 2
                 && cachedRouteCount < 2

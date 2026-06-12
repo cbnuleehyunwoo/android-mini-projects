@@ -20,7 +20,7 @@ struct LoginView: View {
                     Image("character_no_bg")
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 120, height: 120)
+                        .frame(width: 200, height: 200)
                         .accessibilityLabel("런파민 캐릭터")
 
                     Text("RUNPAMINE")
