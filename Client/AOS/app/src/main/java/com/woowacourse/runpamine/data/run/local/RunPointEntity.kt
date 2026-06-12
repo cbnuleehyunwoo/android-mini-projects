@@ -25,6 +25,7 @@ data class RunPointEntity(
     val latitude: Double,
     val longitude: Double,
     val recordedAtEpochMillis: Long,
+    val horizontalAccuracyMeters: Float?,
 )
 
 fun RunPointEntity.toDomain(): RunPoint =
@@ -34,6 +35,7 @@ fun RunPointEntity.toDomain(): RunPoint =
         latitude = latitude,
         longitude = longitude,
         recordedAt = Instant.ofEpochMilli(recordedAtEpochMillis),
+        horizontalAccuracyMeters = horizontalAccuracyMeters,
     )
 
 fun RunPoint.toEntity(): RunPointEntity =
@@ -43,4 +45,5 @@ fun RunPoint.toEntity(): RunPointEntity =
         latitude = latitude,
         longitude = longitude,
         recordedAtEpochMillis = recordedAt.toEpochMilli(),
+        horizontalAccuracyMeters = horizontalAccuracyMeters,
     )

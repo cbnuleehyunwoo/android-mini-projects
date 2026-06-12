@@ -168,6 +168,9 @@ class DefaultRunTrackingRepository(
                         sessionId = session.id,
                         sequence = nextSequence,
                     )
+                if (lastPoint != null && !point.isPlausibleAfter(requireNotNull(lastPoint))) {
+                    return@collect
+                }
                 distanceMeters += lastPoint?.let { metricCalculator.distanceBetweenMeters(it, point) } ?: 0
 
                 val durationSeconds = currentElapsedSeconds()

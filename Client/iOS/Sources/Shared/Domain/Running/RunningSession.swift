@@ -75,7 +75,13 @@ struct RunningSession {
         }
 
         latestLocation = location
-        routePoints.append(RunningCoordinate(location.coordinate, recordedAt: location.timestamp))
+        routePoints.append(
+            RunningCoordinate(
+                location.coordinate,
+                recordedAt: location.timestamp,
+                horizontalAccuracy: location.horizontalAccuracy
+            )
+        )
         shouldMeasureDistanceFromPreviousLocation = true
     }
 

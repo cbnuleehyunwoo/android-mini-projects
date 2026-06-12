@@ -10,7 +10,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         RunSessionEntity::class,
         RunPointEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 abstract class RunDatabase : RoomDatabase() {
@@ -24,6 +24,18 @@ abstract class RunDatabase : RoomDatabase() {
                         """
                         ALTER TABLE run_sessions
                         ADD COLUMN averagePaceSecondsPerKm INTEGER NOT NULL DEFAULT 0
+                        """.trimIndent(),
+                    )
+                }
+            }
+
+        val MIGRATION_2_3 =
+            object : Migration(2, 3) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        """
+                        ALTER TABLE run_points
+                        ADD COLUMN horizontalAccuracyMeters REAL
                         """.trimIndent(),
                     )
                 }

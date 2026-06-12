@@ -31,11 +31,15 @@ class AndroidLocationTracker(
                 object : LocationCallback() {
                     override fun onLocationResult(result: LocationResult) {
                         result.locations.forEach { location ->
+                            if (!location.hasAccuracy() || location.accuracy > MAX_HORIZONTAL_ACCURACY_METERS) {
+                                return@forEach
+                            }
                             trySend(
                                 RunPoint(
                                     latitude = location.latitude,
                                     longitude = location.longitude,
                                     recordedAt = Instant.ofEpochMilli(location.time),
+                                    horizontalAccuracyMeters = location.accuracy,
                                 ),
                             )
                         }
@@ -58,7 +62,8 @@ class AndroidLocationTracker(
         }
 
     private companion object {
-        const val UPDATE_INTERVAL_MILLIS = 3_000L
-        const val MIN_UPDATE_DISTANCE_METERS = 5f
+        const val UPDATE_INTERVAL_MILLIS = 1_000L
+        const val MIN_UPDATE_DISTANCE_METERS = 1f
+        const val MAX_HORIZONTAL_ACCURACY_METERS = 30f
     }
 }

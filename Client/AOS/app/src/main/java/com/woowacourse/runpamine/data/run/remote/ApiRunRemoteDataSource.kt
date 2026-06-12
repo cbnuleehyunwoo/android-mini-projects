@@ -216,6 +216,7 @@ private fun JSONArray?.toRunPoints(id: String): List<RunPoint> {
             latitude = point.getDouble("latitude"),
             longitude = point.getDouble("longitude"),
             recordedAt = parseApiInstant(point.getString("recordedAt")),
+            horizontalAccuracyMeters = point.optDouble("horizontalAccuracyMeters").takeIf { !it.isNaN() }?.toFloat(),
         )
     }.sortedBy { it.sequence }
 }

@@ -22,6 +22,7 @@ final class RunningTracker: NSObject, ObservableObject {
     private let historyStore: RunningHistoryStore
     private var timer: Timer?
     private var shouldStartAfterAuthorization = false
+    private var shouldValidateJumpFromPreviousLocation = false
 
     init(historyStore: RunningHistoryStore = RunningHistoryStore()) {
         self.historyStore = historyStore
@@ -31,7 +32,7 @@ final class RunningTracker: NSObject, ObservableObject {
         manager.delegate = self
         manager.activityType = .fitness
         manager.desiredAccuracy = kCLLocationAccuracyBest
-        manager.distanceFilter = 5
+        manager.distanceFilter = 1
         manager.pausesLocationUpdatesAutomatically = false
         #if os(iOS)
         manager.showsBackgroundLocationIndicator = true
@@ -67,6 +68,7 @@ final class RunningTracker: NSObject, ObservableObject {
         lastRecord = nil
         session.reset()
         shouldStartAfterAuthorization = true
+        shouldValidateJumpFromPreviousLocation = false
 
         switch authorizationStatus {
         case .notDetermined:
@@ -92,6 +94,7 @@ final class RunningTracker: NSObject, ObservableObject {
         manager.allowsBackgroundLocationUpdates = false
         stopElapsedTimer()
         session.pauseDistanceMeasurement()
+        shouldValidateJumpFromPreviousLocation = false
         trackingState = .paused
     }
 
@@ -182,8 +185,9 @@ extension RunningTracker: CLLocationManagerDelegate {
     nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         Task { @MainActor in
             guard trackingState == .tracking else { return }
-            for location in locations where location.horizontalAccuracy >= 0 {
+            for location in locations where isAcceptable(location) {
                 session.append(location)
+                shouldValidateJumpFromPreviousLocation = true
             }
         }
     }
@@ -194,6 +198,32 @@ extension RunningTracker: CLLocationManagerDelegate {
         }
     }
 }
+
+private extension RunningTracker {
+    func isAcceptable(_ location: CLLocation) -> Bool {
+        guard location.horizontalAccuracy >= 0,
+              location.horizontalAccuracy <= maxHorizontalAccuracyMeters
+        else {
+            return false
+        }
+
+        guard shouldValidateJumpFromPreviousLocation,
+              let previousLocation = latestLocation
+        else {
+            return true
+        }
+
+        let elapsedSeconds = abs(location.timestamp.timeIntervalSince(previousLocation.timestamp))
+        guard elapsedSeconds > 0 else { return true }
+
+        let allowedDistance = elapsedSeconds * maxRunningMetersPerSecond + jumpToleranceMeters
+        return location.distance(from: previousLocation) <= allowedDistance
+    }
+}
+
+private let maxHorizontalAccuracyMeters: CLLocationAccuracy = 30
+private let maxRunningMetersPerSecond: CLLocationDistance = 7
+private let jumpToleranceMeters: CLLocationDistance = 6
 
 private func isRunnableAuthorizationStatus(_ status: CLAuthorizationStatus) -> Bool {
     #if os(iOS)
