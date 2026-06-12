@@ -30,7 +30,7 @@ final class SupabaseAuthService: AuthServiceProtocol {
         self.store = store
         self.session = session
         self.decoder = decoder
-        apiBaseURL = bundle.authAPIBaseURL?.apiBaseURL
+        apiBaseURL = bundle.authAPIBaseURL
         supabase = bundle.supabaseConfiguration.map {
             SupabaseClient(
                 supabaseURL: $0.url,
@@ -357,15 +357,6 @@ private extension Bundle {
 }
 
 private extension URL {
-    var apiBaseURL: URL {
-        let normalizedURL = absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        guard host?.hasSuffix(".supabase.co") == true, path.isEmpty || path == "/" else {
-            return URL(string: normalizedURL) ?? self
-        }
-
-        return URL(string: "\(normalizedURL)/functions/v1/api") ?? self
-    }
-
     func appendingAPIPath(_ path: String) -> URL {
         var url = self
         path

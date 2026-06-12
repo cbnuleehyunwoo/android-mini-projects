@@ -107,7 +107,7 @@ final class RankingAPIService: RankingServiceProtocol {
         session: URLSession = .shared,
         decoder: JSONDecoder = JSONDecoder()
     ) {
-        self.baseURL = baseURL.apiBaseURL
+        self.baseURL = baseURL
         self.session = session
         self.decoder = decoder
     }
@@ -753,15 +753,6 @@ private extension Bundle {
 }
 
 private extension URL {
-    var apiBaseURL: URL {
-        let normalizedURL = absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        guard host?.hasSuffix(".supabase.co") == true, path.isEmpty || path == "/" else {
-            return URL(string: normalizedURL) ?? self
-        }
-
-        return URL(string: "\(normalizedURL)/functions/v1/api") ?? self
-    }
-
     func appendingAPIPath(_ path: String) -> URL {
         var url = self
         path
