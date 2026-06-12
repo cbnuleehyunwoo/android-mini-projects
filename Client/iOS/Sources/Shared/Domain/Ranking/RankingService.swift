@@ -740,7 +740,7 @@ private extension Bundle {
         guard
             let baseURLString = (
                 object(forInfoDictionaryKey: "RankingAPIBaseURL")
-                ?? object(forInfoDictionaryKey: "ProfileAPIBaseURL")
+                ?? object(forInfoDictionaryKey: "APIBaseURL")
             ) as? String,
             !baseURLString.isEmpty,
             !baseURLString.hasPrefix("$(")

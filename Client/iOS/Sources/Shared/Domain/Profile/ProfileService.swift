@@ -260,7 +260,7 @@ private struct ProfileAPIErrorPayload: Decodable {
 private extension Bundle {
     var profileAPIBaseURL: URL? {
         guard
-            let baseURLString = object(forInfoDictionaryKey: "ProfileAPIBaseURL") as? String,
+            let baseURLString = object(forInfoDictionaryKey: "APIBaseURL") as? String,
             !baseURLString.isEmpty,
             !baseURLString.hasPrefix("$(")
         else {

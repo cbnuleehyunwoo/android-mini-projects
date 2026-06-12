@@ -604,7 +604,7 @@ private extension Bundle {
         guard
             let baseURLString = (
                 object(forInfoDictionaryKey: "TeamAPIBaseURL")
-                ?? object(forInfoDictionaryKey: "ProfileAPIBaseURL")
+                ?? object(forInfoDictionaryKey: "APIBaseURL")
             ) as? String,
             !baseURLString.isEmpty,
             !baseURLString.hasPrefix("$(")

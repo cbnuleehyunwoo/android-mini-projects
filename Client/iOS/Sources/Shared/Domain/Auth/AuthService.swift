@@ -319,7 +319,7 @@ private struct AuthDeleteAccountPayload: Decodable {
 private extension Bundle {
     var authAPIBaseURL: URL? {
         guard
-            let baseURLString = object(forInfoDictionaryKey: "ProfileAPIBaseURL") as? String,
+            let baseURLString = object(forInfoDictionaryKey: "APIBaseURL") as? String,
             !baseURLString.isEmpty,
             !baseURLString.hasPrefix("$(")
         else {

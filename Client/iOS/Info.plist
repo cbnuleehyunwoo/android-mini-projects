@@ -47,8 +47,8 @@
 	<string>러닝 중 화면이 꺼져도 이동 경로와 거리를 측정하기 위해 위치 권한이 필요합니다.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>러닝 거리와 경로를 기록하기 위해 현재 위치를 사용합니다.</string>
-	<key>ProfileAPIBaseURL</key>
-	<string>$(RUNPAMINE_PROFILE_API_BASE_URL)</string>
+	<key>APIBaseURL</key>
+	<string>$(RUNPAMINE_API_BASE_URL)</string>
 	<key>SupabaseAnonKey</key>
 	<string>$(RUNPAMINE_SUPABASE_ANON_KEY)</string>
 	<key>SupabaseURL</key>

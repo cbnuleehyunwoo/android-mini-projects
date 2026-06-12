@@ -153,7 +153,6 @@
 		7A1590010000000000000102 /* Runpamine.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runpamine.entitlements; sourceTree = "<group>"; };
 		7A1670010000000000000101 /* RunpamineConfirmationDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunpamineConfirmationDialog.swift; sourceTree = "<group>"; };
 		7A2370010000000000000101 /* Runpamine.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Runpamine.xcconfig; sourceTree = "<group>"; };
-		7A2370010000000000000102 /* Secrets.xcconfig.example */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig.example; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -186,7 +185,6 @@
 			isa = PBXGroup;
 			children = (
 				7A2370010000000000000101 /* Runpamine.xcconfig */,
-				7A2370010000000000000102 /* Secrets.xcconfig.example */,
 			);
 			path = Config;
 			sourceTree = "<group>";
