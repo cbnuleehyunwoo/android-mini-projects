@@ -78,6 +78,7 @@
 		7A1420010000000000000002 /* RankingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1420010000000000000102 /* RankingView.swift */; };
 		7A1590010000000000000001 /* AppleLoginButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1590010000000000000101 /* AppleLoginButton.swift */; };
 		7A1670010000000000000001 /* RunpamineConfirmationDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1670010000000000000101 /* RunpamineConfirmationDialog.swift */; };
+		7A2480010000000000000001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7A2480010000000000000101 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -153,6 +154,7 @@
 		7A1590010000000000000102 /* Runpamine.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runpamine.entitlements; sourceTree = "<group>"; };
 		7A1670010000000000000101 /* RunpamineConfirmationDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunpamineConfirmationDialog.swift; sourceTree = "<group>"; };
 		7A2370010000000000000101 /* Runpamine.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Runpamine.xcconfig; sourceTree = "<group>"; };
+		7A2480010000000000000101 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -176,6 +178,7 @@
 				7A1000010000000000000320 /* Resources */,
 				7A2370010000000000000301 /* Config */,
 				7A100001000000000000012F /* Info.plist */,
+				7A2480010000000000000101 /* PrivacyInfo.xcprivacy */,
 				7A1590010000000000000102 /* Runpamine.entitlements */,
 				7A1000010000000000000303 /* Products */,
 			);
@@ -544,6 +547,7 @@
 				7A100001000000000000004A /* bk.png in Resources */,
 				7A100001000000000000004B /* encho.png in Resources */,
 				7A1350010000000000000040 /* lottie in Resources */,
+				7A2480010000000000000001 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
