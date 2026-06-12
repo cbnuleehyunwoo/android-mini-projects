@@ -117,7 +117,10 @@ class RunpamineContainer(
                 context.applicationContext,
                 RunDatabase::class.java,
                 "runpamine-runs.db",
-            ).addMigrations(RunDatabase.MIGRATION_1_2)
+            ).addMigrations(
+                RunDatabase.MIGRATION_1_2,
+                RunDatabase.MIGRATION_2_3,
+            )
             .build()
     }
 

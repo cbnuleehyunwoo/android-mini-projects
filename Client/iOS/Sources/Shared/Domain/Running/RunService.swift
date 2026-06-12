@@ -335,7 +335,8 @@ private struct RunPointPayload: Decodable {
         guard let recordedAt = RunDateCoder.dateTime(from: recordedAt) else { return nil }
         return RunningCoordinate(
             .init(latitude: latitude, longitude: longitude),
-            recordedAt: recordedAt
+            recordedAt: recordedAt,
+            horizontalAccuracy: nil
         )
     }
 }

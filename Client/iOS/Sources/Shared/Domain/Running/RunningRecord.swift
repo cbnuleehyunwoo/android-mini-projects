@@ -61,11 +61,13 @@ struct RunningCoordinate: Codable, Hashable {
     let latitude: CLLocationDegrees
     let longitude: CLLocationDegrees
     let recordedAt: Date?
+    let horizontalAccuracy: CLLocationAccuracy?
 
-    init(_ coordinate: CLLocationCoordinate2D, recordedAt: Date? = nil) {
+    init(_ coordinate: CLLocationCoordinate2D, recordedAt: Date? = nil, horizontalAccuracy: CLLocationAccuracy? = nil) {
         latitude = coordinate.latitude
         longitude = coordinate.longitude
         self.recordedAt = recordedAt
+        self.horizontalAccuracy = horizontalAccuracy
     }
 
     var coordinate: CLLocationCoordinate2D {
