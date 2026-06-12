@@ -1,7 +1,7 @@
 package com.woowacourse.runpamine.presentation.record.model
 
-import java.time.LocalDate
 import com.woowacourse.runpamine.domain.run.RunPoint
+import java.time.LocalDate
 
 data class RunningRecord(
     val id: String,

@@ -13,13 +13,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -31,6 +28,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,14 +43,18 @@ import com.woowacourse.runpamine.domain.ranking.RankingMetric
 import com.woowacourse.runpamine.domain.ranking.RankingSeason
 import com.woowacourse.runpamine.domain.ranking.TeamRanking
 import com.woowacourse.runpamine.domain.ranking.UserRanking
+import com.woowacourse.runpamine.domain.ranking.teamStandardLabel
 import com.woowacourse.runpamine.presentation.ranking.components.RankBadge
+import com.woowacourse.runpamine.presentation.ranking.components.RankingRow
+import com.woowacourse.runpamine.presentation.ranking.components.RankingScopeTabs
+import com.woowacourse.runpamine.presentation.ranking.components.RankingSkeletonBody
 import com.woowacourse.runpamine.presentation.ranking.components.RankingStateMessage
+import com.woowacourse.runpamine.presentation.ranking.model.RankingItem
 import com.woowacourse.runpamine.presentation.ranking.model.RankingScope
 import com.woowacourse.runpamine.presentation.ranking.model.RankingUiState
 import com.woowacourse.runpamine.presentation.ranking.viewmodel.RankingViewModel
 import com.woowacourse.runpamine.ui.theme.Blue10
 import com.woowacourse.runpamine.ui.theme.Blue40
-import com.woowacourse.runpamine.ui.theme.Gray40
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 import java.util.Locale
 
@@ -154,107 +156,6 @@ private fun RankingContent(
 }
 
 @Composable
-fun RankingScopeTabs(
-    selectedScope: RankingScope,
-    onScopeSelect: (RankingScope) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .height(72.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            RankingScope.entries.forEach { scope ->
-                RankingScopeTab(
-                    scope = scope,
-                    selected = scope == selectedScope,
-                    onClick = { onScopeSelect(scope) },
-                    modifier = Modifier.weight(1f),
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun RankingScopeTab(
-    scope: RankingScope,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier =
-            modifier
-                .height(72.dp)
-                .clickable(
-                    role = Role.Tab,
-                    onClick = onClick,
-                ),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = scope.label,
-            color = if (selected) Blue40 else Gray40,
-            style = MaterialTheme.typography.titleSmall.copy(fontSize = 18.sp),
-            textAlign = TextAlign.Center,
-        )
-        if (selected) {
-            Box(
-                modifier =
-                    Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .height(4.dp)
-                        .background(Blue40),
-            )
-        }
-    }
-}
-
-@Composable
-private fun RankingRow(
-    item: RankingItem,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .background(if (item.isMine) Blue10 else Color(0xFFF8F8F8))
-                .padding(horizontal = 14.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        RankBadge(
-            rank = item.rank,
-            selected = item.isMine,
-        )
-        Text(
-            text = item.name,
-            color = if (item.isMine) Blue40 else Color(0xFF384152),
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.weight(1f),
-        )
-        Text(
-            text = item.valueText,
-            color = if (item.isMine) Blue40 else Color(0xFFA2ACBA),
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.End,
-        )
-    }
-}
-
-@Composable
 private fun RankingMetricTabs(
     selectedScope: RankingScope,
     selectedMetric: RankingMetric,
@@ -312,6 +213,8 @@ private fun MyRankingCard(
         )
         Text(
             text = item.name,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
             color = Blue40,
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
@@ -362,160 +265,6 @@ private fun RankingListCard(
             RankingRow(item = item)
         }
     }
-}
-
-@Composable
-private fun RankingSkeletonBody(
-    selectedScope: RankingScope,
-    selectedMetric: RankingMetric,
-    modifier: Modifier = Modifier,
-) {
-    Column(modifier = modifier) {
-        MyRankingSkeletonCard(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 22.dp),
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        HorizontalDivider(
-            color = DividerDefaults.color.copy(alpha = 0.7f),
-            thickness = 1.dp,
-        )
-        Column(
-            modifier =
-                Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState()),
-        ) {
-            Spacer(modifier = Modifier.height(24.dp))
-            RankingListSkeletonCard(
-                selectedScope = selectedScope,
-                selectedMetric = selectedMetric,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Spacer(modifier = Modifier.height(28.dp))
-        }
-    }
-}
-
-@Composable
-private fun MyRankingSkeletonCard(modifier: Modifier = Modifier) {
-    Row(
-        modifier =
-            modifier
-                .clip(RoundedCornerShape(12.dp))
-                .background(Blue10)
-                .padding(horizontal = 16.dp, vertical = 28.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        RankingSkeletonBox(
-            modifier =
-                Modifier
-                    .size(34.dp),
-            color = RankingSkeletonDarkColor,
-            shape = RoundedCornerShape(10.dp),
-        )
-        RankingSkeletonBox(
-            modifier =
-                Modifier
-                    .width(78.dp)
-                    .height(22.dp),
-        )
-        Spacer(modifier = Modifier.weight(1f))
-        RankingSkeletonBox(
-            modifier =
-                Modifier
-                    .width(118.dp)
-                    .height(24.dp)
-        )
-    }
-}
-
-@Composable
-private fun RankingListSkeletonCard(
-    selectedScope: RankingScope,
-    selectedMetric: RankingMetric,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier.padding(horizontal = 20.dp, vertical = 22.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        if (selectedScope == RankingScope.TEAM) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = selectedScope.skeletonTitle,
-                    color = Color(0xFF111827),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f),
-                )
-                Text(
-                    text = selectedMetric.standardLabel(selectedScope),
-                    color = Color(0xFFA6AFBD),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
-        }
-        repeat(RANKING_SKELETON_ROW_COUNT) { index ->
-            RankingRowSkeleton(selected = index == 1)
-        }
-    }
-}
-
-@Composable
-private fun RankingRowSkeleton(selected: Boolean) {
-    Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .background(if (selected) Blue10 else Color(0xFFF8F8F8))
-                .padding(horizontal = 14.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        RankingSkeletonBox(
-            modifier =
-                Modifier
-                    .size(34.dp),
-            color = RankingSkeletonDarkColor,
-            shape = RoundedCornerShape(10.dp),
-        )
-        RankingSkeletonBox(
-            modifier =
-                Modifier
-                    .width(96.dp)
-                    .height(22.dp)
-        )
-        Spacer(modifier = Modifier.weight(1f))
-        RankingSkeletonBox(
-            modifier =
-                Modifier
-                    .width(68.dp)
-                    .height(22.dp)
-        )
-    }
-}
-
-@Composable
-private fun RankingSkeletonBox(
-    modifier: Modifier = Modifier,
-    color: Color = RankingSkeletonColor,
-    shape: RoundedCornerShape = RoundedCornerShape(8.dp),
-) {
-    Box(
-        modifier =
-            modifier
-                .clip(shape)
-                .background(color),
-    )
 }
 
 private fun RankingUiState.toRankingItems(): List<RankingItem> =
@@ -634,43 +383,6 @@ private fun RankingMetric.label(scope: RankingScope): String =
         RankingMetric.CONSISTENCY -> if (scope == RankingScope.TEAM) "평균 활동일" else "횟수"
     }
 
-private val RankingMetric.teamStandardLabel: String
-    get() =
-        when (this) {
-            RankingMetric.DISTANCE -> "팀 총 거리 기준"
-            RankingMetric.PACE -> "팀 평균 페이스 기준"
-            RankingMetric.CONSISTENCY -> "평균 활동일 기준"
-        }
-
-private val RankingScope.skeletonTitle: String
-    get() =
-        when (this) {
-            RankingScope.TEAM -> "전체 팀 순위"
-            RankingScope.PERSONAL -> "전체 개인 순위"
-        }
-
-private fun RankingMetric.standardLabel(scope: RankingScope): String =
-    when (scope) {
-        RankingScope.TEAM -> teamStandardLabel
-        RankingScope.PERSONAL ->
-            when (this) {
-                RankingMetric.DISTANCE -> "개인 총 거리 기준"
-                RankingMetric.PACE -> "개인 페이스 기준"
-                RankingMetric.CONSISTENCY -> "개인 횟수 기준"
-            }
-    }
-
-private data class RankingItem(
-    val rank: Int?,
-    val name: String,
-    val valueText: String,
-    val isMine: Boolean = false,
-    val percentileText: String? = null,
-) {
-    val highlightText: String
-        get() = listOfNotNull(valueText, percentileText?.let { "($it)" }).joinToString(" ")
-}
-
 private fun Int.toKilometerText(): String = String.format(Locale.getDefault(), "%.1f km", this / METERS_PER_KILOMETER)
 
 private fun Int.toPaceText(): String {
@@ -732,9 +444,6 @@ private fun previewUiState(scope: RankingScope = RankingScope.PERSONAL): Ranking
 
 private const val METERS_PER_KILOMETER = 1_000.0
 private const val SECONDS_PER_MINUTE = 60
-private const val RANKING_SKELETON_ROW_COUNT = 6
-private val RankingSkeletonColor = Color(0xFFD8E1ED)
-private val RankingSkeletonDarkColor = Color(0xFFB8C4D4)
 
 @Preview(showBackground = true)
 @Composable
