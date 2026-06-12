@@ -107,7 +107,7 @@ final class RankingAPIService: RankingServiceProtocol {
         session: URLSession = .shared,
         decoder: JSONDecoder = JSONDecoder()
     ) {
-        self.baseURL = baseURL.apiBaseURL
+        self.baseURL = baseURL
         self.session = session
         self.decoder = decoder
     }
@@ -396,6 +396,21 @@ private struct TeamRankingBoardPayload: Decodable {
     let eligibleCount: Int
     let rankings: [TeamRankingEntryPayload]
 
+    private enum CodingKeys: String, CodingKey {
+        case season
+        case requiredDistanceMeters
+        case eligibleCount
+        case rankings
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        season = try container.decode(SeasonPayload.self, forKey: .season)
+        requiredDistanceMeters = try container.decodeLossyIntIfPresent(forKey: .requiredDistanceMeters) ?? 0
+        eligibleCount = try container.decodeLossyIntIfPresent(forKey: .eligibleCount) ?? 0
+        rankings = (try? container.decode([TeamRankingEntryPayload].self, forKey: .rankings)) ?? []
+    }
+
     var domain: TeamRankingBoard {
         TeamRankingBoard(
             season: season.domain,
@@ -418,6 +433,35 @@ private struct TeamRankingEntryPayload: Decodable {
     let runCount: Int
     let totalActiveDays: Int
     let averageActiveDays: Double?
+
+    private enum CodingKeys: String, CodingKey {
+        case rank
+        case topPercent
+        case eligibleCount
+        case teamId
+        case teamName
+        case distanceMeters
+        case durationSeconds
+        case averagePaceSecondsPerKm
+        case runCount
+        case totalActiveDays
+        case averageActiveDays
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        rank = try container.decodeLossyInt(forKey: .rank)
+        topPercent = try container.decodeLossyIntIfPresent(forKey: .topPercent) ?? 0
+        eligibleCount = try container.decodeLossyIntIfPresent(forKey: .eligibleCount) ?? 0
+        teamName = (try container.decodeStringIfPresent(forKey: .teamName)) ?? ""
+        teamId = (try container.decodeStringIfPresent(forKey: .teamId)) ?? "team-\(rank)-\(teamName)"
+        distanceMeters = try container.decodeLossyIntIfPresent(forKey: .distanceMeters) ?? 0
+        durationSeconds = try container.decodeLossyIntIfPresent(forKey: .durationSeconds) ?? 0
+        averagePaceSecondsPerKm = try container.decodeLossyIntIfPresent(forKey: .averagePaceSecondsPerKm)
+        runCount = try container.decodeLossyIntIfPresent(forKey: .runCount) ?? 0
+        totalActiveDays = try container.decodeLossyIntIfPresent(forKey: .totalActiveDays) ?? 0
+        averageActiveDays = try container.decodeLossyDoubleIfPresent(forKey: .averageActiveDays)
+    }
 
     var domain: TeamRankingEntry {
         TeamRankingEntry(
@@ -669,6 +713,24 @@ private extension KeyedDecodingContainer {
         return nil
     }
 
+    func decodeLossyDoubleIfPresent(forKey key: Key) throws -> Double? {
+        guard contains(key), try !decodeNil(forKey: key) else { return nil }
+
+        if let value = try? decode(Double.self, forKey: key) {
+            return value
+        }
+
+        if let value = try? decode(Int.self, forKey: key) {
+            return Double(value)
+        }
+
+        if let value = try? decode(String.self, forKey: key), let number = Double(value) {
+            return number
+        }
+
+        return nil
+    }
+
     func decodeStringIfPresent(forKey key: Key) throws -> String? {
         guard contains(key), try !decodeNil(forKey: key) else { return nil }
 
@@ -740,7 +802,7 @@ private extension Bundle {
         guard
             let baseURLString = (
                 object(forInfoDictionaryKey: "RankingAPIBaseURL")
-                ?? object(forInfoDictionaryKey: "ProfileAPIBaseURL")
+                ?? object(forInfoDictionaryKey: "APIBaseURL")
             ) as? String,
             !baseURLString.isEmpty,
             !baseURLString.hasPrefix("$(")
@@ -753,15 +815,6 @@ private extension Bundle {
 }
 
 private extension URL {
-    var apiBaseURL: URL {
-        let normalizedURL = absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        guard host?.hasSuffix(".supabase.co") == true, path.isEmpty || path == "/" else {
-            return URL(string: normalizedURL) ?? self
-        }
-
-        return URL(string: "\(normalizedURL)/functions/v1/api") ?? self
-    }
-
     func appendingAPIPath(_ path: String) -> URL {
         var url = self
         path

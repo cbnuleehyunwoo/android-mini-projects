@@ -8,4 +8,5 @@ data class RunPoint(
     val latitude: Double,
     val longitude: Double,
     val recordedAt: Instant,
+    val horizontalAccuracyMeters: Float? = null,
 )

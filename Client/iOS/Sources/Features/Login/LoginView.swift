@@ -17,7 +17,11 @@ struct LoginView: View {
                 Spacer()
 
                 VStack(spacing: 34) {
-                    AppLogoView(size: 88)
+                    Image("character_no_bg")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 120, height: 120)
+                        .accessibilityLabel("런파민 캐릭터")
 
                     Text("RUNPAMINE")
                         .font(AppTheme.Typography.font(size: 44, weight: .bold))

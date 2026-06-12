@@ -12,7 +12,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.woowacourse.runpamine.presentation.team.components.noteam.NoTeamButtonSection
 import com.woowacourse.runpamine.presentation.team.components.noteam.NoTeamHeader
-import com.woowacourse.runpamine.presentation.team.components.noteam.NoTeamIcon
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
 @Composable

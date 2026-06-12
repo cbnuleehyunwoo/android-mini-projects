@@ -16,7 +16,7 @@ class DefaultRunSyncRepository(
         val session =
             localDataSource.findSession(runSessionId)
                 ?: return Result.failure(IllegalArgumentException("Run session not found: $runSessionId"))
-        val points = localDataSource.findPoints(runSessionId)
+        val points = RunPointSimplifier.simplify(localDataSource.findPoints(runSessionId))
 
         return runCatching {
             localDataSource.updateSyncStatus(runSessionId, RunSyncStatus.SYNCING)

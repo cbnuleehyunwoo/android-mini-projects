@@ -1,7 +1,7 @@
 package com.woowacourse.runpamine.presentation.splash
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
@@ -63,8 +63,9 @@ private fun SplashContent(modifier: Modifier = Modifier) {
         Image(
             painter = painterResource(id = R.drawable.img_splash),
             contentDescription = null,
-            modifier = Modifier
-                .size(200.dp),
+            modifier =
+                Modifier
+                    .size(200.dp),
             contentScale = ContentScale.Fit,
         )
     }
