@@ -47,25 +47,16 @@ struct RunningView: View {
 
     private var activeRunningView: some View {
         ZStack {
-            runningBackground
+            Color.white.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                Spacer()
+                Spacer(minLength: 0)
                 runningContentPanel
+                Spacer(minLength: 0)
             }
         }
         .runpamineBackSwipe {
             requestFinishRunning()
-        }
-    }
-
-    @ViewBuilder
-    private var runningBackground: some View {
-        if tracker.route.count >= 2 || tracker.latestLocation != nil {
-            RunningMapView(route: tracker.route, latestLocation: tracker.latestLocation, focusesVisibleUpperArea: true)
-                .opacity(0.94)
-        } else {
-            Color.white.ignoresSafeArea()
         }
     }
 
@@ -86,7 +77,7 @@ struct RunningView: View {
             controlButtons
         }
         .padding(.top, 30)
-        .background(Color.white.opacity(tracker.route.count >= 2 ? 0.94 : 1))
+        .background(Color.white)
     }
 
     private var distanceSection: some View {
