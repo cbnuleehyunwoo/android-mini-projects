@@ -3,6 +3,7 @@ import SwiftUI
 struct AppTabBar: View {
     static let height: CGFloat = 75
 
+    @Environment(\.displayScale) private var displayScale
     @Binding var selectedTab: MainTab
 
     var body: some View {
@@ -18,12 +19,13 @@ struct AppTabBar: View {
         .padding(.horizontal, 30)
         .padding(.top, 10)
         .padding(.bottom, 8)
-        .background(Color.white.ignoresSafeArea(.container, edges: .bottom))
         .frame(height: Self.height)
+        .frame(maxWidth: .infinity)
+        .background(Color.white.ignoresSafeArea(.container, edges: .bottom))
         .overlay(alignment: .top) {
             Rectangle()
                 .fill(AppTheme.Colors.border.opacity(0.6))
-                .frame(height: 1)
+                .frame(height: 1 / displayScale)
         }
     }
 
