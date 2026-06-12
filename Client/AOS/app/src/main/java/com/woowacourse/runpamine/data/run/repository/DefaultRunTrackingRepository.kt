@@ -5,10 +5,10 @@ import com.woowacourse.runpamine.domain.run.LocationTracker
 import com.woowacourse.runpamine.domain.run.RunPoint
 import com.woowacourse.runpamine.domain.run.RunSession
 import com.woowacourse.runpamine.domain.run.RunTrackingRepository
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
