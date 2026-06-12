@@ -88,10 +88,7 @@ fun RunningScreen(
         modifier = modifier,
         onPauseClick = viewModel::togglePause,
         onStopClick = {
-            viewModel.stopRun { session ->
-                completedSession = session
-                completedRoutePoints = state.routePoints
-            }
+            showStopDialog = true
         },
     )
 
