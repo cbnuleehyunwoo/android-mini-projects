@@ -115,6 +115,7 @@ fun NavHost(
                 onRecordClick = { record ->
                     navController.navigate(
                         AppRoute.History.createRoute(
+                            runId = record.id,
                             distance = String.format(Locale.getDefault(), "%.1f", record.distanceKm),
                             time = record.duration,
                             pace = record.pace.removeSuffix("/km"),
@@ -129,6 +130,9 @@ fun NavHost(
             route = AppRoute.History.route,
             arguments =
                 listOf(
+                    navArgument(AppRoute.History.RUN_ID) {
+                        type = NavType.StringType
+                    },
                     navArgument(AppRoute.History.DISTANCE) {
                         type = NavType.StringType
                     },
@@ -144,6 +148,7 @@ fun NavHost(
                 ),
         ) { backStackEntry ->
             HistoryScreen(
+                runId = backStackEntry.arguments?.getString(AppRoute.History.RUN_ID).orEmpty(),
                 distance = backStackEntry.arguments?.getString(AppRoute.History.DISTANCE).orEmpty(),
                 time = backStackEntry.arguments?.getString(AppRoute.History.TIME).orEmpty(),
                 pace = backStackEntry.arguments?.getString(AppRoute.History.PACE).orEmpty(),

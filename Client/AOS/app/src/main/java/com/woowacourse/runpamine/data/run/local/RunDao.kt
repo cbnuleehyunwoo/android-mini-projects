@@ -28,6 +28,9 @@ interface RunDao {
     @Query("SELECT * FROM run_points WHERE sessionId = :sessionId ORDER BY sequence ASC")
     suspend fun getPoints(sessionId: String): List<RunPointEntity>
 
+    @Query("SELECT * FROM run_points WHERE sessionId = :sessionId ORDER BY sequence ASC")
+    fun observePoints(sessionId: String): Flow<List<RunPointEntity>>
+
     @Query("SELECT * FROM run_points WHERE sessionId = :sessionId ORDER BY sequence DESC LIMIT 1")
     suspend fun getLastPoint(sessionId: String): RunPointEntity?
 

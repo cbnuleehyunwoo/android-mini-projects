@@ -23,6 +23,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.woowacourse.runpamine.R
 import com.woowacourse.runpamine.di.runpamineContainer
+import com.woowacourse.runpamine.domain.run.RunPoint
 import com.woowacourse.runpamine.domain.run.RunSession
 import com.woowacourse.runpamine.presentation.component.RunpamineConfirmationDialog
 import com.woowacourse.runpamine.presentation.running.components.RunningScreenContent
@@ -47,6 +48,7 @@ fun RunningScreen(
         )
     val state by viewModel.currentRunState.collectAsStateWithLifecycle()
     var completedSession by remember { mutableStateOf<RunSession?>(null) }
+    var completedRoutePoints by remember { mutableStateOf(emptyList<RunPoint>()) }
     var showStopDialog by rememberSaveable { mutableStateOf(false) }
     val locationPermissionLauncher =
         rememberLauncherForActivityResult(
@@ -75,6 +77,7 @@ fun RunningScreen(
             time = session.durationSeconds.elapsedTimeText(),
             pace = session.paceText(),
             calories = session.calories.toString(),
+            routePoints = completedRoutePoints,
             onCompleteClick = onStopCompleted,
             modifier = modifier,
         )
@@ -87,6 +90,7 @@ fun RunningScreen(
         onStopClick = {
             viewModel.stopRun { session ->
                 completedSession = session
+                completedRoutePoints = state.routePoints
             }
         },
     )
@@ -102,6 +106,7 @@ fun RunningScreen(
                 showStopDialog = false
                 viewModel.stopRun { session ->
                     completedSession = session
+                    completedRoutePoints = state.routePoints
                 }
             },
         )

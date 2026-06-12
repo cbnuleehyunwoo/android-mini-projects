@@ -73,6 +73,20 @@ class ApiRunRemoteDataSource(
             response.getJSONObject("data").toRunPeriodSummary()
         }
 
+    override suspend fun getRunDetail(
+        accessToken: String,
+        runId: String,
+    ): RunSession =
+        withContext(Dispatchers.IO) {
+            val response =
+                request(
+                    path = "/runs/$runId",
+                    method = "GET",
+                    accessToken = accessToken,
+                )
+            response.getJSONObject("data").toRunSession()
+        }
+
     private fun request(
         path: String,
         method: String,
@@ -188,7 +202,23 @@ private fun JSONObject.toRunSession(): RunSession =
         durationSeconds = getLong("durationSeconds"),
         averagePaceSecondsPerKm = optInt("averagePaceSecondsPerKm", 0),
         calories = getInt("calories"),
+        routePoints = optJSONArray("points").toRunPoints(id = getString("id")),
     )
+
+private fun JSONArray?.toRunPoints(id: String): List<RunPoint> {
+    if (this == null) return emptyList()
+    return List(length()) { index ->
+        getJSONObject(index)
+    }.map { point ->
+        RunPoint(
+            sessionId = id,
+            sequence = point.getInt("sequence"),
+            latitude = point.getDouble("latitude"),
+            longitude = point.getDouble("longitude"),
+            recordedAt = parseApiInstant(point.getString("recordedAt")),
+        )
+    }.sortedBy { it.sequence }
+}
 
 private fun Instant.toApiDateTimeString(): String = DateTimeFormatter.ISO_INSTANT.format(this)
 

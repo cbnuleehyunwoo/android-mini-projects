@@ -51,6 +51,9 @@ class RoomRunLocalDataSource(
 
     override fun observeActiveSession(): Flow<RunSession?> = runDao.observeActiveSession().map { it?.toDomain() }
 
+    override fun observePoints(sessionId: String): Flow<List<RunPoint>> =
+        runDao.observePoints(sessionId).map { points -> points.map { it.toDomain() } }
+
     override suspend fun findPoints(sessionId: String): List<RunPoint> = runDao.getPoints(sessionId).map { it.toDomain() }
 
     override suspend fun findLastPoint(sessionId: String): RunPoint? = runDao.getLastPoint(sessionId)?.toDomain()

@@ -30,6 +30,8 @@ interface RunLocalDataSource {
 
     fun observeActiveSession(): Flow<RunSession?>
 
+    fun observePoints(sessionId: String): Flow<List<RunPoint>>
+
     suspend fun findPoints(sessionId: String): List<RunPoint>
 
     suspend fun findLastPoint(sessionId: String): RunPoint?

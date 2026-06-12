@@ -2,8 +2,10 @@ package com.woowacourse.runpamine.data.run.repository
 
 import com.woowacourse.runpamine.data.run.local.RunLocalDataSource
 import com.woowacourse.runpamine.domain.run.LocationTracker
+import com.woowacourse.runpamine.domain.run.RunPoint
 import com.woowacourse.runpamine.domain.run.RunSession
 import com.woowacourse.runpamine.domain.run.RunTrackingRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -12,6 +14,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -20,6 +24,7 @@ import java.time.Duration
 import java.time.Instant
 import java.util.UUID
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class DefaultRunTrackingRepository(
     private val localDataSource: RunLocalDataSource,
     private val locationTracker: LocationTracker,
@@ -112,6 +117,17 @@ class DefaultRunTrackingRepository(
         }
 
     override fun observeCurrentRun(): Flow<RunSession?> = localDataSource.observeActiveSession()
+
+    override fun observeCurrentRoutePoints(): Flow<List<RunPoint>> =
+        localDataSource
+            .observeActiveSession()
+            .flatMapLatest { session ->
+                if (session == null) {
+                    flowOf(emptyList())
+                } else {
+                    localDataSource.observePoints(session.id)
+                }
+            }
 
     override fun observePaused(): Flow<Boolean> = isPaused
 

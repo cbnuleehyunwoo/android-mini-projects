@@ -4,6 +4,7 @@ import com.woowacourse.runpamine.data.run.remote.RunRemoteDataSource
 import com.woowacourse.runpamine.domain.auth.AuthRepository
 import com.woowacourse.runpamine.domain.run.RunPeriodSummary
 import com.woowacourse.runpamine.domain.run.RunRecordRepository
+import com.woowacourse.runpamine.domain.run.RunSession
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -21,6 +22,12 @@ class DefaultRunRecordRepository(
         remoteDataSource.getMonthlyRuns(
             accessToken = requireAccessToken(),
             yearMonth = yearMonth,
+        )
+
+    override suspend fun getRunDetail(runId: String): RunSession =
+        remoteDataSource.getRunDetail(
+            accessToken = requireAccessToken(),
+            runId = runId,
         )
 
     private suspend fun requireAccessToken(): String =
