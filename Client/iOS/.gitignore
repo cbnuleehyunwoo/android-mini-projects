@@ -31,3 +31,4 @@ fastlane/test_output/
 *.mobileprovision
 *.p8
 GoogleService-Info.plist
+Config/Secrets.xcconfig
