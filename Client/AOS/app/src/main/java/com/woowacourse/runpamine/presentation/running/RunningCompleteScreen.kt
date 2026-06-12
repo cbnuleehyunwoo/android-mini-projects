@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.Scaffold
@@ -16,8 +17,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.woowacourse.runpamine.R
+import com.woowacourse.runpamine.domain.run.RunPoint
 import com.woowacourse.runpamine.presentation.component.BottomButton
 import com.woowacourse.runpamine.presentation.running.components.RunningMetricCard
+import com.woowacourse.runpamine.presentation.running.components.RunningRouteMap
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
 @Composable
@@ -26,6 +29,7 @@ fun RunningCompleteScreen(
     time: String,
     pace: String,
     calories: String,
+    routePoints: List<RunPoint>,
     onCompleteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -41,6 +45,14 @@ fun RunningCompleteScreen(
                     .safeDrawingPadding()
                     .padding(horizontal = 24.dp, vertical = 28.dp),
         ) {
+            RunningRouteMap(
+                points = routePoints,
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(330.dp),
+            )
+            Spacer(modifier = Modifier.weight(0.35f))
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
@@ -102,6 +114,7 @@ private fun RunningCompleteScreenPreview() {
             time = "23:32",
             pace = "5'30\"",
             calories = "344",
+            routePoints = emptyList(),
             onCompleteClick = {},
             modifier = Modifier.fillMaxSize(),
         )

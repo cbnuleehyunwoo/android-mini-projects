@@ -30,12 +30,14 @@ class RunTrackingViewModel(
     val currentRunState =
         combine(
             runTrackingRepository.observeCurrentRun(),
+            runTrackingRepository.observeCurrentRoutePoints(),
             runTrackingRepository.observePaused(),
             errorMessage,
             tickerFlow(),
-        ) { session, isPaused, error, _ ->
+        ) { session, routePoints, isPaused, error, _ ->
             RunTrackingUiState(
                 session = session,
+                routePoints = routePoints,
                 elapsedSeconds = runTrackingRepository.currentElapsedSeconds(),
                 isRunning = session != null,
                 isPaused = isPaused,

@@ -23,4 +23,9 @@ interface RunRemoteDataSource {
         accessToken: String,
         yearMonth: YearMonth,
     ): RunPeriodSummary
+
+    suspend fun getRunDetail(
+        accessToken: String,
+        runId: String,
+    ): RunSession
 }

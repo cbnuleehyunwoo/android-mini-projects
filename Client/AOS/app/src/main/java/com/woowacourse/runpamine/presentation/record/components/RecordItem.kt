@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -26,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.woowacourse.runpamine.presentation.record.model.RunningRecord
+import com.woowacourse.runpamine.presentation.running.components.RunningRouteMap
 import com.woowacourse.runpamine.ui.theme.Gray40
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 import java.time.DayOfWeek
@@ -57,7 +59,14 @@ fun RecordItem(
                             color = Color(0xFF3A3A3A),
                             shape = RoundedCornerShape(12.dp),
                         ),
-            )
+            ) {
+                if (record.routePoints.isNotEmpty()) {
+                    RunningRouteMap(
+                        points = record.routePoints,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+            }
             Column(
                 modifier =
                     Modifier

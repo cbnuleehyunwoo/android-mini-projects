@@ -13,6 +13,8 @@ interface RunTrackingRepository {
 
     fun observeCurrentRun(): Flow<RunSession?>
 
+    fun observeCurrentRoutePoints(): Flow<List<RunPoint>>
+
     fun observePaused(): Flow<Boolean>
 
     fun currentElapsedSeconds(): Long

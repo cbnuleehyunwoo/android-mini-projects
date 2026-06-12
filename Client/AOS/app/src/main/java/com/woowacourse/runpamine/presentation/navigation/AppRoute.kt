@@ -26,20 +26,22 @@ sealed interface AppRoute {
     }
 
     data object History : AppRoute {
+        const val RUN_ID = "runId"
         const val DISTANCE = "distance"
         const val TIME = "time"
         const val PACE = "pace"
         const val CALORIES = "calories"
 
-        override val route = "history/{$DISTANCE}/{$TIME}/{$PACE}/{$CALORIES}"
+        override val route = "history/{$RUN_ID}/{$DISTANCE}/{$TIME}/{$PACE}/{$CALORIES}"
 
         fun createRoute(
+            runId: String,
             distance: String,
             time: String,
             pace: String,
             calories: String,
         ): String =
-            listOf("history", distance, time, pace, calories)
+            listOf("history", runId, distance, time, pace, calories)
                 .joinToString(separator = "/") { value -> Uri.encode(value) }
     }
 

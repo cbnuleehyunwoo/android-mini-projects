@@ -1,6 +1,7 @@
 package com.woowacourse.runpamine.presentation.record.model
 
 import java.time.LocalDate
+import com.woowacourse.runpamine.domain.run.RunPoint
 
 data class RunningRecord(
     val id: String,
@@ -9,4 +10,5 @@ data class RunningRecord(
     val duration: String,
     val pace: String,
     val calories: Int,
+    val routePoints: List<RunPoint> = emptyList(),
 )

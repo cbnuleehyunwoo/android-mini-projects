@@ -5,22 +5,33 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.woowacourse.runpamine.R
+import com.woowacourse.runpamine.di.runpamineContainer
+import com.woowacourse.runpamine.domain.run.RunPoint
 import com.woowacourse.runpamine.presentation.component.ScreenTopBar
 import com.woowacourse.runpamine.presentation.running.components.RunningMetricCard
+import com.woowacourse.runpamine.presentation.running.components.RunningRouteMap
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
 @Composable
 fun HistoryScreen(
+    runId: String,
     distance: String,
     time: String,
     pace: String,
@@ -28,6 +39,17 @@ fun HistoryScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val runRecordRepository = LocalContext.current.runpamineContainer.runRecordRepository
+    var routePoints by remember(runId) { mutableStateOf(emptyList<RunPoint>()) }
+
+    LaunchedEffect(runId) {
+        if (runId.isBlank()) return@LaunchedEffect
+        routePoints =
+            runCatching {
+                runRecordRepository.getRunDetail(runId).routePoints
+            }.getOrDefault(emptyList())
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = Color.White,
@@ -48,6 +70,13 @@ fun HistoryScreen(
                     .padding(horizontal = 24.dp, vertical = 28.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            RunningRouteMap(
+                points = routePoints,
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(330.dp),
+            )
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -95,6 +124,7 @@ fun HistoryScreen(
 private fun HistoryScreenPreview() {
     RunpamineTheme {
         HistoryScreen(
+            runId = "preview",
             distance = "12.3",
             time = "23:32",
             pace = "5'30\"",
