@@ -61,7 +61,7 @@ struct RunningView: View {
     }
 
     private var runningContentPanel: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: 2) {
             distanceSection
             durationSection
 
@@ -81,7 +81,7 @@ struct RunningView: View {
     }
 
     private var distanceSection: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: 2) {
             HStack(spacing: 6) {
                 Image("icon_footprint")
                     .resizable()
@@ -94,7 +94,7 @@ struct RunningView: View {
 
             HStack(alignment: .lastTextBaseline, spacing: 7) {
                 Text(RunningMetricFormatter.distanceKilometers(tracker.distanceMeters))
-                    .font(AppTheme.Typography.font(size: 70, weight: .black))
+                    .font(AppTheme.Typography.font(size: 80, weight: .extraBold))
                     .foregroundStyle(.black)
                 Text("km")
                     .font(AppTheme.Typography.font(size: 28, weight: .black))
@@ -135,36 +135,13 @@ struct RunningView: View {
     }
 
     private var controlButtons: some View {
-        HStack(spacing: 12) {
-            Button {
-                finishRunning()
-            } label: {
-                Label("종료", systemImage: "stop.fill")
-                    .font(AppTheme.Typography.font(size: 13, weight: .black))
-                    .foregroundStyle(Color(red: 0.72, green: 0.05, blue: 0.05))
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 54)
-                    .background(Color(red: 0.98, green: 0.90, blue: 0.90))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .stroke(Color(red: 0.90, green: 0.55, blue: 0.55), lineWidth: 1)
-                    }
-                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-            }
-
-            Button {
-                togglePause()
-            } label: {
-                Label(pauseToggleTitle, systemImage: pauseToggleIcon)
-                    .font(AppTheme.Typography.font(size: 13, weight: .black))
-                    .foregroundStyle(.white)
-                    .frame(width: 127, height: 54)
-                    .background(pauseToggleBackgroundColor)
-                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-            }
-        }
+        RunningControlButtons(
+            isPaused: isPaused,
+            onStop: finishRunning,
+            onTogglePause: togglePause
+        )
         .padding(.horizontal, 24)
-        .padding(.top, 36)
+        .padding(.top, 16)
         .padding(.bottom, 42)
     }
 
@@ -172,23 +149,13 @@ struct RunningView: View {
         tracker.trackingState == .paused
     }
 
-    private var pauseToggleTitle: String {
-        isPaused ? "시작" : "일시 정지"
-    }
-
-    private var pauseToggleIcon: String {
-        isPaused ? "play.fill" : "pause.fill"
-    }
-
-    private var pauseToggleBackgroundColor: Color {
-        isPaused ? AppTheme.Colors.success : .black
-    }
-
     private func togglePause() {
-        if tracker.trackingState == .paused {
-            tracker.resume()
-        } else {
-            tracker.pause()
+        withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
+            if tracker.trackingState == .paused {
+                tracker.resume()
+            } else {
+                tracker.pause()
+            }
         }
     }
 
@@ -234,6 +201,62 @@ struct RunningView: View {
     }
 }
 
+private struct RunningControlButtons: View {
+    let isPaused: Bool
+    let onStop: () -> Void
+    let onTogglePause: () -> Void
+
+    var body: some View {
+        ZStack {
+            RunningControlButton(
+                systemImage: "stop.fill",
+                accessibilityLabel: "러닝 중지",
+                foregroundColor: .white,
+                backgroundColor: .black,
+                iconSize: 31,
+                action: onStop
+            )
+            .offset(x: isPaused ? -51 : 0)
+            .opacity(isPaused ? 1 : 0)
+            .allowsHitTesting(isPaused)
+
+            RunningControlButton(
+                systemImage: isPaused ? "play.fill" : "pause.fill",
+                accessibilityLabel: isPaused ? "러닝 재개" : "러닝 일시 정지",
+                foregroundColor: isPaused ? .black : .white,
+                backgroundColor: isPaused ? AppTheme.Colors.success : .black,
+                iconSize: isPaused ? 34 : 32,
+                action: onTogglePause
+            )
+            .offset(x: isPaused ? 51 : 0)
+        }
+        .frame(height: 70)
+        .animation(.spring(response: 0.32, dampingFraction: 0.82), value: isPaused)
+    }
+}
+
+private struct RunningControlButton: View {
+    let systemImage: String
+    let accessibilityLabel: String
+    let foregroundColor: Color
+    let backgroundColor: Color
+    let iconSize: CGFloat
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.system(size: iconSize, weight: .black))
+                .foregroundStyle(foregroundColor)
+                .frame(width: 70, height: 70)
+                .background(backgroundColor)
+                .clipShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(accessibilityLabel)
+    }
+}
+
 private struct RunningMetricCard: View {
     let title: String
     let value: String
@@ -248,16 +271,16 @@ private struct RunningMetricCard: View {
                     .scaledToFit()
                     .frame(width: 16, height: 16)
                 Text(title)
-                    .font(AppTheme.Typography.font(size: 13, weight: .medium))
+                    .font(AppTheme.Typography.font(size: 14, weight: .medium))
                     .foregroundStyle(AppTheme.Colors.textPrimary)
             }
             HStack(alignment: .lastTextBaseline, spacing: 3) {
                 Text(value)
-                    .font(AppTheme.Typography.font(size: 28, weight: .black))
+                    .font(AppTheme.Typography.font(size: 28, weight: .bold))
                     .foregroundStyle(.black)
                 Text(suffix)
-                    .font(AppTheme.Typography.font(size: 12, weight: .black))
-                    .foregroundStyle(.black)
+                    .font(AppTheme.Typography.font(size: 12, weight: .medium))
+                    .foregroundStyle(.gray)
             }
         }
         .padding(.horizontal, 22)
@@ -267,4 +290,8 @@ private struct RunningMetricCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .shadow(color: .black.opacity(0.08), radius: 15, x: 0, y: 8)
     }
+}
+
+#Preview("러닝 화면") {
+    RunningView()
 }
