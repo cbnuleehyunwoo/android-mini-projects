@@ -1,6 +1,5 @@
 package com.woowacourse.runpamine.data.ranking.remote
 
-import android.util.Log
 import com.woowacourse.runpamine.domain.ranking.MyRankingSummary
 import com.woowacourse.runpamine.domain.ranking.RankingMetric
 import com.woowacourse.runpamine.domain.ranking.RankingSeason
@@ -77,10 +76,6 @@ private fun HttpURLConnection.useJsonRequest(
     accessToken: String,
 ): JSONObject =
     try {
-        val requestUrl = url.toString()
-        val startedAt = System.currentTimeMillis()
-        Log.d(TAG, "REQUEST $method $requestUrl")
-
         requestMethod = method
         connectTimeout = CONNECT_TIMEOUT_MILLIS
         readTimeout = READ_TIMEOUT_MILLIS
@@ -89,26 +84,14 @@ private fun HttpURLConnection.useJsonRequest(
 
         val responseText =
             if (responseCode in 200..299) {
-                inputStream.bufferedReader().use { it.readText() }.also { text ->
-                    val elapsedMillis = System.currentTimeMillis() - startedAt
-                    Log.d(
-                        TAG,
-                        "RESPONSE $responseCode $method $requestUrl (${elapsedMillis}ms)\n$text",
-                    )
-                }
+                inputStream.bufferedReader().use { it.readText() }
             } else {
                 val errorText = errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
-                val elapsedMillis = System.currentTimeMillis() - startedAt
-                Log.w(
-                    TAG,
-                    "ERROR $responseCode $method $requestUrl (${elapsedMillis}ms)\n$errorText",
-                )
                 throw IllegalStateException(errorText.toApiErrorMessage(responseCode))
             }
 
         JSONObject(responseText)
     } catch (throwable: Throwable) {
-        Log.e(TAG, "HTTP $method $url failed.", throwable)
         throw throwable
     } finally {
         disconnect()
@@ -201,4 +184,3 @@ private fun String.toApiBaseUrl(): String {
 
 private const val CONNECT_TIMEOUT_MILLIS = 10_000
 private const val READ_TIMEOUT_MILLIS = 10_000
-private const val TAG = "RankingApi"
