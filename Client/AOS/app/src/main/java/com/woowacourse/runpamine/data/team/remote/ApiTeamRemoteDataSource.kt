@@ -1,6 +1,5 @@
 package com.woowacourse.runpamine.data.team.remote
 
-import android.util.Log
 import com.woowacourse.runpamine.domain.team.Team
 import com.woowacourse.runpamine.domain.team.TeamDailySummary
 import com.woowacourse.runpamine.domain.team.TeamMemberSeasonStats
@@ -120,12 +119,6 @@ private fun HttpURLConnection.useJsonRequest(
     body: JSONObject?,
 ): JSONObject =
     try {
-        val requestUrl = url.toString()
-        Log.d(TAG, "HTTP $method $requestUrl")
-        body?.let { requestBody ->
-            Log.d(TAG, "Request body: $requestBody")
-        }
-
         requestMethod = method
         connectTimeout = CONNECT_TIMEOUT_MILLIS
         readTimeout = READ_TIMEOUT_MILLIS
@@ -141,18 +134,14 @@ private fun HttpURLConnection.useJsonRequest(
 
         val responseText =
             if (responseCode in 200..299) {
-                inputStream.bufferedReader().use { it.readText() }.also { text ->
-                    Log.d(TAG, "Response $responseCode $method $requestUrl: $text")
-                }
+                inputStream.bufferedReader().use { it.readText() }
             } else {
                 val errorText = errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
-                Log.w(TAG, "Error $responseCode $method $requestUrl: $errorText")
                 throw IllegalStateException(errorText.toApiErrorMessage(responseCode))
             }
 
         JSONObject(responseText)
     } catch (throwable: Throwable) {
-        Log.e(TAG, "HTTP $method $url failed.", throwable)
         throw throwable
     } finally {
         disconnect()

@@ -18,12 +18,22 @@ android {
             }
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file(runpamineProperty("release_store_file"))
+            storePassword = runpamineProperty("release_store_password")
+            keyAlias = runpamineProperty("release_key_alias")
+            keyPassword = runpamineProperty("release_key_password")
+        }
+    }
+
+
     defaultConfig {
         applicationId = "com.woowacourse.runpamine"
         minSdk = 36
         targetSdk = 36
         versionCode = 1
-        versionName = "1.0.0"
+        versionName = "0.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "BASE_URL", runpamineProperty("base_url").toBuildConfigString())
@@ -33,6 +43,7 @@ android {
 
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

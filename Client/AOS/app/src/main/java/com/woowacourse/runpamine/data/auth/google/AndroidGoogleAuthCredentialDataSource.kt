@@ -1,7 +1,6 @@
 package com.woowacourse.runpamine.data.auth.google
 
 import android.content.Context
-import android.util.Log
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialException
@@ -31,7 +30,6 @@ class AndroidGoogleAuthCredentialDataSource(
                     request = accountPickerRequest(hashedNonce),
                 )
             }.recoverCatching { throwable ->
-                Log.w(TAG, "Google account picker request failed.", throwable)
                 if (throwable.shouldRetryWithSignInButton()) {
                     credentialManager.getCredential(
                         context = context,
@@ -93,5 +91,3 @@ private fun String.sha256(): String {
             .digest(toByteArray())
     return bytes.joinToString(separator = "") { byte -> "%02x".format(byte) }
 }
-
-private const val TAG = "GoogleAuthCredential"

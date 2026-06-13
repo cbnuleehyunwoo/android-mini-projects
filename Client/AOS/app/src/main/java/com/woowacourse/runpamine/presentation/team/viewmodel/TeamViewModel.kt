@@ -1,6 +1,5 @@
 package com.woowacourse.runpamine.presentation.team.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -81,12 +80,6 @@ class TeamViewModel(
                         memberErrorMessage = membersResult.exceptionOrNull()?.toMemberErrorMessage(),
                     )
                 }
-                membersResult.exceptionOrNull()?.let { throwable ->
-                    Log.w(TAG, "Failed to load team members.", throwable)
-                }
-                seasonStatsResult.exceptionOrNull()?.let { throwable ->
-                    Log.w(TAG, "Failed to load team season stats.", throwable)
-                }
             }.onFailure { throwable ->
                 val members =
                     buildEmptyTeamMembers(
@@ -107,12 +100,6 @@ class TeamViewModel(
                         errorMessage = throwable.message ?: "팀 기록 정보를 불러오지 못했어요.",
                         memberErrorMessage = membersResult.exceptionOrNull()?.toMemberErrorMessage(),
                     )
-                }
-                membersResult.exceptionOrNull()?.let { memberThrowable ->
-                    Log.w(TAG, "Failed to load team members.", memberThrowable)
-                }
-                seasonStatsResult.exceptionOrNull()?.let { statsThrowable ->
-                    Log.w(TAG, "Failed to load team season stats.", statsThrowable)
                 }
             }
     }
