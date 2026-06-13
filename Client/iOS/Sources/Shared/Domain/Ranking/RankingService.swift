@@ -490,7 +490,7 @@ private struct UserRankingBoardPayload: Decodable {
     var domain: UserRankingBoard {
         UserRankingBoard(
             season: season.domain,
-            metric: UserRankingMetric(rawValue: metric) ?? .distance,
+            metric: UserRankingMetric(apiValue: metric),
             requiredDistanceMeters: requiredDistanceMeters,
             eligibleCount: eligibleCount,
             rankings: rankings.map(\.domain)
@@ -743,6 +743,19 @@ private extension KeyedDecodingContainer {
 }
 
 private extension UserRankingMetric {
+    init(apiValue: String) {
+        switch apiValue {
+        case "distance":
+            self = .distance
+        case "pace":
+            self = .pace
+        case "consistency", "count":
+            self = .consistency
+        default:
+            self = .distance
+        }
+    }
+
     var teamRankingPath: String {
         switch self {
         case .distance:
