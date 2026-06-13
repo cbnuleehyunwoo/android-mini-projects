@@ -9,8 +9,9 @@ struct TeamDashboardView: View {
     let onJoinTeam: () -> Void
     let onInvite: () -> Void
     @State private var records: [RunningRecord] = RunningHistoryStore().load()
+    @State private var dailySummary: TeamDailySummary?
     @State private var seasonStats: TeamSeasonStats?
-    @State private var hasResolvedSeasonStats = false
+    @State private var hasResolvedDashboard = false
 
     var body: some View {
         Group {
@@ -23,7 +24,7 @@ struct TeamDashboardView: View {
             }
         }
         .task(id: team?.id) {
-            await refreshSeasonStats()
+            await refreshDashboard()
         }
     }
 
@@ -97,8 +98,21 @@ struct TeamDashboardView: View {
     }
 
     private var memberCards: [TeamMemberCardModel] {
-        if let seasonStats {
-            return seasonStats.members.map { TeamMemberCardModel(member: $0) }
+        if let dailySummary {
+            let seasonMembersByID = seasonStats?.members.reduce(into: [String: TeamSeasonMember]()) { result, member in
+                result[member.id] = member
+            } ?? [:]
+
+            return dailySummary.members.map { member in
+                TeamMemberCardModel(
+                    member: member,
+                    seasonMember: seasonMembersByID[member.id]
+                )
+            }
+        }
+
+        if isRemoteDashboard {
+            return []
         }
 
         return [
@@ -112,8 +126,12 @@ struct TeamDashboardView: View {
     }
 
     private var teamDistanceText: String {
-        if let seasonStats {
-            return TeamDashboardFormatter.distanceKilometers(seasonStats.teamTotalDistanceMeters)
+        if let dailySummary {
+            return TeamDashboardFormatter.distanceKilometers(dailySummary.teamTotalDistanceMeters)
+        }
+
+        if isRemoteDashboard {
+            return TeamDashboardFormatter.distanceKilometers(0)
         }
 
         let totalDistance = records.reduce(0) { $0 + $1.distanceKilometers }
@@ -121,38 +139,56 @@ struct TeamDashboardView: View {
     }
 
     private var completedMemberCount: Int {
-        seasonStats?.completedMemberCount ?? memberCards.filter(\.hasRunRecord).count
+        if let dailySummary {
+            return dailySummary.completedMemberCount
+        }
+
+        return isRemoteDashboard ? 0 : memberCards.filter(\.hasRunRecord).count
     }
 
     private var totalMemberCount: Int {
-        seasonStats?.totalMemberCount ?? memberCards.count
+        if let dailySummary {
+            return dailySummary.totalMemberCount
+        }
+
+        return isRemoteDashboard ? team?.memberCount ?? 0 : memberCards.count
     }
 
     private var displayTeam: RunningTeam? {
-        seasonStats?.runningTeam ?? team
+        dailySummary?.team ?? seasonStats?.runningTeam ?? team
     }
 
     private var shouldShowSkeleton: Bool {
-        team != nil && accessToken != nil && seasonStats == nil && !hasResolvedSeasonStats
+        team != nil && accessToken != nil && dailySummary == nil && !hasResolvedDashboard
+    }
+
+    private var isRemoteDashboard: Bool {
+        team != nil && accessToken != nil
     }
 
     private var summaryDateText: String {
-        TeamDashboardFormatter.dateString(from: Date())
+        TeamDashboardFormatter.dateString(from: dailySummary?.date ?? Date())
     }
 
     @MainActor
-    private func refreshSeasonStats() async {
+    private func refreshDashboard() async {
         guard team != nil, let accessToken else { return }
+        dailySummary = nil
         seasonStats = nil
-        hasResolvedSeasonStats = false
+        hasResolvedDashboard = false
 
         do {
-            seasonStats = try await teamService.fetchMyTeamSeasonStats(seasonID: nil, accessToken: accessToken)
+            async let nextDailySummary = teamService.fetchDailySummary(date: Date(), accessToken: accessToken)
+            async let nextSeasonStats = teamService.fetchMyTeamSeasonStats(seasonID: nil, accessToken: accessToken)
+
+            dailySummary = try await nextDailySummary
+            seasonStats = try? await nextSeasonStats
         } catch {
+            dailySummary = nil
             seasonStats = nil
         }
 
-        hasResolvedSeasonStats = true
+        hasResolvedDashboard = true
     }
 }
 
@@ -400,15 +436,15 @@ private struct TeamMemberCardModel: Identifiable {
         self.hasRunRecord = hasRunRecord
     }
 
-    init(member: TeamSeasonMember) {
+    init(member: TeamDailyMember, seasonMember: TeamSeasonMember?) {
         id = member.id
         name = member.nickname
-        animation = .teamMember(consecutiveRunDays: member.consecutiveRunDays)
-        distanceText = TeamDashboardFormatter.memberDistanceKilometers(member.seasonDistanceMeters)
-        timeText = member.seasonDurationSeconds > 0 ? RunningMetricFormatter.duration(TimeInterval(member.seasonDurationSeconds)) : "--:--"
+        animation = .teamMember(consecutiveRunDays: seasonMember?.consecutiveRunDays ?? (member.completed ? 1 : nil))
+        distanceText = TeamDashboardFormatter.memberDistanceKilometers(member.distanceMeters)
+        timeText = member.durationSeconds > 0 ? RunningMetricFormatter.duration(TimeInterval(member.durationSeconds)) : "--:--"
         paceText = "\(RunningMetricFormatter.pace(member.averagePaceSecondsPerKilometer.map(TimeInterval.init)))/km"
-        caloriesText = "\(member.seasonCalories)"
-        hasRunRecord = member.consecutiveRunDays > 0
+        caloriesText = "\(member.calories)"
+        hasRunRecord = member.completed
     }
 
     static func runningMember(
