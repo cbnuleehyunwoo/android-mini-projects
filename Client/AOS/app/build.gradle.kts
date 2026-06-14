@@ -27,7 +27,6 @@ android {
         }
     }
 
-
     defaultConfig {
         applicationId = "com.woowacourse.runpamine"
         minSdk = 30
@@ -90,6 +89,7 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.maps.compose)
     implementation(libs.play.services.location)
+    implementation(libs.play.app.update.ktx)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)

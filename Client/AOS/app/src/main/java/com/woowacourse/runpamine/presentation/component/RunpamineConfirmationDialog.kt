@@ -21,9 +21,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogWindowProvider
+import com.woowacourse.runpamine.R
+import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
 @Composable
 fun RunpamineConfirmationDialog(
@@ -95,5 +99,20 @@ fun RunpamineConfirmationDialog(
                 }
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun RunpamineConfirmationDialogPreview() {
+    RunpamineTheme {
+        RunpamineConfirmationDialog(
+            title = stringResource(R.string.update_required_title),
+            message = stringResource(R.string.update_required_message),
+            dismissText = stringResource(R.string.update_required_later),
+            confirmText = stringResource(R.string.update_required_confirm),
+            onDismiss = {},
+            onConfirm = {},
+        )
     }
 }
