@@ -96,6 +96,7 @@ struct HistoryView: View {
             RunningSummaryView(record: record) {
                 selectedRecord = nil
             }
+            .networkErrorOverlay()
         }
     }
 
