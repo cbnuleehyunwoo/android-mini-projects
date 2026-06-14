@@ -38,6 +38,8 @@ fun RunningRouteMap(
     points: List<RunPoint>,
     modifier: Modifier = Modifier,
     showMarkers: Boolean = false,
+    isInteractive: Boolean = true,
+    routePadding: Int = ROUTE_PADDING,
 ) {
     val route = remember(points) { points.sortedBy { it.sequence }.map { LatLng(it.latitude, it.longitude) } }
     val cameraPositionState =
@@ -55,7 +57,7 @@ fun RunningRouteMap(
 
             else ->
                 cameraPositionState.animate(
-                    CameraUpdateFactory.newLatLngBounds(route.toBounds(), ROUTE_PADDING),
+                    CameraUpdateFactory.newLatLngBounds(route.toBounds(), routePadding),
                 )
         }
     }
@@ -75,6 +77,10 @@ fun RunningRouteMap(
                     compassEnabled = false,
                     mapToolbarEnabled = false,
                     myLocationButtonEnabled = false,
+                    rotationGesturesEnabled = isInteractive,
+                    scrollGesturesEnabled = isInteractive,
+                    tiltGesturesEnabled = isInteractive,
+                    zoomGesturesEnabled = isInteractive,
                     zoomControlsEnabled = false,
                 ),
         ) {
