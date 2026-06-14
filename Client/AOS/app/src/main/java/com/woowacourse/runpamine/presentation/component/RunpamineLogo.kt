@@ -25,9 +25,9 @@ fun RunpamineLogo(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Icon(
-            painter = painterResource(R.drawable.ic_app_logo),
+            painter = painterResource(R.drawable.img_splash),
             contentDescription = "런파민 로고",
-            modifier = Modifier.size(90.dp),
+            modifier = Modifier.size(200.dp),
             tint = Color.Unspecified,
         )
 
