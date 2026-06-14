@@ -26,6 +26,7 @@ import com.woowacourse.runpamine.presentation.component.RunpamineConfirmationDia
 import com.woowacourse.runpamine.presentation.home.components.HomeHeader
 import com.woowacourse.runpamine.presentation.home.components.HomeMapSection
 import com.woowacourse.runpamine.presentation.home.components.HomeNoTeamSection
+import com.woowacourse.runpamine.presentation.home.components.HomeSkeletonContent
 import com.woowacourse.runpamine.presentation.home.components.HomeTeamSection
 import com.woowacourse.runpamine.presentation.home.components.StartButton
 import com.woowacourse.runpamine.presentation.home.viewmodel.HomeUiState
@@ -70,6 +71,11 @@ private fun HomeContent(
     modifier: Modifier = Modifier,
 ) {
     var showStartDialog by rememberSaveable { mutableStateOf(false) }
+
+    if (uiState.isLoading) {
+        HomeSkeletonContent(modifier = modifier)
+        return
+    }
 
     Column(
         modifier = modifier,
