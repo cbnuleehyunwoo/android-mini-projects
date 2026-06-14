@@ -85,6 +85,10 @@ class RecordViewModel(
                             isLoading = false,
                         )
                     }
+
+                    visibleRuns
+                        .filter { run -> run.routePoints.size < MIN_ROUTE_POINT_COUNT }
+                        .forEach { run -> loadRoutePoints(run.id) }
                 }.onFailure { throwable ->
                     if (throwable is CancellationException) throw throwable
 
@@ -96,6 +100,30 @@ class RecordViewModel(
                     }
                 }
             }
+    }
+
+    private suspend fun loadRoutePoints(runId: String) {
+        val detail =
+            try {
+                runRecordRepository.getRunDetail(runId)
+            } catch (throwable: Throwable) {
+                if (throwable is CancellationException) throw throwable
+                return
+            }
+        if (detail.routePoints.size < MIN_ROUTE_POINT_COUNT) return
+
+        _uiState.update { state ->
+            state.copy(
+                records =
+                    state.records.map { record ->
+                        if (record.id == runId) {
+                            record.copy(routePoints = detail.routePoints)
+                        } else {
+                            record
+                        }
+                    },
+            )
+        }
     }
 
     class Factory(
@@ -159,3 +187,4 @@ private fun Int.toPaceText(): String {
 private const val METERS_PER_KILOMETER = 1_000.0
 private const val SECONDS_PER_MINUTE = 60
 private const val SECONDS_PER_HOUR = 3_600
+private const val MIN_ROUTE_POINT_COUNT = 2
