@@ -6,6 +6,7 @@ struct RunningSession {
     private(set) var latestLocation: CLLocation?
     private(set) var elapsedTime: TimeInterval = 0
     private(set) var distanceMeters: CLLocationDistance = 0
+    private(set) var averagePaceSecondsPerKilometer: TimeInterval?
 
     private var segmentStartedAt: Date?
     private var accumulatedElapsedTime: TimeInterval = 0
@@ -14,11 +15,6 @@ struct RunningSession {
 
     var distanceKilometers: Double {
         distanceMeters / 1_000
-    }
-
-    var averagePaceSecondsPerKilometer: TimeInterval? {
-        guard distanceKilometers > 0.01 else { return nil }
-        return elapsedTime / distanceKilometers
     }
 
     var route: [CLLocationCoordinate2D] {
@@ -30,6 +26,7 @@ struct RunningSession {
         latestLocation = nil
         elapsedTime = 0
         distanceMeters = 0
+        averagePaceSecondsPerKilometer = nil
         segmentStartedAt = nil
         accumulatedElapsedTime = 0
         startedAt = nil
@@ -66,7 +63,9 @@ struct RunningSession {
         shouldMeasureDistanceFromPreviousLocation = false
     }
 
-    mutating func append(_ location: CLLocation) {
+    mutating func append(_ location: CLLocation, at date: Date = Date()) {
+        updateElapsedTime(at: date)
+
         if shouldMeasureDistanceFromPreviousLocation, let previousLocation = latestLocation {
             let delta = location.distance(from: previousLocation)
             if delta.isFinite && delta >= 0 {
@@ -74,6 +73,7 @@ struct RunningSession {
             }
         }
 
+        updateAveragePace()
         latestLocation = location
         routePoints.append(
             RunningCoordinate(
@@ -93,7 +93,17 @@ struct RunningSession {
             endedAt: endedAt,
             elapsedTime: elapsedTime,
             distanceMeters: distanceMeters,
+            averagePaceSecondsPerKilometer: averagePaceSecondsPerKilometer,
             route: routePoints
         )
+    }
+
+    private mutating func updateAveragePace() {
+        guard distanceKilometers > 0.01 else {
+            averagePaceSecondsPerKilometer = nil
+            return
+        }
+
+        averagePaceSecondsPerKilometer = elapsedTime / distanceKilometers
     }
 }

@@ -191,6 +191,7 @@ struct RunningView: View {
             endedAt: endedAt,
             elapsedTime: tracker.elapsedTime,
             distanceMeters: tracker.distanceMeters,
+            averagePaceSecondsPerKilometer: tracker.averagePaceSecondsPerKilometer,
             route: route
         )
     }
