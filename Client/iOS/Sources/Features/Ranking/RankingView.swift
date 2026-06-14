@@ -8,6 +8,7 @@ struct RankingView: View {
     @State private var mySummary: MyRankingSummary?
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var activeRankingRequestID: UUID?
 
     private let rankingService: RankingServiceProtocol
     private let accessToken: String?
@@ -237,7 +238,7 @@ struct RankingView: View {
     }
 
     private var highlightedUserEntry: UserRankingEntry? {
-        guard let board = userBoard else { return nil }
+        guard let board = currentUserBoard else { return nil }
         let summaryRank = mySummary.flatMap { selectedMetric.rank(from: $0) }
         if let entry = board.rankings.first(where: { $0.nickname == nickname }) {
             return entry
@@ -265,7 +266,7 @@ struct RankingView: View {
             }
         case .personal:
             let highlightedID = highlightedUserEntry?.userID
-            return (userBoard?.rankings ?? []).map { entry in
+            return (currentUserBoard?.rankings ?? []).map { entry in
                 RankingListRow(
                     id: entry.userID,
                     rank: entry.rank,
@@ -275,6 +276,11 @@ struct RankingView: View {
                 )
             }
         }
+    }
+
+    private var currentUserBoard: UserRankingBoard? {
+        guard let userBoard, userBoard.metric == selectedMetric else { return nil }
+        return userBoard
     }
 
     private var teamSubtitle: String {
@@ -307,28 +313,55 @@ struct RankingView: View {
             return
         }
 
+        let requestID = UUID()
+        let requestScope = selectedScope
+        let requestMetric = selectedMetric
+        activeRankingRequestID = requestID
         isLoading = true
         errorMessage = nil
+
+        switch requestScope {
+        case .team:
+            teamBoard = nil
+        case .personal:
+            userBoard = nil
+        }
 
         do {
             let token = accessToken ?? ""
             async let summary = rankingService.fetchMyRankingSummary(seasonID: nil, accessToken: token)
 
-            switch selectedScope {
+            switch requestScope {
             case .team:
-                async let teamRanking = rankingService.fetchTeamRankings(metric: selectedMetric, seasonID: nil, accessToken: token)
-                teamBoard = try await teamRanking
+                async let teamRanking = rankingService.fetchTeamRankings(metric: requestMetric, seasonID: nil, accessToken: token)
+                let nextTeamBoard = try await teamRanking
+                let nextSummary = try await summary
+                guard shouldApplyRankingResponse(requestID: requestID, scope: requestScope, metric: requestMetric) else { return }
+                teamBoard = nextTeamBoard
+                mySummary = nextSummary
             case .personal:
-                async let userRanking = rankingService.fetchUserRankings(metric: selectedMetric, seasonID: nil, accessToken: token)
-                userBoard = try await userRanking
+                async let userRanking = rankingService.fetchUserRankings(metric: requestMetric, seasonID: nil, accessToken: token)
+                let nextUserBoard = try await userRanking
+                let nextSummary = try await summary
+                guard shouldApplyRankingResponse(requestID: requestID, scope: requestScope, metric: requestMetric) else { return }
+                userBoard = nextUserBoard
+                mySummary = nextSummary
             }
-
-            mySummary = try await summary
         } catch {
+            guard shouldApplyRankingResponse(requestID: requestID, scope: requestScope, metric: requestMetric) else { return }
             errorMessage = error.localizedDescription
         }
 
+        guard shouldApplyRankingResponse(requestID: requestID, scope: requestScope, metric: requestMetric) else { return }
         isLoading = false
+    }
+
+    private func shouldApplyRankingResponse(
+        requestID: UUID,
+        scope: RankingScope,
+        metric: UserRankingMetric
+    ) -> Bool {
+        activeRankingRequestID == requestID && selectedScope == scope && selectedMetric == metric
     }
 
     private func summaryRow(from entry: UserRankingEntry) -> RankingSummaryRow {
