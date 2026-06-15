@@ -120,8 +120,7 @@ class RunpamineContainer(
             ).addMigrations(
                 RunDatabase.MIGRATION_1_2,
                 RunDatabase.MIGRATION_2_3,
-            )
-            .build()
+            ).build()
     }
 
     private val runLocalDataSource: RunLocalDataSource by lazy {

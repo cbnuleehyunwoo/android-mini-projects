@@ -1,5 +1,8 @@
 package com.woowacourse.runpamine
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,13 +18,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.install.model.UpdateAvailability
 import com.woowacourse.runpamine.data.network.NetworkConnectivityObserver
 import com.woowacourse.runpamine.presentation.component.RunpamineBottomBar
 import com.woowacourse.runpamine.presentation.component.RunpamineBottomTab
+import com.woowacourse.runpamine.presentation.component.RunpamineConfirmationDialog
 import com.woowacourse.runpamine.presentation.error.ErrorScreen
 import com.woowacourse.runpamine.presentation.navigation.AppRoute
 import com.woowacourse.runpamine.presentation.navigation.NavHost
@@ -40,6 +47,17 @@ fun RunpamineApp(
     var hasConnectedOnce by rememberSaveable { mutableStateOf(networkObserver.isConnected) }
     LaunchedEffect(isConnected) {
         if (isConnected) hasConnectedOnce = true
+    }
+    var showUpdateDialog by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        AppUpdateManagerFactory
+            .create(context)
+            .appUpdateInfo
+            .addOnSuccessListener { appUpdateInfo ->
+                if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE) {
+                    showUpdateDialog = true
+                }
+            }
     }
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -77,6 +95,44 @@ fun RunpamineApp(
 
         if (showNetworkError) {
             ErrorScreen()
+        }
+
+        if (showUpdateDialog) {
+            RunpamineConfirmationDialog(
+                title = stringResource(R.string.update_required_title),
+                message = stringResource(R.string.update_required_message),
+                dismissText = stringResource(R.string.update_required_later),
+                confirmText = stringResource(R.string.update_required_confirm),
+                onDismiss = { showUpdateDialog = false },
+                onConfirm = {
+                    showUpdateDialog = false
+                    context.openPlayStore()
+                },
+            )
+        }
+    }
+}
+
+private fun Context.openPlayStore() {
+    val appPackageName = packageName
+    val marketIntent =
+        Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$appPackageName")).apply {
+            setPackage("com.android.vending")
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+
+    runCatching {
+        startActivity(marketIntent)
+    }.onFailure {
+        val webIntent =
+            Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse("https://play.google.com/store/apps/details?id=$appPackageName"),
+            ).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+        runCatching {
+            startActivity(webIntent)
         }
     }
 }

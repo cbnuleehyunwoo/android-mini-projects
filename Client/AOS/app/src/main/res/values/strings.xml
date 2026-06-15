@@ -91,4 +91,8 @@
     <string name="ranking_retry">다시 시도</string>
     <string name="ranking_empty_message">아직 랭킹에 표시할 기록이 없어요.</string>
     <string name="network_error_message">네트워크 연결을 확인해주세요.</string>
+    <string name="update_required_title">업데이트가 필요해요</string>
+    <string name="update_required_message">새로운 버전이 출시되었습니다. 원활한 이용을 위해 업데이트해주세요.</string>
+    <string name="update_required_later">나중에</string>
+    <string name="update_required_confirm">업데이트</string>
 </resources>

@@ -27,13 +27,12 @@ android {
         }
     }
 
-
     defaultConfig {
         applicationId = "com.woowacourse.runpamine"
         minSdk = 30
         targetSdk = 36
-        versionCode = 3
-        versionName = "0.0.3"
+        versionCode = 4
+        versionName = "0.0.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "BASE_URL", runpamineProperty("base_url").toBuildConfigString())
@@ -90,6 +89,7 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.maps.compose)
     implementation(libs.play.services.location)
+    implementation(libs.play.app.update.ktx)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)

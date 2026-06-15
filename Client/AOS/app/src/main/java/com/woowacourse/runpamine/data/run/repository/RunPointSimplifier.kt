@@ -51,14 +51,22 @@ object RunPointSimplifier {
         val startToEndMeters = start.distanceTo(end).toDouble()
         if (startToEndMeters == 0.0) return start.distanceTo(this).toDouble()
 
-        val x = start.distanceTo(RunPoint(latitude = start.latitude, longitude = longitude, recordedAt = recordedAt))
-            .toDouble() * if (longitude >= start.longitude) 1 else -1
-        val y = start.distanceTo(RunPoint(latitude = latitude, longitude = start.longitude, recordedAt = recordedAt))
-            .toDouble() * if (latitude >= start.latitude) 1 else -1
-        val endX = start.distanceTo(RunPoint(latitude = start.latitude, longitude = end.longitude, recordedAt = end.recordedAt))
-            .toDouble() * if (end.longitude >= start.longitude) 1 else -1
-        val endY = start.distanceTo(RunPoint(latitude = end.latitude, longitude = start.longitude, recordedAt = end.recordedAt))
-            .toDouble() * if (end.latitude >= start.latitude) 1 else -1
+        val x =
+            start
+                .distanceTo(RunPoint(latitude = start.latitude, longitude = longitude, recordedAt = recordedAt))
+                .toDouble() * if (longitude >= start.longitude) 1 else -1
+        val y =
+            start
+                .distanceTo(RunPoint(latitude = latitude, longitude = start.longitude, recordedAt = recordedAt))
+                .toDouble() * if (latitude >= start.latitude) 1 else -1
+        val endX =
+            start
+                .distanceTo(RunPoint(latitude = start.latitude, longitude = end.longitude, recordedAt = end.recordedAt))
+                .toDouble() * if (end.longitude >= start.longitude) 1 else -1
+        val endY =
+            start
+                .distanceTo(RunPoint(latitude = end.latitude, longitude = start.longitude, recordedAt = end.recordedAt))
+                .toDouble() * if (end.latitude >= start.latitude) 1 else -1
 
         val progress = ((x * endX) + (y * endY)) / ((endX * endX) + (endY * endY))
         val clampedProgress = progress.coerceIn(0.0, 1.0)
@@ -67,8 +75,7 @@ object RunPointSimplifier {
         return kotlin.math.hypot(x - projectedX, y - projectedY)
     }
 
-    private fun List<RunPoint>.resequence(): List<RunPoint> =
-        mapIndexed { index, point -> point.copy(sequence = index + 1) }
+    private fun List<RunPoint>.resequence(): List<RunPoint> = mapIndexed { index, point -> point.copy(sequence = index + 1) }
 
     private const val EPSILON_METERS = 8.0
     private const val MIN_POINTS_TO_SIMPLIFY = 2
