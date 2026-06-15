@@ -209,7 +209,12 @@ private fun JSONObject.toTeamRunSummary(): TeamRunSummary =
 
 private fun String.toApiErrorMessage(responseCode: Int): String =
     runCatching {
-        JSONObject(this).getJSONObject("error").getString("message")
+        val message = JSONObject(this).getJSONObject("error").getString("message")
+        if (responseCode == HttpURLConnection.HTTP_CONFLICT && message == TEAM_NAME_ALREADY_EXISTS) {
+            DUPLICATE_TEAM_NAME_MESSAGE
+        } else {
+            message
+        }
     }.getOrDefault("팀 요청에 실패했어요. ($responseCode)")
 
 private fun String.toApiBaseUrl(): String {
@@ -223,4 +228,6 @@ private fun String.toApiBaseUrl(): String {
 
 private const val CONNECT_TIMEOUT_MILLIS = 10_000
 private const val READ_TIMEOUT_MILLIS = 10_000
+private const val TEAM_NAME_ALREADY_EXISTS = "Team name already exists"
+private const val DUPLICATE_TEAM_NAME_MESSAGE = "중복된 팀 이름입니다."
 private const val TAG = "TeamApi"
