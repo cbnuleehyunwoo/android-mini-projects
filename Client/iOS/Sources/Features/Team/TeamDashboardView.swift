@@ -438,7 +438,7 @@ struct TeamDashboardView: View {
         #if DEBUG
         print(
             """
-            [TeamDashboard][member-tap] cardID=\(member.id), name=\(member.name), hasDetail=\(member.detail != nil), dailyID=\(member.debugDailyID ?? "nil"), seasonID=\(member.debugSeasonID ?? "nil"), seasonMatchingID=\(member.debugSeasonMatchingID ?? "nil"), seasonDistance=\(member.debugSeasonDistanceMeters.map(String.init) ?? "nil"), seasonDuration=\(member.debugSeasonDurationSeconds.map(String.init) ?? "nil"), seasonRuns=\(member.debugSeasonRunCount.map(String.init) ?? "nil"), seasonPace=\(member.debugSeasonAveragePaceSecondsPerKilometer.map(String.init) ?? "nil")
+            [TeamDashboard][member-tap] cardID=\(member.id), name=\(member.name), hasDetail=\(member.detail != nil), dailyID=\(member.debugDailyID ?? "nil"), dailyDistance=\(member.debugDailyDistanceMeters.map(String.init) ?? "nil"), dailyDuration=\(member.debugDailyDurationSeconds.map(String.init) ?? "nil"), dailyPace=\(member.debugDailyAveragePaceSecondsPerKilometer.map(String.init) ?? "nil"), dailyCompleted=\(member.debugDailyCompleted.map(String.init) ?? "nil"), seasonID=\(member.debugSeasonID ?? "nil"), seasonMatchingID=\(member.debugSeasonMatchingID ?? "nil"), seasonDistance=\(member.debugSeasonDistanceMeters.map(String.init) ?? "nil"), seasonDuration=\(member.debugSeasonDurationSeconds.map(String.init) ?? "nil"), seasonRuns=\(member.debugSeasonRunCount.map(String.init) ?? "nil"), seasonPace=\(member.debugSeasonAveragePaceSecondsPerKilometer.map(String.init) ?? "nil")
             """
         )
         #endif
@@ -702,6 +702,10 @@ private struct TeamMemberCardModel: Identifiable {
     let isCurrentUser: Bool
     let detail: TeamMemberSeasonDetail?
     let debugDailyID: String?
+    let debugDailyDistanceMeters: Int?
+    let debugDailyDurationSeconds: Int?
+    let debugDailyAveragePaceSecondsPerKilometer: Int?
+    let debugDailyCompleted: Bool?
     let debugSeasonID: String?
     let debugSeasonMatchingID: String?
     let debugSeasonDistanceMeters: Int?
@@ -720,6 +724,10 @@ private struct TeamMemberCardModel: Identifiable {
         isCurrentUser: Bool,
         detail: TeamMemberSeasonDetail?,
         debugDailyID: String? = nil,
+        debugDailyDistanceMeters: Int? = nil,
+        debugDailyDurationSeconds: Int? = nil,
+        debugDailyAveragePaceSecondsPerKilometer: Int? = nil,
+        debugDailyCompleted: Bool? = nil,
         debugSeasonID: String? = nil,
         debugSeasonMatchingID: String? = nil,
         debugSeasonDistanceMeters: Int? = nil,
@@ -737,6 +745,10 @@ private struct TeamMemberCardModel: Identifiable {
         self.isCurrentUser = isCurrentUser
         self.detail = detail
         self.debugDailyID = debugDailyID
+        self.debugDailyDistanceMeters = debugDailyDistanceMeters
+        self.debugDailyDurationSeconds = debugDailyDurationSeconds
+        self.debugDailyAveragePaceSecondsPerKilometer = debugDailyAveragePaceSecondsPerKilometer
+        self.debugDailyCompleted = debugDailyCompleted
         self.debugSeasonID = debugSeasonID
         self.debugSeasonMatchingID = debugSeasonMatchingID
         self.debugSeasonDistanceMeters = debugSeasonDistanceMeters
@@ -764,6 +776,10 @@ private struct TeamMemberCardModel: Identifiable {
         hasRunRecord = dailyMember?.completed ?? false
         self.isCurrentUser = isCurrentUser
         debugDailyID = dailyMember?.id
+        debugDailyDistanceMeters = dailyMember?.distanceMeters
+        debugDailyDurationSeconds = dailyMember?.durationSeconds
+        debugDailyAveragePaceSecondsPerKilometer = dailyMember?.averagePaceSecondsPerKilometer
+        debugDailyCompleted = dailyMember?.completed
         debugSeasonID = seasonMember?.id
         debugSeasonMatchingID = seasonMember?.matchingID
         debugSeasonDistanceMeters = seasonMember?.seasonDistanceMeters
@@ -795,6 +811,10 @@ private struct TeamMemberCardModel: Identifiable {
         hasRunRecord = member.completed
         self.isCurrentUser = isCurrentUser
         debugDailyID = member.id
+        debugDailyDistanceMeters = member.distanceMeters
+        debugDailyDurationSeconds = member.durationSeconds
+        debugDailyAveragePaceSecondsPerKilometer = member.averagePaceSecondsPerKilometer
+        debugDailyCompleted = member.completed
         debugSeasonID = seasonMember?.id
         debugSeasonMatchingID = seasonMember?.matchingID
         debugSeasonDistanceMeters = seasonMember?.seasonDistanceMeters
