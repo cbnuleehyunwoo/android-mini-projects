@@ -186,10 +186,18 @@ fun NavHost(
             JoinScreen(
                 onBackClick = navController::popBackStack,
                 onJoinSuccess = {
-                    navController.navigate(AppRoute.Home.route) {
-                        popUpTo(AppRoute.JoinTeam.route) {
-                            inclusive = true
+                    val removedExistingTeam =
+                        navController.popBackStack(
+                            route = AppRoute.Team.route,
+                            inclusive = true,
+                        )
+                    navController.navigate(AppRoute.Team.route) {
+                        if (!removedExistingTeam) {
+                            popUpTo(AppRoute.JoinTeam.route) {
+                                inclusive = true
+                            }
                         }
+                        launchSingleTop = true
                     }
                 },
             )
