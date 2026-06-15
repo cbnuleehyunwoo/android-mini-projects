@@ -69,6 +69,12 @@ final class LocalAppStateStore {
         state = nextState
     }
 
+    func clearTeam() {
+        var nextState = state
+        nextState.team = nil
+        state = nextState
+    }
+
     func loadTeam() -> RunningTeam? {
         state.team?.runningTeam
     }
