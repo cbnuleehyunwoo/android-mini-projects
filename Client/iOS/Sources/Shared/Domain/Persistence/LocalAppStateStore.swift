@@ -59,6 +59,10 @@ final class LocalAppStateStore {
         state = PersistedAppState(hasCompletedOnboarding: state.hasCompletedOnboarding)
     }
 
+    func deleteAccount() {
+        state = PersistedAppState()
+    }
+
     func saveTeam(_ team: RunningTeam) {
         var nextState = state
         nextState.team = PersistedTeam(team)

@@ -173,7 +173,7 @@ struct MyPageView: View {
 
         do {
             try await authService.logout(accessToken: accessToken)
-            completeLocalSessionRemoval()
+            completeLocalSessionRemoval(shouldResetOnboarding: false)
         } catch {
             logoutErrorMessage = error.localizedDescription
         }
@@ -196,14 +196,18 @@ struct MyPageView: View {
 
         do {
             try await authService.deleteAccount(accessToken: accessToken)
-            completeLocalSessionRemoval()
+            completeLocalSessionRemoval(shouldResetOnboarding: true)
         } catch {
             deleteAccountErrorMessage = error.localizedDescription
         }
     }
 
-    private func completeLocalSessionRemoval() {
-        store.logout()
+    private func completeLocalSessionRemoval(shouldResetOnboarding: Bool = false) {
+        if shouldResetOnboarding {
+            store.deleteAccount()
+        } else {
+            store.logout()
+        }
         dismiss()
         onLogoutCompleted()
     }
