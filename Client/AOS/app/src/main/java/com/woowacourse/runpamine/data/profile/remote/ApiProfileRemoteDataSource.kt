@@ -148,7 +148,12 @@ private fun JSONObject.toTeamSummary(): TeamSummary =
 
 private fun String.toApiErrorMessage(responseCode: Int): String =
     runCatching {
-        JSONObject(this).getJSONObject("error").getString("message")
+        val message = JSONObject(this).getJSONObject("error").getString("message")
+        if (responseCode == HttpURLConnection.HTTP_CONFLICT && message == NICKNAME_ALREADY_EXISTS) {
+            DUPLICATE_NICKNAME_MESSAGE
+        } else {
+            message
+        }
     }.getOrDefault("프로필 요청에 실패했어요. ($responseCode)")
 
 private fun String.toApiBaseUrl(): String {
@@ -162,3 +167,5 @@ private fun String.toApiBaseUrl(): String {
 
 private const val CONNECT_TIMEOUT_MILLIS = 10_000
 private const val READ_TIMEOUT_MILLIS = 10_000
+private const val NICKNAME_ALREADY_EXISTS = "Nickname already exists"
+private const val DUPLICATE_NICKNAME_MESSAGE = "중복된 닉네임입니다."
