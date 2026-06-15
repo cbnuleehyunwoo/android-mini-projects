@@ -102,7 +102,8 @@ struct TeamDashboardView: View {
                             TeamMemberRunCard(member: member)
                                 .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
                                 .onTapGesture {
-                                    onSelectMember(member.detail)
+                                    guard let detail = member.detail else { return }
+                                    onSelectMember(detail)
                                 }
                         }
                     }
@@ -376,10 +377,13 @@ struct TeamDashboardView: View {
             async let nextDailySummary = teamService.fetchDailySummary(date: selectedDate, accessToken: accessToken)
             async let nextSeasonStats = teamService.fetchMyTeamSeasonStats(seasonID: nil, accessToken: accessToken)
 
-            dailySummary = try await nextDailySummary
+            let fetchedDailySummary = try await nextDailySummary
             do {
-                seasonStats = try await nextSeasonStats
+                let fetchedSeasonStats = try await nextSeasonStats
+                dailySummary = fetchedDailySummary
+                seasonStats = fetchedSeasonStats
             } catch {
+                dailySummary = fetchedDailySummary
                 seasonStats = nil
                 #if DEBUG
                 print("TeamDashboardView season stats failed: \(error)")
@@ -652,7 +656,7 @@ private struct TeamMemberCardModel: Identifiable {
     let paceText: String
     let hasRunRecord: Bool
     let isCurrentUser: Bool
-    let detail: TeamMemberSeasonDetail
+    let detail: TeamMemberSeasonDetail?
 
     init(
         id: String,
@@ -663,7 +667,7 @@ private struct TeamMemberCardModel: Identifiable {
         paceText: String,
         hasRunRecord: Bool,
         isCurrentUser: Bool,
-        detail: TeamMemberSeasonDetail
+        detail: TeamMemberSeasonDetail?
     ) {
         self.id = id
         self.name = name
@@ -679,21 +683,6 @@ private struct TeamMemberCardModel: Identifiable {
     init(member: TeamDailyMember, seasonMember: TeamSeasonMember?, isCurrentUser: Bool) {
         let memberDistanceText = TeamDashboardFormatter.memberDistanceKilometers(member.distanceMeters)
         let memberPaceText = "\(RunningMetricFormatter.pace(member.averagePaceSecondsPerKilometer.map(TimeInterval.init)))/km"
-        let detailDistanceMeters = if let seasonDistanceMeters = seasonMember?.seasonDistanceMeters, seasonDistanceMeters > 0 {
-            seasonDistanceMeters
-        } else {
-            member.distanceMeters
-        }
-        let detailRunCount = if let seasonRunCount = seasonMember?.seasonRunCount, seasonRunCount > 0 {
-            seasonRunCount
-        } else {
-            member.completed ? 1 : 0
-        }
-        let detailAveragePace = if let seasonAveragePace = seasonMember?.averagePaceSecondsPerKilometer, seasonAveragePace > 0 {
-            seasonAveragePace
-        } else {
-            member.averagePaceSecondsPerKilometer
-        }
 
         id = member.id
         name = member.nickname
@@ -703,14 +692,16 @@ private struct TeamMemberCardModel: Identifiable {
         paceText = memberPaceText
         hasRunRecord = member.completed
         self.isCurrentUser = isCurrentUser
-        detail = TeamMemberSeasonDetail(
-            id: member.id,
-            name: member.nickname,
-            joinedAt: seasonMember?.teamJoinedAt ?? "",
-            seasonDistance: TeamDashboardFormatter.seasonDistanceKilometers(detailDistanceMeters),
-            seasonRunCount: "\(detailRunCount)",
-            seasonAveragePace: RunningMetricFormatter.pace(detailAveragePace.map(TimeInterval.init))
-        )
+        detail = seasonMember.map { member in
+            TeamMemberSeasonDetail(
+                id: member.id,
+                name: member.nickname,
+                joinedAt: member.teamJoinedAt,
+                seasonDistance: TeamDashboardFormatter.seasonDistanceKilometers(member.seasonDistanceMeters),
+                seasonRunCount: "\(member.seasonRunCount)",
+                seasonAveragePace: RunningMetricFormatter.pace(member.averagePaceSecondsPerKilometer.map(TimeInterval.init))
+            )
+        }
     }
 
     static func runningMember(
