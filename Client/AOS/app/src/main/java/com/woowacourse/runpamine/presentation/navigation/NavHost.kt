@@ -25,6 +25,7 @@ import com.woowacourse.runpamine.presentation.running.RunningScreen
 import com.woowacourse.runpamine.presentation.splash.SplashDestination
 import com.woowacourse.runpamine.presentation.splash.SplashScreen
 import com.woowacourse.runpamine.presentation.team.TeamScreen
+import com.woowacourse.runpamine.presentation.team.model.TeamMember
 import com.woowacourse.runpamine.presentation.termsagreement.TermsAgreementScreen
 import java.util.Locale
 
@@ -32,6 +33,7 @@ import java.util.Locale
 fun NavHost(
     navController: NavHostController,
     onOpenMyPage: () -> Unit,
+    onTeamMemberClick: (TeamMember) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     NavHost(
@@ -119,6 +121,7 @@ fun NavHost(
                 onJoinTeamClick = {
                     navController.navigate(AppRoute.JoinTeam.route)
                 },
+                onMemberClick = onTeamMemberClick,
             )
         }
 

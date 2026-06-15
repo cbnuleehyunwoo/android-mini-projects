@@ -33,6 +33,8 @@ import com.woowacourse.runpamine.presentation.error.ErrorScreen
 import com.woowacourse.runpamine.presentation.mypage.MyPageBottomSheet
 import com.woowacourse.runpamine.presentation.navigation.AppRoute
 import com.woowacourse.runpamine.presentation.navigation.NavHost
+import com.woowacourse.runpamine.presentation.team.TeamMemberSeasonBottomSheet
+import com.woowacourse.runpamine.presentation.team.model.TeamMember
 
 @Composable
 fun RunpamineApp(
@@ -51,6 +53,7 @@ fun RunpamineApp(
     }
     var showUpdateDialog by rememberSaveable { mutableStateOf(false) }
     var isShowingMyPage by rememberSaveable { mutableStateOf(false) }
+    var selectedTeamMember by remember { mutableStateOf<TeamMember?>(null) }
     LaunchedEffect(Unit) {
         AppUpdateManagerFactory
             .create(context)
@@ -91,6 +94,7 @@ fun RunpamineApp(
                 NavHost(
                     navController = navController,
                     onOpenMyPage = { isShowingMyPage = true },
+                    onTeamMemberClick = { member -> selectedTeamMember = member },
                     modifier = Modifier.padding(innerPadding),
                 )
             }
@@ -111,6 +115,13 @@ fun RunpamineApp(
                         }
                     }
                 },
+            )
+        }
+
+        selectedTeamMember?.let { member ->
+            TeamMemberSeasonBottomSheet(
+                member = member,
+                onDismissRequest = { selectedTeamMember = null },
             )
         }
 
