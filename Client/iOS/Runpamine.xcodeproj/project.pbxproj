@@ -63,6 +63,7 @@
 		7A1000010000000000000046 /* pretendard_regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000146 /* pretendard_regular.otf */; };
 		7A1000010000000000000047 /* pretendard_semi_bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000147 /* pretendard_semi_bold.otf */; };
 		7A1000010000000000000048 /* pretendard_thin.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000148 /* pretendard_thin.otf */; };
+		7A3100010000000000000040 /* kyobo_handwriting_2025_lyb.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A3100010000000000000140 /* kyobo_handwriting_2025_lyb.otf */; };
 		7A1000010000000000000049 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000149 /* Assets.xcassets */; };
 		7A100001000000000000004A /* bk.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000150 /* bk.png */; };
 		7A100001000000000000004B /* encho.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000151 /* encho.png */; };
@@ -141,6 +142,7 @@
 		7A1000010000000000000146 /* pretendard_regular.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_regular.otf; sourceTree = "<group>"; };
 		7A1000010000000000000147 /* pretendard_semi_bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_semi_bold.otf; sourceTree = "<group>"; };
 		7A1000010000000000000148 /* pretendard_thin.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_thin.otf; sourceTree = "<group>"; };
+		7A3100010000000000000140 /* kyobo_handwriting_2025_lyb.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = kyobo_handwriting_2025_lyb.otf; sourceTree = "<group>"; };
 		7A1000010000000000000149 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7A1000010000000000000150 /* bk.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = bk.png; sourceTree = SOURCE_ROOT; };
 		7A1000010000000000000151 /* encho.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = encho.png; sourceTree = SOURCE_ROOT; };
@@ -432,6 +434,7 @@
 				7A1000010000000000000146 /* pretendard_regular.otf */,
 				7A1000010000000000000147 /* pretendard_semi_bold.otf */,
 				7A1000010000000000000148 /* pretendard_thin.otf */,
+				7A3100010000000000000140 /* kyobo_handwriting_2025_lyb.otf */,
 			);
 			path = Fonts;
 			sourceTree = "<group>";
@@ -547,6 +550,7 @@
 				7A1000010000000000000046 /* pretendard_regular.otf in Resources */,
 				7A1000010000000000000047 /* pretendard_semi_bold.otf in Resources */,
 				7A1000010000000000000048 /* pretendard_thin.otf in Resources */,
+				7A3100010000000000000040 /* kyobo_handwriting_2025_lyb.otf in Resources */,
 				7A100001000000000000004A /* bk.png in Resources */,
 				64AA17802FDE905F00FC0B91 /* error.png in Resources */,
 				7A100001000000000000004B /* encho.png in Resources */,

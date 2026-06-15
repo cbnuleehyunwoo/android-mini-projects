@@ -13,9 +13,7 @@ struct LoginView: View {
         ZStack {
             Color.white.ignoresSafeArea()
 
-            VStack {
-                Spacer()
-
+            VStack(spacing: 0) {
                 VStack(spacing: 34) {
                     Image("character_no_bg")
                         .resizable()
@@ -24,7 +22,7 @@ struct LoginView: View {
                         .accessibilityLabel("런파민 캐릭터")
 
                     Text("RUNPAMINE")
-                        .font(AppTheme.Typography.font(size: 44, weight: .bold))
+                        .font(AppTheme.Typography.loginTitle)
                         .foregroundStyle(AppTheme.Colors.textPrimary)
                         .minimumScaleFactor(0.72)
                 }
@@ -57,10 +55,8 @@ struct LoginView: View {
                         .foregroundStyle(AppTheme.Colors.danger)
                         .padding(.top, 14)
                 }
-
-                Spacer()
-                    .frame(height: 290)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         }
     }
 

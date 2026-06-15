@@ -64,6 +64,7 @@
 		<string>pretendard_regular.otf</string>
 		<string>pretendard_semi_bold.otf</string>
 		<string>pretendard_thin.otf</string>
+		<string>kyobo_handwriting_2025_lyb.otf</string>
 	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
