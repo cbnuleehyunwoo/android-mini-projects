@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -141,9 +142,21 @@ private fun LocationPermissionRequest(
                 style = MaterialTheme.typography.bodyMedium,
             )
             Button(onClick = onRequestPermission) {
-                Text(text = stringResource(R.string.map_permission_request))
+                Text(
+                    text = stringResource(R.string.map_permission_request),
+                    color = Color.White,)
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun LocationPermissionRequestPreview() {
+    RunpamineTheme {
+        LocationPermissionRequest(
+            onRequestPermission = {}
+        )
     }
 }
 
