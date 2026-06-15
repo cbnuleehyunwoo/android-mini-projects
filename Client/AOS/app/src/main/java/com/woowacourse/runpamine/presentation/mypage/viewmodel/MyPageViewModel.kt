@@ -22,6 +22,16 @@ class MyPageViewModel(
     }
 
     fun loadMyProfile() {
+        profileRepository.getCachedProfile()?.let { profile ->
+            _uiState.update {
+                it.copy(
+                    nickname = profile.nickname,
+                    errorMessage = null,
+                )
+            }
+            return
+        }
+
         viewModelScope.launch {
             _uiState.update {
                 it.copy(

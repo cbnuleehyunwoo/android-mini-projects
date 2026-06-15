@@ -33,7 +33,6 @@ import com.woowacourse.runpamine.presentation.component.ScreenTopBar
 import com.woowacourse.runpamine.presentation.mypage.components.MyPageMenuRow
 import com.woowacourse.runpamine.presentation.mypage.components.MyPageProfile
 import com.woowacourse.runpamine.presentation.mypage.components.MyPageSection
-import com.woowacourse.runpamine.presentation.mypage.components.MyPageSkeletonContent
 import com.woowacourse.runpamine.presentation.mypage.viewmodel.MyPageUiState
 import com.woowacourse.runpamine.presentation.mypage.viewmodel.MyPageViewModel
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
@@ -101,12 +100,8 @@ private fun MyPageContent(
                     .fillMaxWidth()
                     .padding(vertical = 16.dp),
         )
-        if (uiState.isLoading) {
-            MyPageSkeletonContent()
-            return@Column
-        }
         MyPageProfile(
-            name = uiState.nickname.ifBlank { stringResource(R.string.my_page_default_nickname) },
+            name = uiState.nickname,
             modifier = Modifier.align(Alignment.CenterHorizontally),
         )
         uiState.errorMessage?.let { message ->
