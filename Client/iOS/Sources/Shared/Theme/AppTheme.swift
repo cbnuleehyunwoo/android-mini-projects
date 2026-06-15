@@ -2,6 +2,8 @@ import SwiftUI
 
 enum AppTheme {
     enum Typography {
+        private static let brandFontName = "KyoboHandwriting2025lyb"
+
         enum Weight {
             case regular
             case medium
@@ -32,13 +34,18 @@ enum AppTheme {
         static let header2 = font(size: 26, weight: .extraBold)
         static let title2 = font(size: 20, weight: .semibold)
         static let body1 = font(size: 16, weight: .medium)
-        static let splashTitle = font(size: 48, weight: .bold)
+        static let splashTitle = brandFont(size: 48)
+        static let loginTitle = brandFont(size: 44)
         static let body2 = font(size: 14, weight: .medium)
         static let caption1 = font(size: 12, weight: .regular)
         static let button = font(size: 17, weight: .bold)
 
         static func font(size: CGFloat, weight: Weight = .regular) -> Font {
             Font.custom(weight.fontName, size: size)
+        }
+
+        static func brandFont(size: CGFloat) -> Font {
+            Font.custom(brandFontName, size: size)
         }
     }
 
