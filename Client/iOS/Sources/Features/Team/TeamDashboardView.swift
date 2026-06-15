@@ -234,6 +234,7 @@ struct TeamDashboardView: View {
     private var memberCards: [TeamMemberCardModel] {
         if let dailySummary {
             let seasonMembersByID = seasonStats?.members.reduce(into: [String: TeamSeasonMember]()) { result, member in
+                result[member.matchingID] = member
                 result[member.id] = member
             } ?? [:]
 
@@ -376,10 +377,20 @@ struct TeamDashboardView: View {
             async let nextSeasonStats = teamService.fetchMyTeamSeasonStats(seasonID: nil, accessToken: accessToken)
 
             dailySummary = try await nextDailySummary
-            seasonStats = try? await nextSeasonStats
+            do {
+                seasonStats = try await nextSeasonStats
+            } catch {
+                seasonStats = nil
+                #if DEBUG
+                print("TeamDashboardView season stats failed: \(error)")
+                #endif
+            }
         } catch {
             dailySummary = nil
             seasonStats = nil
+            #if DEBUG
+            print("TeamDashboardView daily summary failed: \(error)")
+            #endif
         }
 
         hasResolvedDashboard = true

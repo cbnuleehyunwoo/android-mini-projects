@@ -92,6 +92,7 @@ struct TeamSeasonTeam: Equatable {
 
 struct TeamSeasonMember: Identifiable, Equatable {
     let id: String
+    let matchingID: String
     let nickname: String
     let avatarKey: String?
     let teamJoinedAt: String

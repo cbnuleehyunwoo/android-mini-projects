@@ -269,6 +269,7 @@ final class MockTeamService: TeamServiceProtocol {
             members: [
                 TeamSeasonMember(
                     id: "member-primary",
+                    matchingID: "member-primary",
                     nickname: store.nickname,
                     avatarKey: "runner_default",
                     teamJoinedAt: "2026-05-01",
@@ -282,6 +283,7 @@ final class MockTeamService: TeamServiceProtocol {
                 ),
                 TeamSeasonMember(
                     id: "member-burger-1",
+                    matchingID: "member-burger-1",
                     nickname: "버거킹 스마일",
                     avatarKey: "burger_default",
                     teamJoinedAt: "2026-05-01",
@@ -555,6 +557,7 @@ private struct TeamSeasonTeamPayload: Decodable {
 
 private struct TeamSeasonMemberPayload: Decodable {
     let id: String
+    let matchingID: String
     let nickname: String
     let avatarKey: String?
     let teamJoinedAt: String?
@@ -566,9 +569,53 @@ private struct TeamSeasonMemberPayload: Decodable {
     let averagePaceSecondsPerKm: Int?
     let consecutiveRunDays: Int
 
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case userId
+        case profileId
+        case nickname
+        case avatarKey
+        case teamJoinedAt
+        case seasonDistanceMeters
+        case seasonDurationSeconds
+        case seasonCalories
+        case seasonRunCount
+        case seasonActiveDays
+        case averagePaceSecondsPerKm
+        case consecutiveRunDays
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let decodedID = try container.decodeIfPresent(String.self, forKey: .id)
+        let decodedUserID = try container.decodeIfPresent(String.self, forKey: .userId)
+        let decodedProfileID = try container.decodeIfPresent(String.self, forKey: .profileId)
+
+        guard let id = decodedID ?? decodedUserID ?? decodedProfileID else {
+            throw DecodingError.keyNotFound(
+                CodingKeys.id,
+                DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Team season member id is missing")
+            )
+        }
+
+        self.id = id
+        matchingID = decodedUserID ?? id
+        nickname = try container.decode(String.self, forKey: .nickname)
+        avatarKey = try container.decodeIfPresent(String.self, forKey: .avatarKey)
+        teamJoinedAt = try container.decodeIfPresent(String.self, forKey: .teamJoinedAt)
+        seasonDistanceMeters = try container.decode(Int.self, forKey: .seasonDistanceMeters)
+        seasonDurationSeconds = try container.decode(Int.self, forKey: .seasonDurationSeconds)
+        seasonCalories = try container.decode(Int.self, forKey: .seasonCalories)
+        seasonRunCount = try container.decode(Int.self, forKey: .seasonRunCount)
+        seasonActiveDays = try container.decode(Int.self, forKey: .seasonActiveDays)
+        averagePaceSecondsPerKm = try container.decodeIfPresent(Int.self, forKey: .averagePaceSecondsPerKm)
+        consecutiveRunDays = try container.decode(Int.self, forKey: .consecutiveRunDays)
+    }
+
     var domain: TeamSeasonMember {
         TeamSeasonMember(
             id: id,
+            matchingID: matchingID,
             nickname: nickname,
             avatarKey: avatarKey,
             teamJoinedAt: teamJoinedAt ?? "",
