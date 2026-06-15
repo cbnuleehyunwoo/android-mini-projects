@@ -1,6 +1,9 @@
 import CoreLocation
 import MapKit
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 struct HomeMapView: View {
     @StateObject private var locationProvider = HomeLocationProvider()
@@ -16,6 +19,19 @@ struct HomeMapView: View {
     )
 
     var body: some View {
+        Group {
+            if locationProvider.hasLocationAuthorization {
+                mapContent
+            } else {
+                HomeLocationPermissionRequestView(buttonTitle: locationProvider.permissionButtonTitle) {
+                    locationProvider.requestAuthorization()
+                }
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+
+    private var mapContent: some View {
         ZStack(alignment: .leading) {
             Map(position: $cameraPosition) {
                 UserAnnotation()
@@ -48,7 +64,6 @@ struct HomeMapView: View {
             }
             .padding(.leading, 13)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
     private func mapControl(systemIcon: String? = nil, assetIcon: String? = nil, action: @escaping () -> Void) -> some View {
@@ -96,9 +111,37 @@ struct HomeMapView: View {
     }
 }
 
+private struct HomeLocationPermissionRequestView: View {
+    let buttonTitle: String
+    let onRequestPermission: () -> Void
+
+    var body: some View {
+        VStack(spacing: 22) {
+            Text("주변 지도를 보려면 위치 권한이 필요해요.")
+                .font(AppTheme.Typography.font(size: 16, weight: .medium))
+                .foregroundStyle(.black)
+                .multilineTextAlignment(.center)
+
+            Button(action: onRequestPermission) {
+                Text(buttonTitle)
+                    .font(AppTheme.Typography.font(size: 14, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 170, height: 50)
+                    .background(AppTheme.Colors.primary)
+                    .clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.white)
+        .accessibilityElement(children: .combine)
+    }
+}
+
 @MainActor
 private final class HomeLocationProvider: NSObject, ObservableObject {
     @Published private(set) var currentLocation: CLLocation?
+    @Published private(set) var authorizationStatus: CLAuthorizationStatus = .notDetermined
 
     private let manager = CLLocationManager()
 
@@ -107,24 +150,58 @@ private final class HomeLocationProvider: NSObject, ObservableObject {
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyBest
         manager.distanceFilter = 10
+        authorizationStatus = manager.authorizationStatus
+    }
+
+    var hasLocationAuthorization: Bool {
+        #if os(iOS)
+        authorizationStatus == .authorizedWhenInUse || authorizationStatus == .authorizedAlways
+        #else
+        authorizationStatus == .authorizedAlways
+        #endif
+    }
+
+    var permissionButtonTitle: String {
+        switch authorizationStatus {
+        case .denied, .restricted:
+            return "위치 권한 설정하기"
+        default:
+            return "위치 권한 허용하기"
+        }
+    }
+
+    func requestAuthorization() {
+        switch authorizationStatus {
+        case .notDetermined:
+            manager.requestWhenInUseAuthorization()
+        case .denied, .restricted:
+            openAppSettings()
+        case .authorizedWhenInUse, .authorizedAlways:
+            requestLocation()
+        @unknown default:
+            break
+        }
     }
 
     func requestLocation() {
-        switch manager.authorizationStatus {
+        authorizationStatus = manager.authorizationStatus
+
+        switch authorizationStatus {
         case .notDetermined:
-            manager.requestWhenInUseAuthorization()
-        case .authorizedAlways:
+            break
+        case .authorizedWhenInUse, .authorizedAlways:
             manager.requestLocation()
         case .denied, .restricted:
             break
         @unknown default:
             break
         }
+    }
 
+    private func openAppSettings() {
         #if os(iOS)
-        if manager.authorizationStatus == .authorizedWhenInUse {
-            manager.requestLocation()
-        }
+        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+        UIApplication.shared.open(url)
         #endif
     }
 }
@@ -132,15 +209,11 @@ private final class HomeLocationProvider: NSObject, ObservableObject {
 extension HomeLocationProvider: CLLocationManagerDelegate {
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         Task { @MainActor in
-            #if os(iOS)
-            if manager.authorizationStatus == .authorizedWhenInUse || manager.authorizationStatus == .authorizedAlways {
+            authorizationStatus = manager.authorizationStatus
+
+            if hasLocationAuthorization {
                 manager.requestLocation()
             }
-            #else
-            if manager.authorizationStatus == .authorizedAlways {
-                manager.requestLocation()
-            }
-            #endif
         }
     }
 
