@@ -11,7 +11,7 @@ struct RunningSummaryView: View {
                 .clipped()
 
             VStack(spacing: 20) {
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 2) {
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                     SummaryMetric(title: "시간", value: RunningMetricFormatter.duration(record.elapsedTime), suffix: "", icon: "icon_metric_time")
                     SummaryMetric(title: "거리", value: RunningMetricFormatter.distanceKilometers(record.distanceMeters), suffix: "km", icon: "icon_footprint")
                     SummaryMetric(title: "페이스", value: RunningMetricFormatter.pace(record.averagePaceSecondsPerKilometer), suffix: "/km", icon: "icon_metric_pace")
