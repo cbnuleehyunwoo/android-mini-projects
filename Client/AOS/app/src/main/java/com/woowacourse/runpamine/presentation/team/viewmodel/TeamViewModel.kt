@@ -3,6 +3,7 @@ package com.woowacourse.runpamine.presentation.team.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.woowacourse.runpamine.domain.profile.ProfileRepository
 import com.woowacourse.runpamine.domain.team.Team
 import com.woowacourse.runpamine.domain.team.TeamMemberSeasonStats
 import com.woowacourse.runpamine.domain.team.TeamMemberSummary
@@ -20,6 +21,7 @@ import java.util.Locale
 
 class TeamViewModel(
     private val teamRepository: TeamRepository,
+    private val profileRepository: ProfileRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(TeamUiState())
     val uiState = _uiState.asStateFlow()
@@ -27,6 +29,7 @@ class TeamViewModel(
     private var currentTeam: Team? = null
     private var teamMembers: List<TeamMemberSummary>? = null
     private var seasonStats: List<TeamMemberSeasonStats>? = null
+    private var currentUserId: String? = null
 
     init {
         loadTeam()
@@ -42,6 +45,9 @@ class TeamViewModel(
                 )
             }
             runCatching {
+                currentUserId =
+                    profileRepository.getCachedProfile()?.id
+                        ?: profileRepository.getMyProfile()?.id
                 teamRepository.getMyTeam()
             }.onSuccess { team ->
                 currentTeam = team
@@ -111,7 +117,7 @@ class TeamViewModel(
                         totalDistance = summary.teamTotalDistanceMeters.toKilometerText(),
                         completedMemberCount = summary.completedMemberCount,
                         totalMemberCount = summary.totalMemberCount,
-                        members = members,
+                        members = members.markCurrentUser(currentUserId),
                         isLoading = false,
                         isDateLoading = false,
                         canMoveToNextDate = date < LocalDate.now(),
@@ -132,7 +138,7 @@ class TeamViewModel(
                         totalDistance = 0.toKilometerText(),
                         completedMemberCount = 0,
                         totalMemberCount = team.memberCount,
-                        members = members,
+                        members = members.markCurrentUser(currentUserId),
                         isLoading = false,
                         isDateLoading = false,
                         canMoveToNextDate = date < LocalDate.now(),
@@ -144,14 +150,18 @@ class TeamViewModel(
 
     class Factory(
         private val teamRepository: TeamRepository,
+        private val profileRepository: ProfileRepository,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             require(modelClass.isAssignableFrom(TeamViewModel::class.java))
-            return TeamViewModel(teamRepository) as T
+            return TeamViewModel(teamRepository, profileRepository) as T
         }
     }
 }
+
+private fun List<TeamMember>.markCurrentUser(currentUserId: String?): List<TeamMember> =
+    map { member -> member.copy(isMe = member.id == currentUserId) }
 
 private fun buildEmptyTeamMembers(
     members: List<TeamMemberSummary>?,

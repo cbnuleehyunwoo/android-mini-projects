@@ -53,14 +53,34 @@ fun TeamMemberCard(
                 ).clickable(onClick = onClick)
                 .padding(25.dp),
     ) {
-        Text(
-            text = member.name,
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Black,
-            color = Color.Black,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = member.name,
+                modifier = Modifier.weight(1f, fill = false),
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Black,
+                color = Color.Black,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (member.isMe) {
+                Text(
+                    text = "나",
+                    modifier =
+                        Modifier
+                            .background(
+                                color = Color(0xFF0D5BFF),
+                                shape = RoundedCornerShape(8.dp),
+                            ).padding(horizontal = 6.dp, vertical = 4.dp),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                )
+            }
+        }
         Spacer(modifier = Modifier.height(20.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -97,6 +117,7 @@ private fun TeamMemberPreview() {
                     time = "28:35",
                     pace = "2'19\"",
                     calories = "344",
+                    isMe = true,
                 ),
             distance = "12.3km",
             time = "22:32",

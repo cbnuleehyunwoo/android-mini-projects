@@ -12,6 +12,7 @@ data class TeamMember(
     val seasonDistance: String = "0.0",
     val seasonRunCount: Int = 0,
     val seasonAveragePace: String = "-",
+    val isMe: Boolean = false,
 )
 
 enum class RunningStatus {
