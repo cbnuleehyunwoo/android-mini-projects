@@ -1,6 +1,7 @@
 package com.woowacourse.runpamine.presentation.team.components.team
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,6 +32,7 @@ fun TeamMemberCard(
     distance: String,
     time: String,
     pace: String,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val cardShape = RoundedCornerShape(18.dp)
@@ -48,7 +50,8 @@ fun TeamMemberCard(
                 ).background(
                     color = Color.White,
                     shape = cardShape,
-                ).padding(25.dp),
+                ).clickable(onClick = onClick)
+                .padding(25.dp),
     ) {
         Text(
             text = member.name,
@@ -99,6 +102,7 @@ private fun TeamMemberPreview() {
             time = "22:32",
             pace = "5'30\"",
             calories = "344",
+            onClick = {},
         )
     }
 }

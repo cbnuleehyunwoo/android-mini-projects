@@ -178,6 +178,18 @@ private fun JSONObject.toTeamMemberSeasonStats(): TeamMemberSeasonStats =
         id = getString("id"),
         nickname = getString("nickname"),
         avatarKey = optString("avatarKey").takeIf { it.isNotBlank() },
+        teamJoinedAt = optString("teamJoinedAt"),
+        seasonDistanceMeters = optInt("seasonDistanceMeters"),
+        seasonDurationSeconds = optInt("seasonDurationSeconds"),
+        seasonCalories = optInt("seasonCalories"),
+        seasonRunCount = optInt("seasonRunCount"),
+        seasonActiveDays = optInt("seasonActiveDays"),
+        averagePaceSecondsPerKm =
+            if (has("averagePaceSecondsPerKm") && !isNull("averagePaceSecondsPerKm")) {
+                getInt("averagePaceSecondsPerKm")
+            } else {
+                null
+            },
         consecutiveRunDays = getInt("consecutiveRunDays"),
     )
 

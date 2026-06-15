@@ -39,6 +39,7 @@ fun TeamContent(
     onNextDateClick: () -> Unit,
     canMoveToNextDate: Boolean,
     isDateLoading: Boolean,
+    onMemberClick: (TeamMember) -> Unit,
     modifier: Modifier = Modifier,
     memberErrorMessage: String? = null,
 ) {
@@ -128,6 +129,7 @@ fun TeamContent(
                 distance = member.distance,
                 time = member.time,
                 pace = member.pace,
+                onClick = { onMemberClick(member) },
             )
         }
     }
@@ -167,6 +169,7 @@ private fun TeamContentPreview() {
             onNextDateClick = {},
             canMoveToNextDate = true,
             isDateLoading = false,
+            onMemberClick = {},
             modifier = Modifier.fillMaxSize(),
         )
     }

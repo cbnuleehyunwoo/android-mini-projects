@@ -165,7 +165,7 @@ private fun buildEmptyTeamMembers(
     }
 
     return members.map { member ->
-        member.toEmptyTeamMember(statsByUserId[member.id]?.consecutiveRunDays.toRunningStatus())
+        member.toEmptyTeamMember(statsByUserId[member.id])
     }
 }
 
@@ -190,7 +190,7 @@ private fun mergeMembersWithRuns(
     return members.map { member ->
         val stats = statsByUserId[member.id]
         runsByUserId[member.id]?.toTeamMember(stats)
-            ?: member.toEmptyTeamMember(stats?.consecutiveRunDays.toRunningStatus())
+            ?: member.toEmptyTeamMember(stats)
     }
 }
 
@@ -203,9 +203,15 @@ private fun TeamRunSummary.toTeamMember(seasonStats: TeamMemberSeasonStats?): Te
         pace = averagePaceSecondsPerKm.toPaceText(),
         calories = calories.toString(),
         runningStatus = seasonStats?.consecutiveRunDays.toRunningStatus(hasRunRecord = hasRunRecord),
+        teamJoinedAt = seasonStats?.teamJoinedAt.orEmpty(),
+        seasonDistance = seasonStats?.seasonDistanceMeters.toSeasonKilometerText(),
+        seasonRunCount = seasonStats?.seasonRunCount ?: 0,
+        seasonAveragePace = seasonStats?.averagePaceSecondsPerKm.toSeasonPaceText(),
     )
 
-private fun TeamMemberSummary.toEmptyTeamMember(runningStatus: RunningStatus = RunningStatus.Resting): TeamMember =
+private fun TeamMemberSummary.toEmptyTeamMember(
+    seasonStats: TeamMemberSeasonStats? = null,
+): TeamMember =
     TeamMember(
         id = id,
         name = nickname,
@@ -213,7 +219,11 @@ private fun TeamMemberSummary.toEmptyTeamMember(runningStatus: RunningStatus = R
         time = 0.toDurationText(),
         pace = "-",
         calories = "0",
-        runningStatus = runningStatus,
+        runningStatus = seasonStats?.consecutiveRunDays.toRunningStatus(),
+        teamJoinedAt = seasonStats?.teamJoinedAt.orEmpty(),
+        seasonDistance = seasonStats?.seasonDistanceMeters.toSeasonKilometerText(),
+        seasonRunCount = seasonStats?.seasonRunCount ?: 0,
+        seasonAveragePace = seasonStats?.averagePaceSecondsPerKm.toSeasonPaceText(),
     )
 
 private fun TeamMemberSeasonStats.toEmptyTeamMember(runningStatus: RunningStatus = RunningStatus.Resting): TeamMember =
@@ -225,6 +235,10 @@ private fun TeamMemberSeasonStats.toEmptyTeamMember(runningStatus: RunningStatus
         pace = "-",
         calories = "0",
         runningStatus = runningStatus,
+        teamJoinedAt = teamJoinedAt,
+        seasonDistance = seasonDistanceMeters.toSeasonKilometerText(),
+        seasonRunCount = seasonRunCount,
+        seasonAveragePace = averagePaceSecondsPerKm.toSeasonPaceText(),
     )
 
 private val TeamRunSummary.hasRunRecord: Boolean
@@ -254,6 +268,8 @@ private fun LocalDate.toKoreanDisplayText(): String {
 
 private fun Int.toKilometerText(): String = "%.1f km".format(Locale.US, this / 1000.0)
 
+private fun Int?.toSeasonKilometerText(): String = "%.1f".format(Locale.US, (this ?: 0) / 1000.0)
+
 private fun Int.toDurationText(): String {
     val hours = this / 3600
     val minutes = (this % 3600) / 60
@@ -270,6 +286,13 @@ private fun Int.toPaceText(): String {
     val minutes = this / 60
     val seconds = this % 60
     return "%d'%02d\"".format(Locale.US, minutes, seconds)
+}
+
+private fun Int?.toSeasonPaceText(): String {
+    if (this == null || this <= 0) return "-"
+    val minutes = this / 60
+    val seconds = this % 60
+    return "%d′%02d″".format(Locale.US, minutes, seconds)
 }
 
 private fun Throwable.toMemberErrorMessage(): String = message?.let { "팀원 목록을 불러오지 못했어요. ($it)" } ?: "팀원 목록을 불러오지 못했어요."

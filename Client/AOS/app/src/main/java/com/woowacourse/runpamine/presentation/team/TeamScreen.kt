@@ -39,6 +39,7 @@ fun TeamScreen(
     onInviteClick: (String) -> Unit,
     onJoinTeamClick: () -> Unit,
     onCreateTeamClick: () -> Unit,
+    onMemberClick: (TeamMember) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val container = LocalContext.current.runpamineContainer
@@ -55,6 +56,7 @@ fun TeamScreen(
         onCreateTeamClick = onCreateTeamClick,
         onPreviousDateClick = viewModel::moveToPreviousDate,
         onNextDateClick = viewModel::moveToNextDate,
+        onMemberClick = onMemberClick,
         modifier = modifier,
     )
 }
@@ -67,6 +69,7 @@ private fun TeamScreenContent(
     onCreateTeamClick: () -> Unit,
     onPreviousDateClick: () -> Unit,
     onNextDateClick: () -> Unit,
+    onMemberClick: (TeamMember) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     when {
@@ -87,6 +90,7 @@ private fun TeamScreenContent(
                 onNextDateClick = onNextDateClick,
                 canMoveToNextDate = uiState.canMoveToNextDate,
                 isDateLoading = uiState.isDateLoading,
+                onMemberClick = onMemberClick,
                 modifier = modifier.fillMaxSize(),
                 memberErrorMessage = uiState.memberErrorMessage,
             )
@@ -328,6 +332,7 @@ private fun TeamScreenPreview() {
             onCreateTeamClick = {},
             onPreviousDateClick = {},
             onNextDateClick = {},
+            onMemberClick = {},
         )
     }
 }
