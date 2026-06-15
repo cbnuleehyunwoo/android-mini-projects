@@ -37,12 +37,12 @@ struct MyPageView: View {
     var body: some View {
         VStack(spacing: 0) {
             Text("마이페이지")
-                .font(AppTheme.Typography.font(size: 20, weight: .bold))
+                .font(AppTheme.Typography.font(size: 20, weight: .semibold))
                 .foregroundStyle(AppTheme.Colors.textPrimary)
                 .frame(maxWidth: .infinity)
                 .frame(height: 60)
                 .padding(.horizontal, 18)
-                .padding(.top, 8)
+                .padding(.top, 50)
 
             VStack(spacing: 0) {
                 Circle()
@@ -60,18 +60,18 @@ struct MyPageView: View {
                     .padding(.top, 34)
 
                 Text(nickname)
-                    .font(AppTheme.Typography.font(size: 20, weight: .black))
+                    .font(AppTheme.Typography.font(size: 20, weight: .bold))
                     .foregroundStyle(AppTheme.Colors.textPrimary)
                     .padding(.top, 16)
 
                 VStack(alignment: .leading, spacing: 12) {
                     sectionTitle("계정 설정")
-                    settingsRow(icon: "square.and.pencil", title: "닉네임 변경", subtitle: "닉네임을 변경할 수 있습니다.", color: AppTheme.Colors.primary) {
+                    settingsRow(icon: "ic_write", title: "닉네임 변경", subtitle: "닉네임을 변경할 수 있습니다.") {
                         isChangingNickname = true
                     }
                     .disabled(isBusy)
 
-                    settingsRow(icon: "rectangle.portrait.and.arrow.right", title: "로그아웃", subtitle: "계정에서 로그아웃합니다", color: AppTheme.Colors.danger, isDestructive: true) {
+                    settingsRow(icon: "ic_logout", title: "로그아웃", subtitle: "계정에서 로그아웃합니다", isDestructive: true) {
                         Task {
                             await logout()
                         }
@@ -85,7 +85,7 @@ struct MyPageView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
-                    settingsRow(icon: "trash", title: "회원탈퇴", subtitle: "계정을 삭제합니다", color: AppTheme.Colors.danger, isDestructive: true) {
+                    settingsRow(icon: "ic_trash", title: "회원탈퇴", subtitle: "계정을 삭제합니다", isDestructive: true) {
                         isShowingDeleteAccountConfirmation = true
                     }
                     .disabled(isBusy)
@@ -99,10 +99,10 @@ struct MyPageView: View {
 
                     sectionTitle("약관 및 정책")
                         .padding(.top, 4)
-                    settingsRow(icon: "shield.checkered", title: "개인정보처리방침", subtitle: "개인정보 수집 및 이용에 대한 안내", color: AppTheme.Colors.primary) {
+                    settingsRow(icon: "ic_shield", title: "개인정보처리방침", subtitle: "개인정보 수집 및 이용에 대한 안내") {
                         openURL(TermsAgreementID.privacy.documentURL)
                     }
-                    settingsRow(icon: "doc.text", title: "이용약관", subtitle: "서비스 이용에 관한 약관을 확인하세요", color: AppTheme.Colors.primary) {
+                    settingsRow(icon: "ic_page", title: "이용약관", subtitle: "서비스 이용에 관한 약관을 확인하세요") {
                         openURL(TermsAgreementID.service.documentURL)
                     }
 
@@ -212,15 +212,15 @@ struct MyPageView: View {
         icon: String,
         title: String,
         subtitle: String,
-        color: Color,
         isDestructive: Bool = false,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
             HStack(spacing: 14) {
-                Image(systemName: icon)
-                    .font(.system(size: 22, weight: .medium))
-                    .foregroundStyle(color)
+                Image(icon)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 24, height: 24)
                     .frame(width: 28)
 
                 VStack(alignment: .leading, spacing: 3) {
@@ -250,9 +250,10 @@ struct MyPageView: View {
 
     private func appInfoRow() -> some View {
         HStack(spacing: 14) {
-            Image(systemName: "info.circle")
-                .font(.system(size: 22, weight: .medium))
-                .foregroundStyle(AppTheme.Colors.primary)
+            Image("ic_info")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 24, height: 24)
                 .frame(width: 28)
 
             VStack(alignment: .leading, spacing: 3) {
