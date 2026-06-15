@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6450D5702FE0277200A9028D /* ic_gps_error.svg in Resources */ = {isa = PBXBuildFile; fileRef = 6450D56F2FE0277200A9028D /* ic_gps_error.svg */; };
 		64AA17802FDE905F00FC0B91 /* error.png in Resources */ = {isa = PBXBuildFile; fileRef = 64AA177F2FDE905F00FC0B91 /* error.png */; };
 		7A1000010000000000000001 /* RunpamineApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000101 /* RunpamineApp.swift */; };
 		7A1000010000000000000002 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000102 /* SplashView.swift */; };
@@ -63,7 +64,6 @@
 		7A1000010000000000000046 /* pretendard_regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000146 /* pretendard_regular.otf */; };
 		7A1000010000000000000047 /* pretendard_semi_bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000147 /* pretendard_semi_bold.otf */; };
 		7A1000010000000000000048 /* pretendard_thin.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000148 /* pretendard_thin.otf */; };
-		7A3100010000000000000040 /* kyobo_handwriting_2025_lyb.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A3100010000000000000140 /* kyobo_handwriting_2025_lyb.otf */; };
 		7A1000010000000000000049 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000149 /* Assets.xcassets */; };
 		7A100001000000000000004A /* bk.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000150 /* bk.png */; };
 		7A100001000000000000004B /* encho.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000151 /* encho.png */; };
@@ -81,10 +81,12 @@
 		7A1590010000000000000001 /* AppleLoginButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1590010000000000000101 /* AppleLoginButton.swift */; };
 		7A1670010000000000000001 /* RunpamineConfirmationDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1670010000000000000101 /* RunpamineConfirmationDialog.swift */; };
 		7A2480010000000000000001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7A2480010000000000000101 /* PrivacyInfo.xcprivacy */; };
+		7A3100010000000000000040 /* kyobo_handwriting_2025_lyb.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A3100010000000000000140 /* kyobo_handwriting_2025_lyb.otf */; };
 		7A3190010000000000000001 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3190010000000000000101 /* OnboardingView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		6450D56F2FE0277200A9028D /* ic_gps_error.svg */ = {isa = PBXFileReference; lastKnownFileType = text; path = ic_gps_error.svg; sourceTree = "<group>"; };
 		64AA177F2FDE905F00FC0B91 /* error.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = error.png; sourceTree = "<group>"; };
 		7A1000010000000000000101 /* RunpamineApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunpamineApp.swift; sourceTree = "<group>"; };
 		7A1000010000000000000102 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
@@ -143,7 +145,6 @@
 		7A1000010000000000000146 /* pretendard_regular.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_regular.otf; sourceTree = "<group>"; };
 		7A1000010000000000000147 /* pretendard_semi_bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_semi_bold.otf; sourceTree = "<group>"; };
 		7A1000010000000000000148 /* pretendard_thin.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_thin.otf; sourceTree = "<group>"; };
-		7A3100010000000000000140 /* kyobo_handwriting_2025_lyb.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = kyobo_handwriting_2025_lyb.otf; sourceTree = "<group>"; };
 		7A1000010000000000000149 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7A1000010000000000000150 /* bk.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = bk.png; sourceTree = SOURCE_ROOT; };
 		7A1000010000000000000151 /* encho.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = encho.png; sourceTree = SOURCE_ROOT; };
@@ -160,6 +161,7 @@
 		7A1670010000000000000101 /* RunpamineConfirmationDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunpamineConfirmationDialog.swift; sourceTree = "<group>"; };
 		7A2370010000000000000101 /* Runpamine.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Runpamine.xcconfig; sourceTree = "<group>"; };
 		7A2480010000000000000101 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		7A3100010000000000000140 /* kyobo_handwriting_2025_lyb.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = kyobo_handwriting_2025_lyb.otf; sourceTree = "<group>"; };
 		7A3190010000000000000101 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -416,6 +418,7 @@
 			isa = PBXGroup;
 			children = (
 				64AA177F2FDE905F00FC0B91 /* error.png */,
+				6450D56F2FE0277200A9028D /* ic_gps_error.svg */,
 				7A1000010000000000000149 /* Assets.xcassets */,
 				7A1000010000000000000150 /* bk.png */,
 				7A1000010000000000000151 /* encho.png */,
@@ -555,6 +558,7 @@
 				7A1000010000000000000040 /* pretendard_black.otf in Resources */,
 				7A1000010000000000000041 /* pretendard_bold.otf in Resources */,
 				7A1000010000000000000042 /* pretendard_extra_bold.otf in Resources */,
+				6450D5702FE0277200A9028D /* ic_gps_error.svg in Resources */,
 				7A1000010000000000000043 /* pretendard_extra_light.otf in Resources */,
 				7A1000010000000000000044 /* pretendard_light.otf in Resources */,
 				7A1000010000000000000045 /* pretendard_medium.otf in Resources */,

@@ -116,21 +116,41 @@ private struct HomeLocationPermissionRequestView: View {
     let onRequestPermission: () -> Void
 
     var body: some View {
-        VStack(spacing: 22) {
-            Text("주변 지도를 보려면 위치 권한이 필요해요.")
-                .font(AppTheme.Typography.font(size: 16, weight: .medium))
-                .foregroundStyle(.black)
+        VStack(spacing: 0) {
+            Image("ic_gps_error")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 42, height: 42)
+                .frame(width: 88, height: 88)
+                .background(AppTheme.Colors.primary.opacity(0.05))
+                .clipShape(Circle())
+
+            Text("위치 권한이 필요해요")
+                .font(AppTheme.Typography.font(size: 18, weight: .extraBold))
+                .foregroundStyle(AppTheme.Colors.textPrimary)
                 .multilineTextAlignment(.center)
+                .padding(.top, 22)
+
+            Text("러닝 거리 측정과 경로 기록을 위해\n위치 접근 권한을 허용해 주세요.")
+                .font(AppTheme.Typography.font(size: 14, weight: .regular))
+                .foregroundStyle(AppTheme.Colors.textSecondary)
+                .multilineTextAlignment(.center)
+                .lineSpacing(5)
+                .padding(.top, 12)
 
             Button(action: onRequestPermission) {
                 Text(buttonTitle)
-                    .font(AppTheme.Typography.font(size: 14, weight: .bold))
+                    .font(AppTheme.Typography.font(size: 17, weight: .bold))
                     .foregroundStyle(.white)
-                    .frame(width: 170, height: 50)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 64)
                     .background(AppTheme.Colors.primary)
-                    .clipShape(Capsule())
+                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .shadow(color: AppTheme.Colors.primary.opacity(0.2), radius: 12, y: 5)
             }
             .buttonStyle(.plain)
+            .padding(.horizontal, 38)
+            .padding(.top, 28)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.white)
