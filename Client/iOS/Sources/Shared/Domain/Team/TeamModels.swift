@@ -9,6 +9,12 @@ struct RunningTeam: Identifiable, Equatable, Codable {
     var inviteCode: String
 }
 
+struct TeamLeaveResult: Equatable {
+    let left: Bool
+    let teamDeleted: Bool
+    let newOwnerID: String?
+}
+
 struct TeamMember: Identifiable, Equatable {
     let id: String
     let nickname: String

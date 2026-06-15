@@ -7,6 +7,7 @@ protocol TeamServiceProtocol {
     func fetchMyTeamSeasonStats(seasonID: String?, accessToken: String) async throws -> TeamSeasonStats
     func createTeam(name: String, accessToken: String) async throws -> RunningTeam
     func joinTeam(inviteCode: String, accessToken: String) async throws -> RunningTeam
+    func leaveTeam(accessToken: String) async throws -> TeamLeaveResult
 }
 
 final class TeamAPIService: TeamServiceProtocol {
@@ -113,6 +114,15 @@ final class TeamAPIService: TeamServiceProtocol {
         }
 
         return team
+    }
+
+    func leaveTeam(accessToken: String) async throws -> TeamLeaveResult {
+        let response: TeamLeaveEnvelope = try await request(
+            path: "/teams/me",
+            method: "DELETE",
+            accessToken: accessToken
+        )
+        return response.data.domain
     }
 
     private func request<Response: Decodable>(
@@ -333,6 +343,13 @@ final class MockTeamService: TeamServiceProtocol {
         store.saveTeam(team)
         return team
     }
+
+    func leaveTeam(accessToken: String) async throws -> TeamLeaveResult {
+        try await Task.sleep(nanoseconds: 250_000_000)
+        createdTeam = nil
+        store.clearTeam()
+        return TeamLeaveResult(left: true, teamDeleted: false, newOwnerID: nil)
+    }
 }
 
 private struct TeamEnvelope: Decodable {
@@ -353,6 +370,20 @@ private struct TeamDailySummaryEnvelope: Decodable {
 
 private struct TeamSeasonStatsEnvelope: Decodable {
     let data: TeamSeasonStatsPayload
+}
+
+private struct TeamLeaveEnvelope: Decodable {
+    let data: TeamLeavePayload
+}
+
+private struct TeamLeavePayload: Decodable {
+    let left: Bool
+    let teamDeleted: Bool
+    let newOwnerId: String?
+
+    var domain: TeamLeaveResult {
+        TeamLeaveResult(left: left, teamDeleted: teamDeleted, newOwnerID: newOwnerId)
+    }
 }
 
 private struct TeamPayload: Decodable {

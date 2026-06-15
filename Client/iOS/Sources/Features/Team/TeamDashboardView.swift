@@ -8,12 +8,17 @@ struct TeamDashboardView: View {
     let onCreateTeam: () -> Void
     let onJoinTeam: () -> Void
     let onInvite: () -> Void
+    let onLeaveTeam: () -> Void
     @State private var records: [RunningRecord] = RunningHistoryStore().load()
     @State private var dailySummary: TeamDailySummary?
     @State private var seasonStats: TeamSeasonStats?
     @State private var hasResolvedDashboard = false
     @State private var selectedDate = Calendar.current.startOfDay(for: Date())
     @State private var isDateLoading = false
+    @State private var isShowingTeamMenu = false
+    @State private var isShowingLeaveConfirmation = false
+    @State private var isLeavingTeam = false
+    @State private var leaveTeamErrorMessage: String?
 
     var body: some View {
         Group {
@@ -31,73 +36,159 @@ struct TeamDashboardView: View {
     }
 
     private var teamContent: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 0) {
-                HStack(alignment: .center, spacing: 12) {
-                    Text(displayTeam?.name ?? "")
-                        .font(AppTheme.Typography.font(size: 30, weight: .bold))
-                        .foregroundStyle(AppTheme.Colors.primary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.72)
-                        .frame(height: 48, alignment: .center)
+        ZStack(alignment: .topTrailing) {
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 0) {
+                    HStack(alignment: .center, spacing: 12) {
+                        Text(displayTeam?.name ?? "")
+                            .font(AppTheme.Typography.font(size: 30, weight: .bold))
+                            .foregroundStyle(AppTheme.Colors.primary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.72)
+                            .frame(height: 48, alignment: .center)
 
-                    Spacer()
+                        Spacer()
 
-                    Button(action: onInvite) {
-                        Image("icon_plus")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 36, height: 36)
-                            .frame(width: 48, height: 48)
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.16)) {
+                                isShowingTeamMenu.toggle()
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis")
+                                .font(.system(size: 28, weight: .bold))
+                                .foregroundStyle(AppTheme.Colors.primary)
+                                .frame(width: 48, height: 48)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("팀 메뉴")
                     }
-                    .accessibilityLabel("팀원 초대")
-                }
-                .padding(.horizontal, 24)
-                .padding(.top, 32)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 32)
 
-                HStack(spacing: 8) {
-                    dateButton(
-                        systemName: "chevron.left",
-                        accessibilityLabel: "이전 날짜",
-                        isEnabled: !isDateLoading,
-                        action: moveToPreviousDate
-                    )
+                    HStack(spacing: 8) {
+                        dateButton(
+                            systemName: "chevron.left",
+                            accessibilityLabel: "이전 날짜",
+                            isEnabled: !isDateLoading,
+                            action: moveToPreviousDate
+                        )
 
-                    Text(summaryDateText)
-                        .font(AppTheme.Typography.font(size: 18, weight: .medium))
-                        .foregroundStyle(.black)
-                        .frame(minWidth: 190)
+                        Text(summaryDateText)
+                            .font(AppTheme.Typography.font(size: 18, weight: .medium))
+                            .foregroundStyle(.black)
+                            .frame(minWidth: 190)
 
-                    dateButton(
-                        systemName: "chevron.right",
-                        accessibilityLabel: "다음 날짜",
-                        isEnabled: canMoveToNextDate && !isDateLoading,
-                        action: moveToNextDate
-                    )
-                }
-                .padding(.top, 10)
-
-                HStack(spacing: 8) {
-                    metricCard(value: teamDistanceText, label: "팀 총 거리")
-                    metricCard(value: "\(completedMemberCount) / \(totalMemberCount)", label: "완료 / 전체")
-                }
-                .padding(.horizontal, 24)
-                .padding(.top, 20)
-
-                VStack(spacing: 28) {
-                    ForEach(memberCards, id: \.id) { member in
-                        TeamMemberRunCard(member: member)
+                        dateButton(
+                            systemName: "chevron.right",
+                            accessibilityLabel: "다음 날짜",
+                            isEnabled: canMoveToNextDate && !isDateLoading,
+                            action: moveToNextDate
+                        )
                     }
+                    .padding(.top, 10)
+
+                    HStack(spacing: 8) {
+                        metricCard(value: teamDistanceText, label: "팀 총 거리")
+                        metricCard(value: "\(completedMemberCount) / \(totalMemberCount)", label: "완료 / 전체")
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 20)
+
+                    VStack(spacing: 28) {
+                        ForEach(memberCards, id: \.id) { member in
+                            TeamMemberRunCard(member: member)
+                        }
+                    }
+                    .padding(.horizontal, 28)
+                    .padding(.top, 28)
+                    .padding(.bottom, 98)
                 }
-                .padding(.horizontal, 28)
-                .padding(.top, 28)
-                .padding(.bottom, 98)
+            }
+
+            if isShowingTeamMenu {
+                Color.black.opacity(0.001)
+                    .ignoresSafeArea()
+                    .onTapGesture {
+                        withAnimation(.easeInOut(duration: 0.16)) {
+                            isShowingTeamMenu = false
+                        }
+                    }
+
+                teamMenu
+                    .padding(.top, 82)
+                    .padding(.trailing, 24)
+                    .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .topTrailing)))
+                    .zIndex(2)
+            }
+
+            if isShowingLeaveConfirmation {
+                TeamLeaveConfirmationDialog(
+                    isLoading: isLeavingTeam,
+                    errorMessage: leaveTeamErrorMessage,
+                    onDismiss: {
+                        guard !isLeavingTeam else { return }
+                        leaveTeamErrorMessage = nil
+                        withAnimation(.easeInOut(duration: 0.18)) {
+                            isShowingLeaveConfirmation = false
+                        }
+                    },
+                    onConfirm: {
+                        Task {
+                            await leaveTeam()
+                        }
+                    }
+                )
+                .zIndex(3)
             }
         }
         .background(Color.white)
         .onAppear {
             records = RunningHistoryStore().load()
         }
+    }
+
+    private var teamMenu: some View {
+        VStack(spacing: 0) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.16)) {
+                    isShowingTeamMenu = false
+                }
+                onInvite()
+            } label: {
+                Text("팀원 초대")
+                    .font(AppTheme.Typography.font(size: 18, weight: .medium))
+                    .foregroundStyle(Color.black)
+                    .frame(width: 96, height: 42)
+            }
+            .buttonStyle(.plain)
+
+            Rectangle()
+                .fill(Color(red: 0.78, green: 0.78, blue: 0.78))
+                .frame(width: 78, height: 1)
+
+            Button {
+                leaveTeamErrorMessage = nil
+                withAnimation(.easeInOut(duration: 0.16)) {
+                    isShowingTeamMenu = false
+                    isShowingLeaveConfirmation = true
+                }
+            } label: {
+                Text("팀 탈퇴")
+                    .font(AppTheme.Typography.font(size: 18, weight: .medium))
+                    .foregroundStyle(AppTheme.Colors.danger)
+                    .frame(width: 96, height: 42)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.vertical, 6)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(Color(red: 0.72, green: 0.72, blue: 0.72), lineWidth: 1)
+        }
+        .shadow(color: .black.opacity(0.12), radius: 10, x: 0, y: 4)
     }
 
     private func metricCard(value: String, label: String) -> some View {
@@ -229,6 +320,38 @@ struct TeamDashboardView: View {
         let requestDate = selectedDate
         Task {
             await refreshDailySummary(for: requestDate)
+        }
+    }
+
+    @MainActor
+    private func leaveTeam() async {
+        guard !isLeavingTeam else { return }
+        guard let accessToken else {
+            leaveTeamErrorMessage = TeamError.unauthorized.localizedDescription
+            return
+        }
+
+        isLeavingTeam = true
+        leaveTeamErrorMessage = nil
+        defer {
+            isLeavingTeam = false
+        }
+
+        do {
+            let result = try await teamService.leaveTeam(accessToken: accessToken)
+            guard result.left else {
+                leaveTeamErrorMessage = TeamError.invalidResponse.localizedDescription
+                return
+            }
+
+            withAnimation(.easeInOut(duration: 0.18)) {
+                isShowingLeaveConfirmation = false
+            }
+            dailySummary = nil
+            seasonStats = nil
+            onLeaveTeam()
+        } catch {
+            leaveTeamErrorMessage = error.localizedDescription
         }
     }
 
@@ -683,6 +806,79 @@ private struct TeamCaloriesBadge: View {
     }
 }
 
+private struct TeamLeaveConfirmationDialog: View {
+    let isLoading: Bool
+    let errorMessage: String?
+    let onDismiss: () -> Void
+    let onConfirm: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.18)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    guard !isLoading else { return }
+                    onDismiss()
+                }
+
+            VStack(spacing: 0) {
+                Text("팀 탈퇴")
+                    .font(AppTheme.Typography.font(size: 24, weight: .bold))
+                    .foregroundStyle(AppTheme.Colors.textPrimary)
+
+                Text("정말 팀을 탈퇴하시겠습니까?")
+                    .font(AppTheme.Typography.font(size: 18, weight: .medium))
+                    .foregroundStyle(AppTheme.Colors.textSecondary)
+                    .padding(.top, 22)
+
+                if let errorMessage {
+                    Text(errorMessage)
+                        .font(AppTheme.Typography.font(size: 13, weight: .medium))
+                        .foregroundStyle(AppTheme.Colors.danger)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 12)
+                }
+
+                HStack(spacing: 12) {
+                    dialogButton(title: "취소", color: Color(red: 0.55, green: 0.55, blue: 0.55), action: onDismiss)
+                        .disabled(isLoading)
+
+                    dialogButton(
+                        title: isLoading ? "탈퇴 중..." : "팀 탈퇴",
+                        color: AppTheme.Colors.primary,
+                        action: onConfirm
+                    )
+                    .disabled(isLoading)
+                }
+                .padding(.top, 34)
+            }
+            .padding(.horizontal, 28)
+            .padding(.vertical, 30)
+            .frame(maxWidth: 352)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .shadow(color: .black.opacity(0.16), radius: 18, x: 0, y: 8)
+            .padding(.horizontal, 24)
+        }
+        .transition(.opacity)
+    }
+
+    private func dialogButton(title: String, color: Color, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(AppTheme.Typography.font(size: 18, weight: .bold))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .frame(maxWidth: .infinity)
+                .frame(height: 52)
+                .background(color)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
 private enum TeamDashboardFormatter {
     private static let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -756,7 +952,8 @@ private enum TeamRunStreakCalculator {
         accessToken: "preview-token",
         onCreateTeam: {},
         onJoinTeam: {},
-        onInvite: {}
+        onInvite: {},
+        onLeaveTeam: {}
     )
 }
 

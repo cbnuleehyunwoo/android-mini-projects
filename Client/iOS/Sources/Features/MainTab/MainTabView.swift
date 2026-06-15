@@ -71,6 +71,9 @@ struct MainTabView: View {
                         },
                         onInvite: {
                             isShowingInvite = true
+                        },
+                        onLeaveTeam: {
+                            handleTeamLeft()
                         }
                     )
                 case .ranking:
@@ -134,6 +137,12 @@ struct MainTabView: View {
         store.saveTeam(updatedTeam)
         selectedTab = .team
         presentedAction = nil
+    }
+
+    private func handleTeamLeft() {
+        team = nil
+        store.clearTeam()
+        selectedTab = .team
     }
 
     @MainActor
