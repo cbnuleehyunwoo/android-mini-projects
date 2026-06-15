@@ -7,6 +7,7 @@ import com.woowacourse.runpamine.domain.team.TeamDailySummary
 import com.woowacourse.runpamine.domain.team.TeamMemberSeasonStats
 import com.woowacourse.runpamine.domain.team.TeamMemberSummary
 import com.woowacourse.runpamine.domain.team.TeamRepository
+import java.time.LocalDate
 
 class DefaultTeamRepository(
     private val authRepository: AuthRepository,
@@ -39,9 +40,10 @@ class DefaultTeamRepository(
             accessToken = requireAccessToken(),
         )
 
-    override suspend fun getMyTeamDailySummary(): TeamDailySummary =
+    override suspend fun getMyTeamDailySummary(date: LocalDate): TeamDailySummary =
         remoteDataSource.getMyTeamDailySummary(
             accessToken = requireAccessToken(),
+            date = date,
         )
 
     private suspend fun requireAccessToken(): String =

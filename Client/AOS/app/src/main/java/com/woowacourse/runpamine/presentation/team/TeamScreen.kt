@@ -53,6 +53,8 @@ fun TeamScreen(
         onInviteClick = onInviteClick,
         onJoinTeamClick = onJoinTeamClick,
         onCreateTeamClick = onCreateTeamClick,
+        onPreviousDateClick = viewModel::moveToPreviousDate,
+        onNextDateClick = viewModel::moveToNextDate,
         modifier = modifier,
     )
 }
@@ -63,6 +65,8 @@ private fun TeamScreenContent(
     onInviteClick: (String) -> Unit,
     onJoinTeamClick: () -> Unit,
     onCreateTeamClick: () -> Unit,
+    onPreviousDateClick: () -> Unit,
+    onNextDateClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     when {
@@ -79,6 +83,10 @@ private fun TeamScreenContent(
                 totalMemberCount = uiState.totalMemberCount,
                 members = uiState.members,
                 onAddClick = { onInviteClick(uiState.joinCode) },
+                onPreviousDateClick = onPreviousDateClick,
+                onNextDateClick = onNextDateClick,
+                canMoveToNextDate = uiState.canMoveToNextDate,
+                isDateLoading = uiState.isDateLoading,
                 modifier = modifier.fillMaxSize(),
                 memberErrorMessage = uiState.memberErrorMessage,
             )
@@ -318,6 +326,8 @@ private fun TeamScreenPreview() {
             onInviteClick = {},
             onJoinTeamClick = {},
             onCreateTeamClick = {},
+            onPreviousDateClick = {},
+            onNextDateClick = {},
         )
     }
 }
