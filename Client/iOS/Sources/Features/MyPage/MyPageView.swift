@@ -36,11 +36,13 @@ struct MyPageView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            TopNavigationBar(title: "마이페이지") {
-                dismiss()
-            }
-            .padding(.horizontal, 18)
-            .padding(.top, 8)
+            Text("마이페이지")
+                .font(AppTheme.Typography.font(size: 20, weight: .bold))
+                .foregroundStyle(AppTheme.Colors.textPrimary)
+                .frame(maxWidth: .infinity)
+                .frame(height: 60)
+                .padding(.horizontal, 18)
+                .padding(.top, 8)
 
             VStack(spacing: 0) {
                 Circle()
@@ -69,7 +71,7 @@ struct MyPageView: View {
                     }
                     .disabled(isBusy)
 
-                    settingsRow(icon: "rectangle.portrait.and.arrow.right", title: "로그아웃", subtitle: "계정에서 로그아웃합니다", color: AppTheme.Colors.danger) {
+                    settingsRow(icon: "rectangle.portrait.and.arrow.right", title: "로그아웃", subtitle: "계정에서 로그아웃합니다", color: AppTheme.Colors.danger, isDestructive: true) {
                         Task {
                             await logout()
                         }
@@ -78,6 +80,18 @@ struct MyPageView: View {
 
                     if let logoutErrorMessage {
                         Text(logoutErrorMessage)
+                            .font(AppTheme.Typography.caption1)
+                            .foregroundStyle(AppTheme.Colors.danger)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+
+                    settingsRow(icon: "trash", title: "회원탈퇴", subtitle: "계정을 삭제합니다", color: AppTheme.Colors.danger, isDestructive: true) {
+                        isShowingDeleteAccountConfirmation = true
+                    }
+                    .disabled(isBusy)
+
+                    if let deleteAccountErrorMessage {
+                        Text(deleteAccountErrorMessage)
                             .font(AppTheme.Typography.caption1)
                             .foregroundStyle(AppTheme.Colors.danger)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -100,8 +114,6 @@ struct MyPageView: View {
                 .padding(.top, 48)
 
                 Spacer()
-
-                deleteAccountButton
             }
         }
         .background(Color.white)
@@ -130,29 +142,6 @@ struct MyPageView: View {
 
     private var isBusy: Bool {
         isLoggingOut || isDeletingAccount
-    }
-
-    private var deleteAccountButton: some View {
-        VStack(alignment: .trailing, spacing: 8) {
-            if let deleteAccountErrorMessage {
-                Text(deleteAccountErrorMessage)
-                    .font(AppTheme.Typography.caption1)
-                    .foregroundStyle(AppTheme.Colors.danger)
-                    .multilineTextAlignment(.trailing)
-            }
-
-            Button {
-                isShowingDeleteAccountConfirmation = true
-            } label: {
-                Text(isDeletingAccount ? "처리 중..." : "회원탈퇴")
-                    .font(AppTheme.Typography.font(size: 14, weight: .medium))
-                    .foregroundStyle(AppTheme.Colors.danger)
-            }
-            .disabled(isBusy)
-        }
-        .frame(maxWidth: .infinity, alignment: .trailing)
-        .padding(.horizontal, AppTheme.Layout.horizontalPadding)
-        .padding(.bottom, 18)
     }
 
     @MainActor
@@ -224,6 +213,7 @@ struct MyPageView: View {
         title: String,
         subtitle: String,
         color: Color,
+        isDestructive: Bool = false,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
@@ -236,7 +226,7 @@ struct MyPageView: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(title)
                         .font(AppTheme.Typography.font(size: 15, weight: .bold))
-                        .foregroundStyle(title == "로그아웃" ? AppTheme.Colors.danger : AppTheme.Colors.textPrimary)
+                        .foregroundStyle(isDestructive ? AppTheme.Colors.danger : AppTheme.Colors.textPrimary)
                     Text(subtitle)
                         .font(AppTheme.Typography.caption1)
                         .foregroundStyle(AppTheme.Colors.textSecondary)
