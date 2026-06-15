@@ -271,6 +271,7 @@ final class MockTeamService: TeamServiceProtocol {
                     id: "member-primary",
                     nickname: store.nickname,
                     avatarKey: "runner_default",
+                    teamJoinedAt: "2026-05-01",
                     seasonDistanceMeters: 42_800,
                     seasonDurationSeconds: 13_200,
                     seasonCalories: 1_200,
@@ -283,6 +284,7 @@ final class MockTeamService: TeamServiceProtocol {
                     id: "member-burger-1",
                     nickname: "버거킹 스마일",
                     avatarKey: "burger_default",
+                    teamJoinedAt: "2026-05-01",
                     seasonDistanceMeters: 3_800,
                     seasonDurationSeconds: 1_400,
                     seasonCalories: 120,
@@ -555,6 +557,7 @@ private struct TeamSeasonMemberPayload: Decodable {
     let id: String
     let nickname: String
     let avatarKey: String?
+    let teamJoinedAt: String?
     let seasonDistanceMeters: Int
     let seasonDurationSeconds: Int
     let seasonCalories: Int
@@ -568,6 +571,7 @@ private struct TeamSeasonMemberPayload: Decodable {
             id: id,
             nickname: nickname,
             avatarKey: avatarKey,
+            teamJoinedAt: teamJoinedAt ?? "",
             seasonDistanceMeters: seasonDistanceMeters,
             seasonDurationSeconds: seasonDurationSeconds,
             seasonCalories: seasonCalories,
