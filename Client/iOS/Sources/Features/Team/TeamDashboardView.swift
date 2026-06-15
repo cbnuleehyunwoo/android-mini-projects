@@ -679,6 +679,21 @@ private struct TeamMemberCardModel: Identifiable {
     init(member: TeamDailyMember, seasonMember: TeamSeasonMember?, isCurrentUser: Bool) {
         let memberDistanceText = TeamDashboardFormatter.memberDistanceKilometers(member.distanceMeters)
         let memberPaceText = "\(RunningMetricFormatter.pace(member.averagePaceSecondsPerKilometer.map(TimeInterval.init)))/km"
+        let detailDistanceMeters = if let seasonDistanceMeters = seasonMember?.seasonDistanceMeters, seasonDistanceMeters > 0 {
+            seasonDistanceMeters
+        } else {
+            member.distanceMeters
+        }
+        let detailRunCount = if let seasonRunCount = seasonMember?.seasonRunCount, seasonRunCount > 0 {
+            seasonRunCount
+        } else {
+            member.completed ? 1 : 0
+        }
+        let detailAveragePace = if let seasonAveragePace = seasonMember?.averagePaceSecondsPerKilometer, seasonAveragePace > 0 {
+            seasonAveragePace
+        } else {
+            member.averagePaceSecondsPerKilometer
+        }
 
         id = member.id
         name = member.nickname
@@ -692,13 +707,9 @@ private struct TeamMemberCardModel: Identifiable {
             id: member.id,
             name: member.nickname,
             joinedAt: seasonMember?.teamJoinedAt ?? "",
-            seasonDistance: TeamDashboardFormatter.seasonDistanceKilometers(
-                seasonMember?.seasonDistanceMeters ?? member.distanceMeters
-            ),
-            seasonRunCount: "\(seasonMember?.seasonRunCount ?? (member.completed ? 1 : 0))",
-            seasonAveragePace: RunningMetricFormatter.pace(
-                (seasonMember?.averagePaceSecondsPerKilometer ?? member.averagePaceSecondsPerKilometer).map(TimeInterval.init)
-            )
+            seasonDistance: TeamDashboardFormatter.seasonDistanceKilometers(detailDistanceMeters),
+            seasonRunCount: "\(detailRunCount)",
+            seasonAveragePace: RunningMetricFormatter.pace(detailAveragePace.map(TimeInterval.init))
         )
     }
 
