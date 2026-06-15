@@ -11,27 +11,43 @@ class DefaultProfileRepository(
     private val authRepository: AuthRepository,
     private val remoteDataSource: ProfileRemoteDataSource,
 ) : ProfileRepository {
+    private var cachedProfile: UserProfile? = null
+
+    override fun getCachedProfile(): UserProfile? = cachedProfile
+
     override suspend fun getHomeState(): HomeState =
-        remoteDataSource.getHomeState(
-            accessToken = requireAccessToken(),
-        )
+        remoteDataSource
+            .getHomeState(
+                accessToken = requireAccessToken(),
+            ).also { homeState ->
+                cachedProfile = homeState.profile
+            }
 
     override suspend fun getMyProfile(): UserProfile? =
-        remoteDataSource.getMyProfile(
-            accessToken = requireAccessToken(),
-        )
+        remoteDataSource
+            .getMyProfile(
+                accessToken = requireAccessToken(),
+            ).also { profile ->
+                cachedProfile = profile
+            }
 
     override suspend fun createProfile(nickname: String): UserProfile =
-        remoteDataSource.createProfile(
-            accessToken = requireAccessToken(),
-            request = CreateProfileRequest(nickname = nickname.trim()),
-        )
+        remoteDataSource
+            .createProfile(
+                accessToken = requireAccessToken(),
+                request = CreateProfileRequest(nickname = nickname.trim()),
+            ).also { profile ->
+                cachedProfile = profile
+            }
 
     override suspend fun updateMyProfile(nickname: String): UserProfile =
-        remoteDataSource.updateMyProfile(
-            accessToken = requireAccessToken(),
-            request = CreateProfileRequest(nickname = nickname.trim()),
-        )
+        remoteDataSource
+            .updateMyProfile(
+                accessToken = requireAccessToken(),
+                request = CreateProfileRequest(nickname = nickname.trim()),
+            ).also { profile ->
+                cachedProfile = profile
+            }
 
     private suspend fun requireAccessToken(): String =
         requireNotNull(authRepository.getCurrentSession()?.accessToken) {

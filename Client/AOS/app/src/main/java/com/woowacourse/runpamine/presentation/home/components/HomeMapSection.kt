@@ -144,7 +144,8 @@ private fun LocationPermissionRequest(
             Button(onClick = onRequestPermission) {
                 Text(
                     text = stringResource(R.string.map_permission_request),
-                    color = Color.White,)
+                    color = Color.White,
+                )
             }
         }
     }
@@ -155,7 +156,7 @@ private fun LocationPermissionRequest(
 private fun LocationPermissionRequestPreview() {
     RunpamineTheme {
         LocationPermissionRequest(
-            onRequestPermission = {}
+            onRequestPermission = {},
         )
     }
 }
