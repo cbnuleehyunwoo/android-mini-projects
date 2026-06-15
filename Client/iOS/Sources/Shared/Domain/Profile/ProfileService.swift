@@ -175,6 +175,9 @@ enum ProfileAPIError: LocalizedError, Equatable {
         case .missingBaseURL:
             return "프로필 API 주소를 확인해주세요."
         case let .requestFailed(message, statusCode):
+            if statusCode == 409, message == "Nickname already exists" {
+                return "중복된 닉네임입니다."
+            }
             return message ?? "프로필 요청에 실패했어요. (\(statusCode))"
         }
     }

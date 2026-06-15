@@ -120,6 +120,9 @@ enum TeamError: LocalizedError, Equatable {
         case .missingBaseURL:
             return "팀 API 주소를 확인해주세요."
         case let .requestFailed(message, statusCode):
+            if statusCode == 409, message == "Team name already exists" {
+                return "중복된 팀 이름입니다."
+            }
             return message ?? "팀 요청에 실패했어요. (\(statusCode))"
         case .unauthorized:
             return "로그인이 필요합니다."
