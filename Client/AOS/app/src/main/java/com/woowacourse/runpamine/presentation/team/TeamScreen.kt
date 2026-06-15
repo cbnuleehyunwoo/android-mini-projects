@@ -45,7 +45,11 @@ fun TeamScreen(
     val container = LocalContext.current.runpamineContainer
     val viewModel: TeamViewModel =
         viewModel(
-            factory = TeamViewModel.Factory(container.teamRepository),
+            factory =
+                TeamViewModel.Factory(
+                    teamRepository = container.teamRepository,
+                    profileRepository = container.profileRepository,
+                ),
         )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
