@@ -11,6 +11,19 @@ struct RunningSummaryView: View {
                 .clipped()
 
             VStack(spacing: 20) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(Self.dateFormatter.string(from: record.startedAt))
+                        .font(AppTheme.Typography.font(size: 20, weight: .bold))
+                        .foregroundStyle(.black)
+
+                    Text("\(Self.timeFormatter.string(from: record.startedAt)) ~ \(Self.timeFormatter.string(from: record.endedAt))")
+                        .font(AppTheme.Typography.font(size: 16, weight: .regular))
+                        .foregroundStyle(AppTheme.Colors.textPrimary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 30)
+                .padding(.top, 28)
+
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                     SummaryMetric(title: "시간", value: RunningMetricFormatter.duration(record.elapsedTime), suffix: "", icon: "icon_metric_time")
                     SummaryMetric(title: "거리", value: RunningMetricFormatter.distanceKilometers(record.distanceMeters), suffix: "km", icon: "icon_footprint")
@@ -18,7 +31,6 @@ struct RunningSummaryView: View {
                     SummaryMetric(title: "칼로리", value: "\(record.estimatedCalories)", suffix: "kcal", icon: "icon_metric_kcal")
                 }
                 .padding(.horizontal, 22)
-                .padding(.top, 110)
 
                 Spacer()
 
@@ -32,6 +44,20 @@ struct RunningSummaryView: View {
         }
         .ignoresSafeArea(edges: .top)
     }
+
+    private static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = "yyyy년 M월 d일 EEEE"
+        return formatter
+    }()
+
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = "a h:mm"
+        return formatter
+    }()
 }
 
 private struct SummaryMetric: View {
