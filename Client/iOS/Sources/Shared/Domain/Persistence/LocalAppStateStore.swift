@@ -26,6 +26,10 @@ final class LocalAppStateStore {
         state.nickname?.isEmpty == false && !state.acceptedRequiredTerms.isEmpty
     }
 
+    var hasCompletedOnboarding: Bool {
+        state.hasCompletedOnboarding
+    }
+
     var nickname: String {
         state.nickname ?? "호이"
     }
@@ -45,8 +49,14 @@ final class LocalAppStateStore {
         state = nextState
     }
 
+    func markOnboardingCompleted() {
+        var nextState = state
+        nextState.hasCompletedOnboarding = true
+        state = nextState
+    }
+
     func logout() {
-        state = PersistedAppState()
+        state = PersistedAppState(hasCompletedOnboarding: state.hasCompletedOnboarding)
     }
 
     func saveTeam(_ team: RunningTeam) {
@@ -64,6 +74,27 @@ struct PersistedAppState: Codable {
     var nickname: String?
     var acceptedRequiredTerms: [String] = []
     var team: PersistedTeam?
+    var hasCompletedOnboarding = false
+
+    init(
+        nickname: String? = nil,
+        acceptedRequiredTerms: [String] = [],
+        team: PersistedTeam? = nil,
+        hasCompletedOnboarding: Bool = false
+    ) {
+        self.nickname = nickname
+        self.acceptedRequiredTerms = acceptedRequiredTerms
+        self.team = team
+        self.hasCompletedOnboarding = hasCompletedOnboarding
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        nickname = try container.decodeIfPresent(String.self, forKey: .nickname)
+        acceptedRequiredTerms = try container.decodeIfPresent([String].self, forKey: .acceptedRequiredTerms) ?? []
+        team = try container.decodeIfPresent(PersistedTeam.self, forKey: .team)
+        hasCompletedOnboarding = try container.decodeIfPresent(Bool.self, forKey: .hasCompletedOnboarding) ?? false
+    }
 }
 
 struct PersistedTeam: Codable {

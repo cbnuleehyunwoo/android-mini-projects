@@ -62,6 +62,11 @@ struct RootView: View {
                 ) {
                     route = .terms
                 } onComplete: {
+                    routeToMainOrOnboarding()
+                }
+            case .onboarding:
+                OnboardingView {
+                    store.markOnboardingCompleted()
                     route = .main
                 }
             case .main:
@@ -103,9 +108,9 @@ struct RootView: View {
         do {
             let homeState = try await profileService.fetchHomeState(accessToken: session.accessToken)
             apply(homeState)
-            route = homeState.profile == nil ? .terms : .main
+            route = homeState.profile == nil ? .terms : mainOrOnboardingRoute()
         } catch {
-            route = session.needsSignup ? .terms : .main
+            route = session.needsSignup ? .terms : mainOrOnboardingRoute()
         }
     }
 
@@ -125,6 +130,14 @@ struct RootView: View {
             store.saveTeam(team)
         }
     }
+
+    private func routeToMainOrOnboarding() {
+        route = mainOrOnboardingRoute()
+    }
+
+    private func mainOrOnboardingRoute() -> OnboardingRoute {
+        store.hasCompletedOnboarding ? .main : .onboarding
+    }
 }
 
 private enum OnboardingRoute {
@@ -132,6 +145,7 @@ private enum OnboardingRoute {
     case login
     case terms
     case nickname
+    case onboarding
     case main
 }
 
