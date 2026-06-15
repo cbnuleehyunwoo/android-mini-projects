@@ -18,6 +18,7 @@ struct MainTabView: View {
     private let rankingService: RankingServiceProtocol
     private let authService: AuthServiceProtocol
     private let accessToken: String?
+    private let currentUserID: String?
     private let onLogout: () -> Void
     private let store: LocalAppStateStore
 
@@ -29,6 +30,7 @@ struct MainTabView: View {
         rankingService: RankingServiceProtocol = MockRankingService(),
         authService: AuthServiceProtocol = MockAuthService(),
         accessToken: String? = nil,
+        currentUserID: String? = nil,
         onLogout: @escaping () -> Void = {}
     ) {
         self.store = store
@@ -37,6 +39,7 @@ struct MainTabView: View {
         self.rankingService = rankingService
         self.authService = authService
         self.accessToken = accessToken
+        self.currentUserID = currentUserID
         self.onLogout = onLogout
         self.teamService = teamService ?? MockTeamService(store: store)
         _nickname = State(initialValue: store.nickname)
@@ -63,6 +66,7 @@ struct MainTabView: View {
                         nickname: nickname,
                         teamService: teamService,
                         accessToken: accessToken,
+                        currentUserID: currentUserID,
                         onCreateTeam: {
                             presentedAction = .createTeam
                         },

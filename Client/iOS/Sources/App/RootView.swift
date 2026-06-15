@@ -78,6 +78,7 @@ struct RootView: View {
                     rankingService: rankingService,
                     authService: authService,
                     accessToken: currentSession?.accessToken,
+                    currentUserID: currentSession?.userID,
                     onLogout: handleLogoutCompleted
                 )
             }
