@@ -4,6 +4,7 @@ import com.woowacourse.runpamine.data.run.local.RunLocalDataSource
 import com.woowacourse.runpamine.data.run.remote.RunRemoteDataSource
 import com.woowacourse.runpamine.domain.auth.AuthRepository
 import com.woowacourse.runpamine.domain.run.RunResult
+import com.woowacourse.runpamine.domain.run.RunSession
 import com.woowacourse.runpamine.domain.run.RunSyncRepository
 import com.woowacourse.runpamine.domain.run.RunSyncStatus
 
@@ -16,6 +17,12 @@ class DefaultRunSyncRepository(
         val session =
             localDataSource.findSession(runSessionId)
                 ?: return Result.failure(IllegalArgumentException("Run session not found: $runSessionId"))
+
+        if (session.distanceMeters == 0) {
+            localDataSource.updateSyncStatus(runSessionId, RunSyncStatus.SYNCED)
+            return Result.success(session.toRunResult())
+        }
+
         val points = RunPointSimplifier.simplify(localDataSource.findPoints(runSessionId))
 
         return runCatching {
@@ -42,3 +49,12 @@ class DefaultRunSyncRepository(
             "로그인이 필요해요."
         }
 }
+
+private fun RunSession.toRunResult(): RunResult =
+    RunResult(
+        id = id,
+        distanceMeters = distanceMeters,
+        durationSeconds = durationSeconds,
+        averagePaceSecondsPerKm = averagePaceSecondsPerKm,
+        calories = calories,
+    )
