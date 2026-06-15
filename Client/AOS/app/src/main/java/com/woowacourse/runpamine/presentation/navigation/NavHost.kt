@@ -16,7 +16,6 @@ import com.woowacourse.runpamine.presentation.invite.InviteTeamScreen
 import com.woowacourse.runpamine.presentation.join.JoinScreen
 import com.woowacourse.runpamine.presentation.login.LoginScreen
 import com.woowacourse.runpamine.presentation.login.viewmodel.LoginDestination
-import com.woowacourse.runpamine.presentation.mypage.MyPageScreen
 import com.woowacourse.runpamine.presentation.nickname.ChangeNicknameScreen
 import com.woowacourse.runpamine.presentation.ranking.RankingScreen
 import com.woowacourse.runpamine.presentation.record.RecordScreen
@@ -30,6 +29,7 @@ import java.util.Locale
 @Composable
 fun NavHost(
     navController: NavHostController,
+    onOpenMyPage: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     NavHost(
@@ -87,9 +87,7 @@ fun NavHost(
                 onStartClick = {
                     navController.navigate(AppRoute.Running.route)
                 },
-                onMyPageClick = {
-                    navController.navigate(AppRoute.MyPage.route)
-                },
+                onMyPageClick = onOpenMyPage,
                 onTeamClick = {
                     navController.navigate(AppRoute.Team.route)
                 },
@@ -198,22 +196,6 @@ fun NavHost(
                             }
                         }
                         launchSingleTop = true
-                    }
-                },
-            )
-        }
-
-        composable(AppRoute.MyPage.route) {
-            MyPageScreen(
-                onBackClick = navController::popBackStack,
-                onChangeNicknameClick = {
-                    navController.navigate(AppRoute.ChangeNickname.route)
-                },
-                onLogoutCompleted = {
-                    navController.navigate(AppRoute.Login.route) {
-                        popUpTo(navController.graph.id) {
-                            inclusive = true
-                        }
                     }
                 },
             )

@@ -22,12 +22,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogWindowProvider
 import com.woowacourse.runpamine.R
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
+
+enum class ConfirmationDialogStyle {
+    Default,
+    Destructive,
+}
 
 @Composable
 fun RunpamineConfirmationDialog(
@@ -38,7 +44,11 @@ fun RunpamineConfirmationDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
     modifier: Modifier = Modifier,
+    style: ConfirmationDialogStyle = ConfirmationDialogStyle.Default,
 ) {
+    val isDestructive = style == ConfirmationDialogStyle.Destructive
+    val confirmColor = if (isDestructive) Color(0xFFFF2D1A) else MaterialTheme.colorScheme.primary
+
     Dialog(onDismissRequest = onDismiss) {
         val dialogWindow = (LocalView.current.parent as DialogWindowProvider).window
         SideEffect {
@@ -58,29 +68,44 @@ fun RunpamineConfirmationDialog(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = if (isDestructive) Color(0xFF111827) else MaterialTheme.colorScheme.primary,
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = message,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Color.Black,
+                    color = if (isDestructive) Color(0xFF6B7280) else Color.Black,
+                    textAlign = if (isDestructive) TextAlign.Center else TextAlign.Start,
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    OutlinedButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
-                        colors =
-                            ButtonDefaults.outlinedButtonColors(
-                                contentColor = MaterialTheme.colorScheme.primary,
-                            ),
-                    ) {
-                        Text(text = dismissText)
+                    if (isDestructive) {
+                        Button(
+                            onClick = onDismiss,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            colors =
+                                ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF8A8A8A),
+                                ),
+                        ) {
+                            Text(text = dismissText, color = Color.White)
+                        }
+                    } else {
+                        OutlinedButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                            colors =
+                                ButtonDefaults.outlinedButtonColors(
+                                    contentColor = MaterialTheme.colorScheme.primary,
+                                ),
+                        ) {
+                            Text(text = dismissText)
+                        }
                     }
                     Button(
                         onClick = onConfirm,
@@ -88,7 +113,7 @@ fun RunpamineConfirmationDialog(
                         shape = RoundedCornerShape(12.dp),
                         colors =
                             ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
+                                containerColor = confirmColor,
                             ),
                     ) {
                         Text(

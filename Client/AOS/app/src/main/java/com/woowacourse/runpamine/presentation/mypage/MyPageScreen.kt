@@ -1,14 +1,19 @@
 package com.woowacourse.runpamine.presentation.mypage
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -28,6 +33,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.woowacourse.runpamine.BuildConfig
 import com.woowacourse.runpamine.R
 import com.woowacourse.runpamine.di.runpamineContainer
+import com.woowacourse.runpamine.presentation.component.ConfirmationDialogStyle
 import com.woowacourse.runpamine.presentation.component.RunpamineConfirmationDialog
 import com.woowacourse.runpamine.presentation.component.ScreenTopBar
 import com.woowacourse.runpamine.presentation.mypage.components.MyPageMenuRow
@@ -37,12 +43,45 @@ import com.woowacourse.runpamine.presentation.mypage.viewmodel.MyPageUiState
 import com.woowacourse.runpamine.presentation.mypage.viewmodel.MyPageViewModel
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MyPageBottomSheet(
+    onChangeNicknameClick: () -> Unit,
+    onDismissRequest: () -> Unit,
+    onLogoutCompleted: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismissRequest,
+        sheetState = sheetState,
+        containerColor = Color.White,
+        modifier = modifier,
+    ) {
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.88f),
+        ) {
+            MyPageScreen(
+                onChangeNicknameClick = onChangeNicknameClick,
+                onBackClick = onDismissRequest,
+                onLogoutCompleted = onLogoutCompleted,
+                showBackButton = false,
+            )
+        }
+    }
+}
+
 @Composable
 fun MyPageScreen(
     onChangeNicknameClick: () -> Unit,
     onBackClick: () -> Unit,
     onLogoutCompleted: () -> Unit,
     modifier: Modifier = Modifier,
+    showBackButton: Boolean = true,
 ) {
     val container = LocalContext.current.runpamineContainer
     val viewModel: MyPageViewModel =
@@ -54,6 +93,10 @@ fun MyPageScreen(
                 ),
         )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadMyProfile()
+    }
 
     LaunchedEffect(uiState.isLoggedOut) {
         if (uiState.isLoggedOut) {
@@ -67,6 +110,7 @@ fun MyPageScreen(
         onLogoutClick = viewModel::logout,
         onDeleteAccountClick = viewModel::deleteAccount,
         onBackClick = onBackClick,
+        showBackButton = showBackButton,
         modifier = modifier,
     )
 }
@@ -78,9 +122,11 @@ private fun MyPageContent(
     onLogoutClick: () -> Unit,
     onDeleteAccountClick: () -> Unit,
     onBackClick: () -> Unit,
+    showBackButton: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     val uriHandler = LocalUriHandler.current
+    var showLogoutDialog by rememberSaveable { mutableStateOf(false) }
     var showDeleteAccountDialog by rememberSaveable { mutableStateOf(false) }
     val privacyPolicyUrl = stringResource(R.string.my_page_privacy_policy_url)
     val termsOfServiceUrl = stringResource(R.string.my_page_terms_of_service_url)
@@ -95,6 +141,7 @@ private fun MyPageContent(
         ScreenTopBar(
             title = stringResource(R.string.my_page_title),
             onBackClick = onBackClick,
+            showBackButton = showBackButton,
             modifier =
                 Modifier
                     .fillMaxWidth()
@@ -130,7 +177,11 @@ private fun MyPageContent(
                         stringResource(R.string.my_page_logout_description)
                     },
                 titleColor = Color(0xFFDC2626),
-                onClick = onLogoutClick,
+                onClick = {
+                    if (!uiState.isLoggingOut) {
+                        showLogoutDialog = true
+                    }
+                },
             )
             MyPageMenuRow(
                 iconResId = R.drawable.mdi_delete_outline,
@@ -174,17 +225,33 @@ private fun MyPageContent(
         }
     }
 
+    if (showLogoutDialog) {
+        RunpamineConfirmationDialog(
+            title = stringResource(R.string.my_page_logout),
+            message = stringResource(R.string.logout_confirmation),
+            dismissText = stringResource(R.string.cancel),
+            confirmText = stringResource(R.string.my_page_logout),
+            onDismiss = { showLogoutDialog = false },
+            onConfirm = {
+                showLogoutDialog = false
+                onLogoutClick()
+            },
+            style = ConfirmationDialogStyle.Destructive,
+        )
+    }
+
     if (showDeleteAccountDialog) {
         RunpamineConfirmationDialog(
-            title = stringResource(R.string.delete_account),
+            title = stringResource(R.string.my_page_delete_account),
             message = stringResource(R.string.delete_account_confirmation),
             dismissText = stringResource(R.string.cancel),
-            confirmText = stringResource(R.string.delete_account),
+            confirmText = stringResource(R.string.my_page_delete_account),
             onDismiss = { showDeleteAccountDialog = false },
             onConfirm = {
                 showDeleteAccountDialog = false
                 onDeleteAccountClick()
             },
+            style = ConfirmationDialogStyle.Destructive,
         )
     }
 }
