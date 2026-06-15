@@ -61,6 +61,7 @@ struct HistoryView: View {
                         month: displayedMonth,
                         records: visibleRecords,
                         daySummaries: visibleDaySummaries,
+                        canMoveToNextMonth: canMoveToNextMonth,
                         onPreviousMonth: moveToPreviousMonth,
                         onNextMonth: moveToNextMonth
                     )
@@ -212,7 +213,15 @@ struct HistoryView: View {
     }
 
     private func moveToNextMonth() {
+        guard canMoveToNextMonth else { return }
         displayedMonth = calendar.date(byAdding: .month, value: 1, to: displayedMonth) ?? displayedMonth
+    }
+
+    private var canMoveToNextMonth: Bool {
+        let displayedMonthStart = calendar.dateInterval(of: .month, for: displayedMonth)?.start
+        let currentMonthStart = calendar.dateInterval(of: .month, for: Date())?.start
+        guard let displayedMonthStart, let currentMonthStart else { return false }
+        return displayedMonthStart < currentMonthStart
     }
 
     private var canMoveToNextWeek: Bool {
@@ -565,6 +574,7 @@ private struct MonthCalendarView: View {
     let month: Date
     let records: [RunningRecord]
     let daySummaries: [RunDaySummary]
+    let canMoveToNextMonth: Bool
     let onPreviousMonth: () -> Void
     let onNextMonth: () -> Void
 
@@ -578,29 +588,29 @@ private struct MonthCalendarView: View {
         VStack(spacing: 26) {
             HStack(spacing: 16) {
                 Button(action: onPreviousMonth) {
-                    Image("icon_back")
-                        .resizable()
-                        .renderingMode(.template)
-                        .scaledToFit()
-                        .foregroundStyle(Color(red: 0.45, green: 0.53, blue: 0.64))
-                        .frame(width: 20, height: 20)
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(Color.black)
+                        .frame(width: 40, height: 40)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("이전 달")
 
                 Text(monthTitle)
                     .font(AppTheme.Typography.font(size: 20, weight: .bold))
                     .foregroundStyle(AppTheme.Colors.textPrimary)
 
                 Button(action: onNextMonth) {
-                    Image("icon_back")
-                        .resizable()
-                        .renderingMode(.template)
-                        .scaledToFit()
-                        .foregroundStyle(Color(red: 0.45, green: 0.53, blue: 0.64))
-                        .frame(width: 20, height: 20)
-                        .rotationEffect(.degrees(180))
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(canMoveToNextMonth ? Color.black : Color.gray.opacity(0.3))
+                        .frame(width: 40, height: 40)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .disabled(!canMoveToNextMonth)
+                .accessibilityLabel("다음 달")
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
