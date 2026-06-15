@@ -604,7 +604,7 @@ private struct TeamMetricRowSkeleton: View {
             RoundedRectangle(cornerRadius: 4, style: .continuous)
                 .fill(TeamSkeletonStyle.fill)
                 .frame(width: 58, height: 16)
-                .frame(width: 64, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .frame(width: 136, height: 20, alignment: .leading)
     }
@@ -780,7 +780,7 @@ private struct TeamRunMetricRow: View {
                 .foregroundStyle(AppTheme.Colors.textPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.72)
-                .frame(width: 64, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .frame(width: 136, height: 20, alignment: .leading)
     }
