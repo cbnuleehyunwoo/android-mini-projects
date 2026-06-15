@@ -574,7 +574,8 @@ private struct TeamMemberRunCardSkeleton: View {
                     .frame(width: 70, height: 90)
             }
         }
-        .padding(.horizontal, 16)
+        .padding(.leading, 16)
+        .padding(.trailing, 25)
         .padding(.top, 26)
         .padding(.bottom, 32)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -617,7 +618,6 @@ private struct TeamMemberCardModel: Identifiable {
     let distanceText: String
     let timeText: String
     let paceText: String
-    let caloriesText: String
     let hasRunRecord: Bool
 
     init(
@@ -627,7 +627,6 @@ private struct TeamMemberCardModel: Identifiable {
         distanceText: String,
         timeText: String,
         paceText: String,
-        caloriesText: String,
         hasRunRecord: Bool
     ) {
         self.id = id
@@ -636,7 +635,6 @@ private struct TeamMemberCardModel: Identifiable {
         self.distanceText = distanceText
         self.timeText = timeText
         self.paceText = paceText
-        self.caloriesText = caloriesText
         self.hasRunRecord = hasRunRecord
     }
 
@@ -647,7 +645,6 @@ private struct TeamMemberCardModel: Identifiable {
         distanceText = TeamDashboardFormatter.memberDistanceKilometers(member.distanceMeters)
         timeText = member.durationSeconds > 0 ? RunningMetricFormatter.duration(TimeInterval(member.durationSeconds)) : "--:--"
         paceText = "\(RunningMetricFormatter.pace(member.averagePaceSecondsPerKilometer.map(TimeInterval.init)))/km"
-        caloriesText = "\(member.calories)"
         hasRunRecord = member.completed
     }
 
@@ -658,7 +655,6 @@ private struct TeamMemberCardModel: Identifiable {
     ) -> TeamMemberCardModel {
         let totalDistanceMeters = records.reduce(0) { $0 + $1.distanceMeters }
         let totalElapsedTime = records.reduce(0) { $0 + $1.elapsedTime }
-        let totalCalories = records.reduce(0) { $0 + $1.estimatedCalories }
         let totalDistanceKilometers = totalDistanceMeters / 1_000
         let averagePace = totalDistanceKilometers > 0.01 ? totalElapsedTime / totalDistanceKilometers : nil
 
@@ -669,7 +665,6 @@ private struct TeamMemberCardModel: Identifiable {
             distanceText: "\(totalDistanceKilometers.formatted(.number.precision(.fractionLength(1)))) km",
             timeText: totalElapsedTime > 0 ? RunningMetricFormatter.duration(totalElapsedTime) : "--:--",
             paceText: "\(RunningMetricFormatter.pace(averagePace))/km",
-            caloriesText: "\(totalCalories)",
             hasRunRecord: !records.isEmpty
         )
     }
@@ -682,7 +677,6 @@ private struct TeamMemberCardModel: Identifiable {
             distanceText: "0.0 km",
             timeText: "--:--",
             paceText: "0'00\"/km",
-            caloriesText: "0",
             hasRunRecord: false
         )
     }
@@ -709,10 +703,11 @@ private struct TeamMemberRunCard: View {
 
                 Spacer(minLength: 0)
 
-                TeamCaloriesBadge(caloriesText: member.caloriesText)
+                TeamCompletionStamp(isCompleted: member.hasRunRecord)
             }
         }
-        .padding(.horizontal, 16)
+        .padding(.leading, 16)
+        .padding(.trailing, 25)
         .padding(.top, 26)
         .padding(.bottom, 32)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -775,34 +770,20 @@ private struct TeamRunMetricIcon: View {
     }
 }
 
-private struct TeamCaloriesBadge: View {
-    let caloriesText: String
+private struct TeamCompletionStamp: View {
+    let isCompleted: Bool
 
     var body: some View {
-        VStack(spacing: 1) {
-            Image("icon_metric_kcal")
-                .resizable()
-                .renderingMode(.template)
-                .scaledToFit()
-                .foregroundStyle(Color(red: 0.93, green: 0.33, blue: 0.05))
-                .frame(width: 23, height: 23)
-
-            Text(caloriesText)
-                .font(AppTheme.Typography.font(size: 28, weight: .black))
-
-            Text("kcal")
-                .font(AppTheme.Typography.font(size: 13, weight: .medium))
+        ZStack {
+            if isCompleted {
+                Image("stamp")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 64, height: 64)
+                    .accessibilityLabel("러닝 완료")
+            }
         }
-        .padding(.horizontal, 3)
-        .padding(.vertical, 6.5)
-        .foregroundStyle(Color(red: 0.93, green: 0.33, blue: 0.05))
-        .frame(width: 70, height: 90)
-        .background(Color(red: 1.0, green: 0.95, blue: 0.91))
-        .overlay {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(Color(red: 1.0, green: 0.72, blue: 0.49), lineWidth: 1)
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .frame(width: 70, height: 80)
     }
 }
 
@@ -966,7 +947,6 @@ private enum TeamRunStreakCalculator {
             distanceText: "12.0 km",
             timeText: "10:00",
             paceText: "0'50\"/km",
-            caloriesText: "200",
             hasRunRecord: true
         )
     )
