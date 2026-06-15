@@ -335,7 +335,11 @@ private struct HistoryPeriodControl: View {
 private struct WeekDotsView: View {
     let records: [RunningRecord]
     let daySummaries: [RunDaySummary]
-    private let calendar = Calendar.current
+    private var calendar: Calendar {
+        var calendar = Calendar.current
+        calendar.firstWeekday = 2
+        return calendar
+    }
 
     var body: some View {
         HStack(spacing: 0) {
