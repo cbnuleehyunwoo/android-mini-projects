@@ -124,6 +124,7 @@ struct MyPageView: View {
                 onNicknameChanged(nextNickname)
                 isChangingNickname = false
             }
+            .networkErrorOverlay()
         }
     }
 

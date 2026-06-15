@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		64AA17802FDE905F00FC0B91 /* error.png in Resources */ = {isa = PBXBuildFile; fileRef = 64AA177F2FDE905F00FC0B91 /* error.png */; };
 		7A1000010000000000000001 /* RunpamineApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000101 /* RunpamineApp.swift */; };
 		7A1000010000000000000002 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000102 /* SplashView.swift */; };
 		7A1000010000000000000003 /* RunpamineLogoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000103 /* RunpamineLogoView.swift */; };
@@ -82,6 +83,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		64AA177F2FDE905F00FC0B91 /* error.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = error.png; sourceTree = "<group>"; };
 		7A1000010000000000000101 /* RunpamineApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunpamineApp.swift; sourceTree = "<group>"; };
 		7A1000010000000000000102 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 		7A1000010000000000000103 /* RunpamineLogoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunpamineLogoView.swift; sourceTree = "<group>"; };
@@ -182,14 +184,6 @@
 				7A1590010000000000000102 /* Runpamine.entitlements */,
 				7A1000010000000000000303 /* Products */,
 			);
-			sourceTree = "<group>";
-		};
-		7A2370010000000000000301 /* Config */ = {
-			isa = PBXGroup;
-			children = (
-				7A2370010000000000000101 /* Runpamine.xcconfig */,
-			);
-			path = Config;
 			sourceTree = "<group>";
 		};
 		7A1000010000000000000302 /* Sources */ = {
@@ -416,6 +410,7 @@
 		7A1000010000000000000320 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				64AA177F2FDE905F00FC0B91 /* error.png */,
 				7A1000010000000000000149 /* Assets.xcassets */,
 				7A1000010000000000000150 /* bk.png */,
 				7A1000010000000000000151 /* encho.png */,
@@ -464,6 +459,14 @@
 				7A1420010000000000000102 /* RankingView.swift */,
 			);
 			path = Ranking;
+			sourceTree = "<group>";
+		};
+		7A2370010000000000000301 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				7A2370010000000000000101 /* Runpamine.xcconfig */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -545,6 +548,7 @@
 				7A1000010000000000000047 /* pretendard_semi_bold.otf in Resources */,
 				7A1000010000000000000048 /* pretendard_thin.otf in Resources */,
 				7A100001000000000000004A /* bk.png in Resources */,
+				64AA17802FDE905F00FC0B91 /* error.png in Resources */,
 				7A100001000000000000004B /* encho.png in Resources */,
 				7A1350010000000000000040 /* lottie in Resources */,
 				7A2480010000000000000001 /* PrivacyInfo.xcprivacy in Resources */,
@@ -738,8 +742,8 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 7A2370010000000000000101 /* Runpamine.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CODE_SIGN_ENTITLEMENTS = Runpamine.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -771,8 +775,8 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 7A2370010000000000000101 /* Runpamine.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CODE_SIGN_ENTITLEMENTS = Runpamine.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;

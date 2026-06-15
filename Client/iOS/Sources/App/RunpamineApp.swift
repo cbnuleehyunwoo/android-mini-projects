@@ -3,6 +3,7 @@ import SwiftUI
 
 @main
 struct RunpamineApp: App {
+    @StateObject private var networkMonitor = NetworkMonitor()
     private let store = LocalAppStateStore()
     private let profileService: ProfileServiceProtocol
     private let runService: RunServiceProtocol
@@ -26,6 +27,8 @@ struct RunpamineApp: App {
                 rankingService: rankingService,
                 store: store
             )
+                .networkErrorOverlay()
+                .environmentObject(networkMonitor)
                 .onOpenURL { url in
                     GIDSignIn.sharedInstance.handle(url)
                 }

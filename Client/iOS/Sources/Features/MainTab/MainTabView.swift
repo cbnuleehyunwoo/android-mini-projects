@@ -92,10 +92,12 @@ struct MainTabView: View {
                 TeamCreateView(viewModel: TeamCreateViewModel(teamService: teamService, accessToken: accessToken)) { createdTeam in
                     handleTeamUpdated(createdTeam)
                 }
+                .networkErrorOverlay()
             case .joinTeam:
                 TeamJoinView(viewModel: TeamJoinViewModel(teamService: teamService, accessToken: accessToken)) { joinedTeam in
                     handleTeamUpdated(joinedTeam)
                 }
+                .networkErrorOverlay()
             }
         }
         .sheet(isPresented: $isShowingMyPage) {
@@ -108,12 +110,14 @@ struct MainTabView: View {
             ) { updatedNickname in
                 nickname = updatedNickname
             }
+            .networkErrorOverlay()
         }
         .runpamineFullScreenCover(isPresented: $isRunning) {
             RunningView(runService: runService, accessToken: accessToken)
         }
         .runpamineFullScreenCover(isPresented: $isShowingInvite) {
             InviteMemberView(inviteCode: team?.inviteCode ?? "")
+                .networkErrorOverlay()
         }
         .task {
             await refreshHomeState()

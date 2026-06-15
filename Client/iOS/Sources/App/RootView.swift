@@ -1,4 +1,6 @@
+import Network
 import SwiftUI
+import UIKit
 
 struct RootView: View {
     @State private var route: OnboardingRoute = .splash
@@ -131,4 +133,82 @@ private enum OnboardingRoute {
     case terms
     case nickname
     case main
+}
+
+final class NetworkMonitor: ObservableObject {
+    @Published private(set) var isConnected = false
+    @Published private(set) var isStatusKnown = false
+    @Published private(set) var hasConnectedOnce = false
+
+    private let monitor = NWPathMonitor()
+    private let queue = DispatchQueue(label: "runpamine.network-monitor")
+
+    init() {
+        monitor.pathUpdateHandler = { [weak self] path in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.isConnected = path.status == .satisfied
+                self.isStatusKnown = true
+                if self.isConnected {
+                    self.hasConnectedOnce = true
+                }
+            }
+        }
+        monitor.start(queue: queue)
+    }
+
+    deinit {
+        monitor.cancel()
+    }
+}
+
+struct NetworkErrorView: View {
+    var body: some View {
+        ZStack {
+            Color.white.ignoresSafeArea()
+
+            VStack(spacing: 8) {
+                errorImage
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 220, height: 220)
+
+                Text("네트워크 연결을 확인해주세요.")
+                    .font(AppTheme.Typography.body1)
+                    .foregroundStyle(Color.gray)
+            }
+        }
+    }
+
+    private var errorImage: Image {
+        guard let imageURL = Bundle.main.url(forResource: "error", withExtension: "png"),
+              let image = UIImage(contentsOfFile: imageURL.path)
+        else {
+            return Image(systemName: "wifi.slash")
+        }
+        return Image(uiImage: image)
+    }
+}
+
+private struct NetworkErrorOverlayModifier: ViewModifier {
+    @EnvironmentObject private var networkMonitor: NetworkMonitor
+
+    func body(content: Content) -> some View {
+        ZStack {
+            if networkMonitor.hasConnectedOnce {
+                content
+            }
+
+            if networkMonitor.isStatusKnown && !networkMonitor.isConnected {
+                NetworkErrorView()
+                    .zIndex(1)
+            }
+        }
+    }
+}
+
+extension View {
+    func networkErrorOverlay() -> some View {
+        modifier(NetworkErrorOverlayModifier())
+    }
 }
