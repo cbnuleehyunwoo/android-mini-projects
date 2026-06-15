@@ -12,6 +12,7 @@ struct TeamDashboardView: View {
     let onLeaveTeam: () -> Void
     let onSelectMember: (TeamMemberSeasonDetail) -> Void
     @State private var records: [RunningRecord] = RunningHistoryStore().load()
+    @State private var teamMembers: [TeamMember]?
     @State private var dailySummary: TeamDailySummary?
     @State private var seasonStats: TeamSeasonStats?
     @State private var hasResolvedDashboard = false
@@ -238,6 +239,20 @@ struct TeamDashboardView: View {
                 result[member.matchingID] = member
                 result[member.id] = member
             } ?? [:]
+            let dailyMembersByID = dailySummary.members.reduce(into: [String: TeamDailyMember]()) { result, member in
+                result[member.id] = member
+            }
+
+            if let teamMembers {
+                return teamMembers.map { member in
+                    TeamMemberCardModel(
+                        teamMember: member,
+                        dailyMember: dailyMembersByID[member.id],
+                        seasonMember: seasonMembersByID[member.id],
+                        isCurrentUser: member.id == currentUserID
+                    )
+                }
+            }
 
             return dailySummary.members.map { member in
                 TeamMemberCardModel(
@@ -359,6 +374,7 @@ struct TeamDashboardView: View {
             }
             dailySummary = nil
             seasonStats = nil
+            teamMembers = nil
             onLeaveTeam()
         } catch {
             leaveTeamErrorMessage = error.localizedDescription
@@ -369,14 +385,17 @@ struct TeamDashboardView: View {
     private func refreshDashboard() async {
         guard team != nil, let accessToken else { return }
         selectedDate = Calendar.current.startOfDay(for: Date())
+        teamMembers = nil
         dailySummary = nil
         seasonStats = nil
         hasResolvedDashboard = false
 
         do {
+            async let nextTeamMembers = teamService.fetchMyTeamMembers(accessToken: accessToken)
             async let nextDailySummary = teamService.fetchDailySummary(date: selectedDate, accessToken: accessToken)
             async let nextSeasonStats = teamService.fetchMyTeamSeasonStats(seasonID: nil, accessToken: accessToken)
 
+            teamMembers = try? await nextTeamMembers
             let fetchedDailySummary = try await nextDailySummary
             do {
                 let fetchedSeasonStats = try await nextSeasonStats
@@ -678,6 +697,36 @@ private struct TeamMemberCardModel: Identifiable {
         self.hasRunRecord = hasRunRecord
         self.isCurrentUser = isCurrentUser
         self.detail = detail
+    }
+
+    init(
+        teamMember: TeamMember,
+        dailyMember: TeamDailyMember?,
+        seasonMember: TeamSeasonMember?,
+        isCurrentUser: Bool
+    ) {
+        id = teamMember.id
+        name = dailyMember?.nickname ?? teamMember.nickname
+        animation = .teamMember(consecutiveRunDays: seasonMember?.consecutiveRunDays ?? (dailyMember?.completed == true ? 1 : nil))
+        distanceText = TeamDashboardFormatter.memberDistanceKilometers(dailyMember?.distanceMeters ?? 0)
+        timeText = if let durationSeconds = dailyMember?.durationSeconds, durationSeconds > 0 {
+            RunningMetricFormatter.duration(TimeInterval(durationSeconds))
+        } else {
+            "--:--"
+        }
+        paceText = "\(RunningMetricFormatter.pace(dailyMember?.averagePaceSecondsPerKilometer.map(TimeInterval.init)))/km"
+        hasRunRecord = dailyMember?.completed ?? false
+        self.isCurrentUser = isCurrentUser
+        detail = seasonMember.map { member in
+            TeamMemberSeasonDetail(
+                id: member.id,
+                name: member.nickname,
+                joinedAt: member.teamJoinedAt,
+                seasonDistance: TeamDashboardFormatter.seasonDistanceKilometers(member.seasonDistanceMeters),
+                seasonRunCount: "\(member.seasonRunCount)",
+                seasonAveragePace: RunningMetricFormatter.pace(member.averagePaceSecondsPerKilometer.map(TimeInterval.init))
+            )
+        }
     }
 
     init(member: TeamDailyMember, seasonMember: TeamSeasonMember?, isCurrentUser: Bool) {
