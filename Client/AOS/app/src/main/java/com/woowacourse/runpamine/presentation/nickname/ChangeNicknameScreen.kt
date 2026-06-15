@@ -53,6 +53,41 @@ fun ChangeNicknameScreen(
     onBackClick: () -> Unit = {},
     onCompleted: () -> Unit = {},
 ) {
+    NicknameRoute(
+        topBarTitle = stringResource(R.string.change_nickname_bar),
+        submitButtonText = stringResource(R.string.change_nickname_button),
+        loadingButtonText = stringResource(R.string.change_nickname_loading),
+        onBackClick = onBackClick,
+        onCompleted = onCompleted,
+        modifier = modifier,
+    )
+}
+
+@Composable
+fun SetNicknameScreen(
+    modifier: Modifier = Modifier,
+    onBackClick: () -> Unit = {},
+    onCompleted: () -> Unit = {},
+) {
+    NicknameRoute(
+        topBarTitle = stringResource(R.string.set_nickname_bar),
+        submitButtonText = stringResource(R.string.set_nickname_button),
+        loadingButtonText = stringResource(R.string.change_nickname_loading),
+        onBackClick = onBackClick,
+        onCompleted = onCompleted,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun NicknameRoute(
+    topBarTitle: String,
+    submitButtonText: String,
+    loadingButtonText: String,
+    onBackClick: () -> Unit,
+    onCompleted: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val container = androidx.compose.ui.platform.LocalContext.current.runpamineContainer
     val viewModel: NicknameViewModel =
         viewModel(
@@ -69,6 +104,9 @@ fun ChangeNicknameScreen(
 
     ChangeNicknameContent(
         uiState = uiState,
+        topBarTitle = topBarTitle,
+        submitButtonText = submitButtonText,
+        loadingButtonText = loadingButtonText,
         onNicknameChange = viewModel::updateNickname,
         onSubmitClick = viewModel::submitProfile,
         onBackClick = onBackClick,
@@ -79,6 +117,9 @@ fun ChangeNicknameScreen(
 @Composable
 private fun ChangeNicknameContent(
     uiState: NicknameUiState,
+    topBarTitle: String,
+    submitButtonText: String,
+    loadingButtonText: String,
     onNicknameChange: (String) -> Unit,
     onSubmitClick: () -> Unit,
     onBackClick: () -> Unit,
@@ -91,7 +132,7 @@ private fun ChangeNicknameContent(
                 .padding(horizontal = 24.dp),
     ) {
         ScreenTopBar(
-            title = stringResource(R.string.change_nickname_bar),
+            title = topBarTitle,
             onBackClick = onBackClick,
             modifier =
                 Modifier
@@ -137,9 +178,9 @@ private fun ChangeNicknameContent(
         BottomButton(
             text =
                 if (uiState.isLoading) {
-                    "설정 중..."
+                    loadingButtonText
                 } else {
-                    stringResource(R.string.change_nickname_button)
+                    submitButtonText
                 },
             onClick = onSubmitClick,
             modifier =
@@ -223,6 +264,9 @@ private fun ChangeNicknameScreenPreview() {
     RunpamineTheme {
         ChangeNicknameContent(
             uiState = NicknameUiState(),
+            topBarTitle = "닉네임 변경",
+            submitButtonText = "변경하기",
+            loadingButtonText = "설정 중...",
             onNicknameChange = {},
             onSubmitClick = {},
             onBackClick = {},

@@ -16,9 +16,9 @@ import com.woowacourse.runpamine.presentation.invite.InviteTeamScreen
 import com.woowacourse.runpamine.presentation.join.JoinScreen
 import com.woowacourse.runpamine.presentation.login.LoginScreen
 import com.woowacourse.runpamine.presentation.login.viewmodel.LoginDestination
-import com.woowacourse.runpamine.presentation.onboarding.OnboardingScreen
-import com.woowacourse.runpamine.presentation.mypage.MyPageScreen
 import com.woowacourse.runpamine.presentation.nickname.ChangeNicknameScreen
+import com.woowacourse.runpamine.presentation.nickname.SetNicknameScreen
+import com.woowacourse.runpamine.presentation.onboarding.OnboardingScreen
 import com.woowacourse.runpamine.presentation.ranking.RankingScreen
 import com.woowacourse.runpamine.presentation.record.RecordScreen
 import com.woowacourse.runpamine.presentation.running.RunningScreen
@@ -251,7 +251,7 @@ fun NavHost(
         }
 
         composable(AppRoute.SetupNickname.route) {
-            ChangeNicknameScreen(
+            SetNicknameScreen(
                 onBackClick = navController::popBackStack,
                 onCompleted = {
                     navController.navigate(AppRoute.Onboarding.route) {
