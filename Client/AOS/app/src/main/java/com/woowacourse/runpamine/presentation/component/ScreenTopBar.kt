@@ -22,6 +22,7 @@ fun ScreenTopBar(
     title: String,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
+    showBackButton: Boolean = true,
 ) {
     Box(
         modifier =
@@ -34,16 +35,18 @@ fun ScreenTopBar(
             style = MaterialTheme.typography.bodyLarge,
             color = Color.Black,
         )
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = "뒤로가기",
-            tint = Color.Black,
-            modifier =
-                Modifier
-                    .align(Alignment.CenterStart)
-                    .size(24.dp)
-                    .clickable(onClick = onBackClick),
-        )
+        if (showBackButton) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "뒤로가기",
+                tint = Color.Black,
+                modifier =
+                    Modifier
+                        .align(Alignment.CenterStart)
+                        .size(24.dp)
+                        .clickable(onClick = onBackClick),
+            )
+        }
     }
 }
 

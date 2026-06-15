@@ -57,10 +57,6 @@ sealed interface AppRoute {
         override val route = "running"
     }
 
-    data object MyPage : AppRoute {
-        override val route = "my_page"
-    }
-
     data object CreateTeam : AppRoute {
         override val route = "create_team"
     }

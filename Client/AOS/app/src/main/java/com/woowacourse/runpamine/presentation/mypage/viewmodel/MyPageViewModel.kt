@@ -17,10 +17,6 @@ class MyPageViewModel(
     private val _uiState = MutableStateFlow(MyPageUiState())
     val uiState = _uiState.asStateFlow()
 
-    init {
-        loadMyProfile()
-    }
-
     fun loadMyProfile() {
         profileRepository.getCachedProfile()?.let { profile ->
             _uiState.update {

@@ -31,6 +31,7 @@ import java.util.Locale
 @Composable
 fun NavHost(
     navController: NavHostController,
+    onOpenMyPage: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     NavHost(
@@ -100,9 +101,7 @@ fun NavHost(
                 onStartClick = {
                     navController.navigate(AppRoute.Running.route)
                 },
-                onMyPageClick = {
-                    navController.navigate(AppRoute.MyPage.route)
-                },
+                onMyPageClick = onOpenMyPage,
                 onTeamClick = {
                     navController.navigate(AppRoute.Team.route)
                 },
@@ -211,22 +210,6 @@ fun NavHost(
                             }
                         }
                         launchSingleTop = true
-                    }
-                },
-            )
-        }
-
-        composable(AppRoute.MyPage.route) {
-            MyPageScreen(
-                onBackClick = navController::popBackStack,
-                onChangeNicknameClick = {
-                    navController.navigate(AppRoute.ChangeNickname.route)
-                },
-                onLogoutCompleted = {
-                    navController.navigate(AppRoute.Login.route) {
-                        popUpTo(navController.graph.id) {
-                            inclusive = true
-                        }
                     }
                 },
             )
