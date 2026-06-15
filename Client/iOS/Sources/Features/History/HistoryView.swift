@@ -3,10 +3,12 @@ import SwiftUI
 
 struct HistoryView: View {
     @State private var selectedPeriod: HistoryPeriod = .week
+    @State private var displayedWeek = Date()
     @State private var displayedMonth = Date()
     @State private var records: [RunningRecord]
     @State private var daySummaries: [RunDaySummary] = []
     @State private var totalDistanceMeters: Int?
+    @State private var weeklySummaries: [Date: RunPeriodSummary] = [:]
     @State private var loadedRefreshIdentifier: String?
     @State private var selectedRecord: RunningRecord?
     @State private var thumbnailRecordsByID: [UUID: RunningRecord] = [:]
@@ -14,7 +16,11 @@ struct HistoryView: View {
 
     private let runService: RunServiceProtocol
     private let accessToken: String?
-    private let calendar = Calendar.current
+    private var calendar: Calendar {
+        var calendar = Calendar.current
+        calendar.firstWeekday = 2
+        return calendar
+    }
 
     init(runService: RunServiceProtocol = MockRunService(), accessToken: String? = nil) {
         self.runService = runService
@@ -39,7 +45,15 @@ struct HistoryView: View {
                 .padding(.top, 20)
 
                 if selectedPeriod == .week {
-                    WeekDotsView(records: visibleRecords, daySummaries: visibleDaySummaries)
+                    WeekDotsView(
+                        week: displayedWeek,
+                        previousSummary: weeklySummary(for: previousWeek),
+                        currentSummary: weeklySummary(for: displayedWeek),
+                        nextSummary: weeklySummary(for: nextWeek),
+                        canMoveToNextWeek: canMoveToNextWeek,
+                        onPreviousWeek: moveToPreviousWeek,
+                        onNextWeek: moveToNextWeek
+                    )
                         .padding(.horizontal, 30)
                         .padding(.top, 28)
                 } else {
@@ -137,7 +151,7 @@ struct HistoryView: View {
         records.filter { record in
             switch selectedPeriod {
             case .week:
-                return calendar.isDate(record.startedAt, equalTo: Date(), toGranularity: .weekOfYear)
+                return calendar.isDate(record.startedAt, equalTo: displayedWeek, toGranularity: .weekOfYear)
             case .month:
                 return calendar.isDate(record.startedAt, equalTo: displayedMonth, toGranularity: .month)
             }
@@ -152,8 +166,14 @@ struct HistoryView: View {
     }
 
     private var refreshIdentifier: String {
-        let components = calendar.dateComponents([.year, .month], from: displayedMonth)
-        return "\(selectedPeriod.rawValue)-\(components.year ?? 0)-\(components.month ?? 0)"
+        switch selectedPeriod {
+        case .week:
+            let weekStart = calendar.dateInterval(of: .weekOfYear, for: displayedWeek)?.start ?? displayedWeek
+            return "\(selectedPeriod.rawValue)-\(Int(weekStart.timeIntervalSince1970))"
+        case .month:
+            let components = calendar.dateComponents([.year, .month], from: displayedMonth)
+            return "\(selectedPeriod.rawValue)-\(components.year ?? 0)-\(components.month ?? 0)"
+        }
     }
 
     private var thumbnailRefreshIdentifier: String {
@@ -195,6 +215,61 @@ struct HistoryView: View {
         displayedMonth = calendar.date(byAdding: .month, value: 1, to: displayedMonth) ?? displayedMonth
     }
 
+    private var canMoveToNextWeek: Bool {
+        let displayedWeekStart = calendar.dateInterval(of: .weekOfYear, for: displayedWeek)?.start
+        let currentWeekStart = calendar.dateInterval(of: .weekOfYear, for: Date())?.start
+        guard let displayedWeekStart, let currentWeekStart else { return false }
+        return displayedWeekStart < currentWeekStart
+    }
+
+    private func moveToPreviousWeek() {
+        displayedWeek = calendar.date(byAdding: .weekOfYear, value: -1, to: displayedWeek) ?? displayedWeek
+    }
+
+    private func moveToNextWeek() {
+        guard canMoveToNextWeek else { return }
+        displayedWeek = calendar.date(byAdding: .weekOfYear, value: 1, to: displayedWeek) ?? displayedWeek
+    }
+
+    private var previousWeek: Date {
+        calendar.date(byAdding: .weekOfYear, value: -1, to: displayedWeek) ?? displayedWeek
+    }
+
+    private var nextWeek: Date {
+        calendar.date(byAdding: .weekOfYear, value: 1, to: displayedWeek) ?? displayedWeek
+    }
+
+    private func weekStart(for date: Date) -> Date {
+        calendar.dateInterval(of: .weekOfYear, for: date)?.start ?? calendar.startOfDay(for: date)
+    }
+
+    private func weeklySummary(for date: Date) -> RunPeriodSummary {
+        if let summary = weeklySummaries[weekStart(for: date)] {
+            return summary
+        }
+
+        if accessToken == nil {
+            let weeklyRecords = records.filter {
+                calendar.isDate($0.startedAt, equalTo: date, toGranularity: .weekOfYear)
+            }
+            return RunPeriodSummary(
+                totalDistanceMeters: Int(weeklyRecords.reduce(0) { $0 + $1.distanceMeters }.rounded()),
+                days: [],
+                runs: weeklyRecords
+            )
+        }
+
+        guard calendar.isDate(date, equalTo: displayedWeek, toGranularity: .weekOfYear) else {
+            return RunPeriodSummary(totalDistanceMeters: 0, days: [], runs: [])
+        }
+
+        return RunPeriodSummary(
+            totalDistanceMeters: totalDistanceMeters ?? 0,
+            days: visibleDaySummaries,
+            runs: visibleRecords
+        )
+    }
+
     @MainActor
     private func refreshRecords() async {
         guard let accessToken else {
@@ -213,7 +288,7 @@ struct HistoryView: View {
             let summary: RunPeriodSummary
             switch selectedPeriod {
             case .week:
-                summary = try await runService.fetchWeeklyRuns(anchorDate: Date(), accessToken: accessToken)
+                summary = try await runService.fetchWeeklyRuns(anchorDate: displayedWeek, accessToken: accessToken)
             case .month:
                 let components = calendar.dateComponents([.year, .month], from: displayedMonth)
                 summary = try await runService.fetchMonthlyRuns(
@@ -228,8 +303,15 @@ struct HistoryView: View {
             records = summary.runs
             daySummaries = summary.days
             totalDistanceMeters = summary.totalDistanceMeters
+            if selectedPeriod == .week {
+                weeklySummaries[weekStart(for: displayedWeek)] = summary
+            }
             loadedRefreshIdentifier = requestIdentifier
             pruneThumbnailCache(for: summary.runs)
+
+            if selectedPeriod == .week {
+                await preloadPreviousWeek(accessToken: accessToken)
+            }
         } catch {
             guard requestIdentifier == refreshIdentifier else { return }
 
@@ -247,6 +329,17 @@ struct HistoryView: View {
         daySummaries = []
         totalDistanceMeters = nil
         pruneThumbnailCache(for: records)
+    }
+
+    @MainActor
+    private func preloadPreviousWeek(accessToken: String) async {
+        let date = previousWeek
+        let key = weekStart(for: date)
+        guard weeklySummaries[key] == nil else { return }
+
+        if let summary = try? await runService.fetchWeeklyRuns(anchorDate: date, accessToken: accessToken) {
+            weeklySummaries[key] = summary
+        }
     }
 
     @MainActor
@@ -333,13 +426,44 @@ private struct HistoryPeriodControl: View {
 }
 
 private struct WeekDotsView: View {
-    let records: [RunningRecord]
-    let daySummaries: [RunDaySummary]
-    private let calendar = Calendar.current
+    let week: Date
+    let previousSummary: RunPeriodSummary
+    let currentSummary: RunPeriodSummary
+    let nextSummary: RunPeriodSummary
+    let canMoveToNextWeek: Bool
+    let onPreviousWeek: () -> Void
+    let onNextWeek: () -> Void
+
+    @State private var dragOffset: CGFloat = 0
+    @State private var isTransitioning = false
+
+    private var calendar: Calendar {
+        var calendar = Calendar.current
+        calendar.firstWeekday = 2
+        return calendar
+    }
 
     var body: some View {
+        GeometryReader { geometry in
+            HStack(spacing: 0) {
+                weekContent(for: previousWeek, summary: previousSummary)
+                    .frame(width: geometry.size.width)
+                weekContent(for: week, summary: currentSummary)
+                    .frame(width: geometry.size.width)
+                weekContent(for: nextWeek, summary: nextSummary)
+                    .frame(width: geometry.size.width)
+            }
+                .offset(x: -geometry.size.width + dragOffset)
+                .contentShape(Rectangle())
+                .simultaneousGesture(dragGesture(containerWidth: geometry.size.width))
+        }
+        .frame(height: 76)
+        .clipped()
+    }
+
+    private func weekContent(for week: Date, summary: RunPeriodSummary) -> some View {
         HStack(spacing: 0) {
-            ForEach(currentWeekDays, id: \.date) { item in
+            ForEach(weekDays(for: week, summary: summary), id: \.date) { item in
                 VStack(spacing: 8) {
                     Text(item.label)
                         .font(AppTheme.Typography.font(size: 13, weight: .bold))
@@ -353,20 +477,85 @@ private struct WeekDotsView: View {
             }
         }
         .frame(maxWidth: .infinity)
+        .padding(.vertical, 6)
     }
 
-    private var currentWeekDays: [(date: Date, label: String, hasRun: Bool)] {
-        let now = Date()
-        let interval = calendar.dateInterval(of: .weekOfYear, for: now)
-        let start = interval?.start ?? now
+    private func dragGesture(containerWidth: CGFloat) -> some Gesture {
+        DragGesture(minimumDistance: 12)
+            .onChanged { value in
+                guard !isTransitioning else { return }
+                guard abs(value.translation.width) > abs(value.translation.height) else { return }
+
+                let isDraggingTowardFuture = value.translation.width < 0
+                let resistance: CGFloat = isDraggingTowardFuture && !canMoveToNextWeek ? 0.18 : 1
+                dragOffset = value.translation.width * resistance
+            }
+            .onEnded { value in
+                guard !isTransitioning else { return }
+                guard abs(value.translation.width) > abs(value.translation.height) else {
+                    returnToCenter()
+                    return
+                }
+
+                let projectedTranslation = value.predictedEndTranslation.width
+                let threshold = min(containerWidth * 0.2, 72)
+
+                if projectedTranslation > threshold {
+                    transitionWeek(exitOffset: containerWidth, onChange: onPreviousWeek)
+                } else if projectedTranslation < -threshold, canMoveToNextWeek {
+                    transitionWeek(exitOffset: -containerWidth, onChange: onNextWeek)
+                } else {
+                    returnToCenter()
+                }
+            }
+    }
+
+    private func transitionWeek(exitOffset: CGFloat, onChange: @escaping () -> Void) {
+        isTransitioning = true
+
+        withAnimation(.easeInOut(duration: 0.18)) {
+            dragOffset = exitOffset
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) {
+                onChange()
+                dragOffset = 0
+            }
+            isTransitioning = false
+        }
+    }
+
+    private func returnToCenter() {
+        withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
+            dragOffset = 0
+        }
+    }
+
+    private var previousWeek: Date {
+        calendar.date(byAdding: .weekOfYear, value: -1, to: week) ?? week
+    }
+
+    private var nextWeek: Date {
+        calendar.date(byAdding: .weekOfYear, value: 1, to: week) ?? week
+    }
+
+    private func weekDays(
+        for week: Date,
+        summary: RunPeriodSummary
+    ) -> [(date: Date, label: String, hasRun: Bool)] {
+        let interval = calendar.dateInterval(of: .weekOfYear, for: week)
+        let start = interval?.start ?? week
         let symbols = ["일", "월", "화", "수", "목", "금", "토"]
 
         return (0..<7).compactMap { offset in
             guard let date = calendar.date(byAdding: .day, value: offset, to: start) else { return nil }
             let day = calendar.component(.day, from: date)
             let weekday = calendar.component(.weekday, from: date)
-            let hasRun = daySummaries.first(where: { calendar.isDate($0.date, inSameDayAs: date) })?.hasRun
-                ?? records.contains { calendar.isDate($0.startedAt, inSameDayAs: date) }
+            let hasRun = summary.days.first(where: { calendar.isDate($0.date, inSameDayAs: date) })?.hasRun
+                ?? summary.runs.contains { calendar.isDate($0.startedAt, inSameDayAs: date) }
             return (date, "\(day) \(symbols[weekday - 1])", hasRun)
         }
     }

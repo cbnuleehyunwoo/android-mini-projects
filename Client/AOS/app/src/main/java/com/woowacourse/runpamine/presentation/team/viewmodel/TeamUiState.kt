@@ -12,6 +12,8 @@ data class TeamUiState(
     val totalMemberCount: Int = 0,
     val members: List<TeamMember> = emptyList(),
     val isLoading: Boolean = true,
+    val isDateLoading: Boolean = false,
+    val canMoveToNextDate: Boolean = false,
     val errorMessage: String? = null,
     val memberErrorMessage: String? = null,
 )

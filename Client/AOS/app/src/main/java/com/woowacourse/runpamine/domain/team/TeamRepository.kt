@@ -1,5 +1,7 @@
 package com.woowacourse.runpamine.domain.team
 
+import java.time.LocalDate
+
 interface TeamRepository {
     suspend fun createTeam(name: String): Team
 
@@ -11,5 +13,5 @@ interface TeamRepository {
 
     suspend fun getMyTeamSeasonStats(): List<TeamMemberSeasonStats>
 
-    suspend fun getMyTeamDailySummary(): TeamDailySummary
+    suspend fun getMyTeamDailySummary(date: LocalDate): TeamDailySummary
 }

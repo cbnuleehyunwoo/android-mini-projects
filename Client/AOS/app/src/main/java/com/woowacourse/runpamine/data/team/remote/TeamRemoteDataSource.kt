@@ -4,6 +4,7 @@ import com.woowacourse.runpamine.domain.team.Team
 import com.woowacourse.runpamine.domain.team.TeamDailySummary
 import com.woowacourse.runpamine.domain.team.TeamMemberSeasonStats
 import com.woowacourse.runpamine.domain.team.TeamMemberSummary
+import java.time.LocalDate
 
 interface TeamRemoteDataSource {
     suspend fun createTeam(
@@ -22,5 +23,8 @@ interface TeamRemoteDataSource {
 
     suspend fun getMyTeamSeasonStats(accessToken: String): List<TeamMemberSeasonStats>
 
-    suspend fun getMyTeamDailySummary(accessToken: String): TeamDailySummary
+    suspend fun getMyTeamDailySummary(
+        accessToken: String,
+        date: LocalDate,
+    ): TeamDailySummary
 }

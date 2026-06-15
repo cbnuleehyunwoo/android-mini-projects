@@ -10,6 +10,7 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
+import java.time.LocalDate
 
 class ApiTeamRemoteDataSource(
     baseUrl: String,
@@ -91,11 +92,14 @@ class ApiTeamRemoteDataSource(
             }
         }
 
-    override suspend fun getMyTeamDailySummary(accessToken: String): TeamDailySummary =
+    override suspend fun getMyTeamDailySummary(
+        accessToken: String,
+        date: LocalDate,
+    ): TeamDailySummary =
         withContext(Dispatchers.IO) {
             val response =
                 request(
-                    path = "/teams/me/runs",
+                    path = "/teams/me/runs?date=$date",
                     method = "GET",
                     accessToken = accessToken,
                 )

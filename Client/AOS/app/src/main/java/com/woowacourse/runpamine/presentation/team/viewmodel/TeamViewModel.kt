@@ -23,6 +23,10 @@ class TeamViewModel(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(TeamUiState())
     val uiState = _uiState.asStateFlow()
+    private var selectedDate: LocalDate = LocalDate.now()
+    private var currentTeam: Team? = null
+    private var teamMembers: List<TeamMemberSummary>? = null
+    private var seasonStats: List<TeamMemberSeasonStats>? = null
 
     init {
         loadTeam()
@@ -40,7 +44,10 @@ class TeamViewModel(
             runCatching {
                 teamRepository.getMyTeam()
             }.onSuccess { team ->
-                loadTeamDailySummary(team)
+                currentTeam = team
+                teamMembers = runCatching { teamRepository.getMyTeamMembers() }.getOrNull()
+                seasonStats = runCatching { teamRepository.getMyTeamSeasonStats() }.getOrNull()
+                loadTeamDailySummary(team, selectedDate, isInitialLoad = true)
             }.onFailure { throwable ->
                 _uiState.update {
                     it.copy(
@@ -53,18 +60,47 @@ class TeamViewModel(
         }
     }
 
-    private suspend fun loadTeamDailySummary(team: Team) {
-        val membersResult = runCatching { teamRepository.getMyTeamMembers() }
-        val seasonStatsResult = runCatching { teamRepository.getMyTeamSeasonStats() }
-        val summaryResult = runCatching { teamRepository.getMyTeamDailySummary() }
+    fun moveToPreviousDate() {
+        moveToDate(selectedDate.minusDays(1))
+    }
+
+    fun moveToNextDate() {
+        if (selectedDate >= LocalDate.now()) return
+        moveToDate(selectedDate.plusDays(1))
+    }
+
+    private fun moveToDate(date: LocalDate) {
+        val team = currentTeam ?: return
+        if (uiState.value.isDateLoading) return
+
+        selectedDate = date
+        viewModelScope.launch {
+            loadTeamDailySummary(team, date, isInitialLoad = false)
+        }
+    }
+
+    private suspend fun loadTeamDailySummary(
+        team: Team,
+        date: LocalDate,
+        isInitialLoad: Boolean,
+    ) {
+        _uiState.update {
+            it.copy(
+                date = date.toKoreanDisplayText(),
+                isDateLoading = !isInitialLoad,
+                canMoveToNextDate = date < LocalDate.now(),
+                errorMessage = null,
+            )
+        }
+        val summaryResult = runCatching { teamRepository.getMyTeamDailySummary(date) }
 
         summaryResult
             .onSuccess { summary ->
                 val members =
                     mergeMembersWithRuns(
-                        members = membersResult.getOrNull(),
+                        members = teamMembers,
                         runs = summary.members,
-                        seasonStats = seasonStatsResult.getOrNull(),
+                        seasonStats = seasonStats,
                     )
                 _uiState.update {
                     it.copy(
@@ -77,28 +113,30 @@ class TeamViewModel(
                         totalMemberCount = summary.totalMemberCount,
                         members = members,
                         isLoading = false,
-                        memberErrorMessage = membersResult.exceptionOrNull()?.toMemberErrorMessage(),
+                        isDateLoading = false,
+                        canMoveToNextDate = date < LocalDate.now(),
                     )
                 }
             }.onFailure { throwable ->
                 val members =
                     buildEmptyTeamMembers(
-                        members = membersResult.getOrNull(),
-                        seasonStats = seasonStatsResult.getOrNull(),
+                        members = teamMembers,
+                        seasonStats = seasonStats,
                     )
                 _uiState.update {
                     it.copy(
                         hasTeam = true,
                         teamName = team.name,
                         joinCode = team.joinCode,
-                        date = LocalDate.now().toKoreanDisplayText(),
+                        date = date.toKoreanDisplayText(),
                         totalDistance = 0.toKilometerText(),
                         completedMemberCount = 0,
                         totalMemberCount = team.memberCount,
                         members = members,
                         isLoading = false,
+                        isDateLoading = false,
+                        canMoveToNextDate = date < LocalDate.now(),
                         errorMessage = throwable.message ?: "팀 기록 정보를 불러오지 못했어요.",
-                        memberErrorMessage = membersResult.exceptionOrNull()?.toMemberErrorMessage(),
                     )
                 }
             }
