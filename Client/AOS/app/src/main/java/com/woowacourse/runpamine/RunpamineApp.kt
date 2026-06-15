@@ -30,6 +30,7 @@ import com.woowacourse.runpamine.presentation.component.RunpamineBottomBar
 import com.woowacourse.runpamine.presentation.component.RunpamineBottomTab
 import com.woowacourse.runpamine.presentation.component.RunpamineConfirmationDialog
 import com.woowacourse.runpamine.presentation.error.ErrorScreen
+import com.woowacourse.runpamine.presentation.mypage.MyPageBottomSheet
 import com.woowacourse.runpamine.presentation.navigation.AppRoute
 import com.woowacourse.runpamine.presentation.navigation.NavHost
 
@@ -49,6 +50,7 @@ fun RunpamineApp(
         if (isConnected) hasConnectedOnce = true
     }
     var showUpdateDialog by rememberSaveable { mutableStateOf(false) }
+    var isShowingMyPage by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         AppUpdateManagerFactory
             .create(context)
@@ -88,9 +90,28 @@ fun RunpamineApp(
             ) { innerPadding ->
                 NavHost(
                     navController = navController,
+                    onOpenMyPage = { isShowingMyPage = true },
                     modifier = Modifier.padding(innerPadding),
                 )
             }
+        }
+
+        if (isShowingMyPage) {
+            MyPageBottomSheet(
+                onDismissRequest = { isShowingMyPage = false },
+                onChangeNicknameClick = {
+                    isShowingMyPage = false
+                    navController.navigate(AppRoute.ChangeNickname.route)
+                },
+                onLogoutCompleted = {
+                    isShowingMyPage = false
+                    navController.navigate(AppRoute.Login.route) {
+                        popUpTo(navController.graph.id) {
+                            inclusive = true
+                        }
+                    }
+                },
+            )
         }
 
         if (showNetworkError) {
