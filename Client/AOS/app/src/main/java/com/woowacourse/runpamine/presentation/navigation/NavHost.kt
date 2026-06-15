@@ -16,6 +16,8 @@ import com.woowacourse.runpamine.presentation.invite.InviteTeamScreen
 import com.woowacourse.runpamine.presentation.join.JoinScreen
 import com.woowacourse.runpamine.presentation.login.LoginScreen
 import com.woowacourse.runpamine.presentation.login.viewmodel.LoginDestination
+import com.woowacourse.runpamine.presentation.onboarding.OnboardingScreen
+import com.woowacourse.runpamine.presentation.mypage.MyPageScreen
 import com.woowacourse.runpamine.presentation.nickname.ChangeNicknameScreen
 import com.woowacourse.runpamine.presentation.ranking.RankingScreen
 import com.woowacourse.runpamine.presentation.record.RecordScreen
@@ -52,6 +54,18 @@ fun NavHost(
                         }
                     navController.navigate(route) {
                         popUpTo(AppRoute.Splash.route) {
+                            inclusive = true
+                        }
+                    }
+                },
+            )
+        }
+
+        composable(AppRoute.Onboarding.route) {
+            OnboardingScreen(
+                onStartClick = {
+                    navController.navigate(AppRoute.Home.route) {
+                        popUpTo(navController.graph.id) {
                             inclusive = true
                         }
                     }
@@ -211,7 +225,7 @@ fun NavHost(
                     }
                 },
                 onJoinClick = {
-                    navController.navigate(AppRoute.ChangeNickname.route) {
+                    navController.navigate(AppRoute.SetupNickname.route) {
                         popUpTo(AppRoute.TermsAgreement.route) {
                             inclusive = true
                         }
@@ -226,6 +240,19 @@ fun NavHost(
                 onCompleted = {
                     navController.navigate(AppRoute.Home.route) {
                         popUpTo(AppRoute.ChangeNickname.route) {
+                            inclusive = true
+                        }
+                    }
+                },
+            )
+        }
+
+        composable(AppRoute.SetupNickname.route) {
+            ChangeNicknameScreen(
+                onBackClick = navController::popBackStack,
+                onCompleted = {
+                    navController.navigate(AppRoute.Onboarding.route) {
+                        popUpTo(AppRoute.SetupNickname.route) {
                             inclusive = true
                         }
                     }

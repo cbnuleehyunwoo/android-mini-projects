@@ -13,6 +13,10 @@ sealed interface AppRoute {
         override val route = "login"
     }
 
+    data object Onboarding : AppRoute {
+        override val route = "onboarding"
+    }
+
     data object Home : AppRoute {
         override val route = "home"
     }
@@ -67,6 +71,10 @@ sealed interface AppRoute {
 
     data object ChangeNickname : AppRoute {
         override val route = "change_nickname"
+    }
+
+    data object SetupNickname : AppRoute {
+        override val route = "setup_nickname"
     }
 
     data object InviteTeam : AppRoute {
