@@ -6,6 +6,7 @@ struct RootView: View {
     @State private var route: OnboardingRoute = .splash
     @State private var acceptedTerms: [TermsAgreement] = []
     @State private var currentSession: AuthSession?
+    @State private var currentProfileID: String?
     private let authService: AuthServiceProtocol
     private let profileService: ProfileServiceProtocol
     private let runService: RunServiceProtocol
@@ -78,6 +79,7 @@ struct RootView: View {
                     rankingService: rankingService,
                     authService: authService,
                     accessToken: currentSession?.accessToken,
+                    currentUserID: currentProfileID ?? currentSession?.userID,
                     onLogout: handleLogoutCompleted
                 )
             }
@@ -117,12 +119,14 @@ struct RootView: View {
     @MainActor
     private func handleLogoutCompleted() {
         currentSession = nil
+        currentProfileID = nil
         acceptedTerms = []
         route = .login
     }
 
     private func apply(_ homeState: HomeState) {
         if let profile = homeState.profile {
+            currentProfileID = profile.id
             store.saveNickname(profile.nickname)
         }
 

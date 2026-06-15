@@ -12,6 +12,7 @@ struct MainTabView: View {
     @State private var isRunning = false
     @State private var isShowingInvite = false
     @State private var nickname: String
+    @State private var currentUserID: String?
     private let teamService: TeamServiceProtocol
     private let profileService: ProfileServiceProtocol
     private let runService: RunServiceProtocol
@@ -29,6 +30,7 @@ struct MainTabView: View {
         rankingService: RankingServiceProtocol = MockRankingService(),
         authService: AuthServiceProtocol = MockAuthService(),
         accessToken: String? = nil,
+        currentUserID: String? = nil,
         onLogout: @escaping () -> Void = {}
     ) {
         self.store = store
@@ -41,6 +43,7 @@ struct MainTabView: View {
         self.teamService = teamService ?? MockTeamService(store: store)
         _nickname = State(initialValue: store.nickname)
         _team = State(initialValue: store.loadTeam())
+        _currentUserID = State(initialValue: currentUserID)
     }
 
     var body: some View {
@@ -63,6 +66,7 @@ struct MainTabView: View {
                         nickname: nickname,
                         teamService: teamService,
                         accessToken: accessToken,
+                        currentUserID: currentUserID,
                         onCreateTeam: {
                             presentedAction = .createTeam
                         },
@@ -153,6 +157,7 @@ struct MainTabView: View {
             let homeState = try await profileService.fetchHomeState(accessToken: accessToken)
 
             if let profile = homeState.profile {
+                currentUserID = profile.id
                 nickname = profile.nickname
                 store.saveNickname(profile.nickname)
             }

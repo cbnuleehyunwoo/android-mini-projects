@@ -5,6 +5,7 @@ struct TeamDashboardView: View {
     let nickname: String
     let teamService: TeamServiceProtocol
     let accessToken: String?
+    let currentUserID: String?
     let onCreateTeam: () -> Void
     let onJoinTeam: () -> Void
     let onInvite: () -> Void
@@ -234,7 +235,8 @@ struct TeamDashboardView: View {
             return dailySummary.members.map { member in
                 TeamMemberCardModel(
                     member: member,
-                    seasonMember: seasonMembersByID[member.id]
+                    seasonMember: seasonMembersByID[member.id],
+                    isCurrentUser: member.id == currentUserID
                 )
             }
         }
@@ -247,7 +249,8 @@ struct TeamDashboardView: View {
             TeamMemberCardModel.runningMember(
                 id: "member-primary",
                 name: nickname,
-                records: records
+                records: records,
+                isCurrentUser: true
             ),
             TeamMemberCardModel.emptyBurger(index: 1)
         ]
@@ -619,6 +622,7 @@ private struct TeamMemberCardModel: Identifiable {
     let timeText: String
     let paceText: String
     let hasRunRecord: Bool
+    let isCurrentUser: Bool
 
     init(
         id: String,
@@ -627,7 +631,8 @@ private struct TeamMemberCardModel: Identifiable {
         distanceText: String,
         timeText: String,
         paceText: String,
-        hasRunRecord: Bool
+        hasRunRecord: Bool,
+        isCurrentUser: Bool
     ) {
         self.id = id
         self.name = name
@@ -636,9 +641,10 @@ private struct TeamMemberCardModel: Identifiable {
         self.timeText = timeText
         self.paceText = paceText
         self.hasRunRecord = hasRunRecord
+        self.isCurrentUser = isCurrentUser
     }
 
-    init(member: TeamDailyMember, seasonMember: TeamSeasonMember?) {
+    init(member: TeamDailyMember, seasonMember: TeamSeasonMember?, isCurrentUser: Bool) {
         id = member.id
         name = member.nickname
         animation = .teamMember(consecutiveRunDays: seasonMember?.consecutiveRunDays ?? (member.completed ? 1 : nil))
@@ -646,12 +652,14 @@ private struct TeamMemberCardModel: Identifiable {
         timeText = member.durationSeconds > 0 ? RunningMetricFormatter.duration(TimeInterval(member.durationSeconds)) : "--:--"
         paceText = "\(RunningMetricFormatter.pace(member.averagePaceSecondsPerKilometer.map(TimeInterval.init)))/km"
         hasRunRecord = member.completed
+        self.isCurrentUser = isCurrentUser
     }
 
     static func runningMember(
         id: String,
         name: String,
-        records: [RunningRecord]
+        records: [RunningRecord],
+        isCurrentUser: Bool
     ) -> TeamMemberCardModel {
         let totalDistanceMeters = records.reduce(0) { $0 + $1.distanceMeters }
         let totalElapsedTime = records.reduce(0) { $0 + $1.elapsedTime }
@@ -665,7 +673,8 @@ private struct TeamMemberCardModel: Identifiable {
             distanceText: "\(totalDistanceKilometers.formatted(.number.precision(.fractionLength(1)))) km",
             timeText: totalElapsedTime > 0 ? RunningMetricFormatter.duration(totalElapsedTime) : "--:--",
             paceText: "\(RunningMetricFormatter.pace(averagePace))/km",
-            hasRunRecord: !records.isEmpty
+            hasRunRecord: !records.isEmpty,
+            isCurrentUser: isCurrentUser
         )
     }
 
@@ -677,7 +686,8 @@ private struct TeamMemberCardModel: Identifiable {
             distanceText: "0.0 km",
             timeText: "--:--",
             paceText: "0'00\"/km",
-            hasRunRecord: false
+            hasRunRecord: false,
+            isCurrentUser: false
         )
     }
 }
@@ -687,9 +697,17 @@ private struct TeamMemberRunCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
-            Text(member.name)
-                .font(AppTheme.Typography.font(size: 24, weight: .bold))
-                .foregroundStyle(.black)
+            HStack(spacing: 6) {
+                Text(member.name)
+                    .font(AppTheme.Typography.font(size: 24, weight: .bold))
+                    .foregroundStyle(.black)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
+
+                if member.isCurrentUser {
+                    TeamCurrentUserBadge()
+                }
+            }
 
             HStack(spacing: 0) {
                 RunpamineLottieView(animation: member.animation)
@@ -714,6 +732,18 @@ private struct TeamMemberRunCard: View {
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .shadow(color: .black.opacity(0.22), radius: 9, x: 0, y: 6)
+    }
+}
+
+private struct TeamCurrentUserBadge: View {
+    var body: some View {
+        Text("나")
+            .font(AppTheme.Typography.font(size: 10, weight: .black))
+            .foregroundStyle(.white)
+            .frame(width: 19, height: 20)
+            .background(AppTheme.Colors.primary)
+            .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+            .accessibilityLabel("내 카드")
     }
 }
 
@@ -931,6 +961,7 @@ private enum TeamRunStreakCalculator {
         nickname: "커비",
         teamService: MockTeamService(),
         accessToken: "preview-token",
+        currentUserID: "member-preview",
         onCreateTeam: {},
         onJoinTeam: {},
         onInvite: {},
@@ -947,7 +978,8 @@ private enum TeamRunStreakCalculator {
             distanceText: "12.0 km",
             timeText: "10:00",
             paceText: "0'50\"/km",
-            hasRunRecord: true
+            hasRunRecord: true,
+            isCurrentUser: true
         )
     )
     .padding(20)
