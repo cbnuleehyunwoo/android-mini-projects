@@ -681,9 +681,13 @@ private struct TeamMemberCardModel: Identifiable {
             id: member.id,
             name: member.nickname,
             joinedAt: seasonMember?.teamJoinedAt ?? "",
-            seasonDistance: seasonMember.map { TeamDashboardFormatter.seasonDistanceKilometers($0.seasonDistanceMeters) } ?? "0.0",
-            seasonRunCount: "\(seasonMember?.seasonRunCount ?? 0)",
-            seasonAveragePace: RunningMetricFormatter.pace(seasonMember?.averagePaceSecondsPerKilometer.map(TimeInterval.init))
+            seasonDistance: TeamDashboardFormatter.seasonDistanceKilometers(
+                seasonMember?.seasonDistanceMeters ?? member.distanceMeters
+            ),
+            seasonRunCount: "\(seasonMember?.seasonRunCount ?? (member.completed ? 1 : 0))",
+            seasonAveragePace: RunningMetricFormatter.pace(
+                (seasonMember?.averagePaceSecondsPerKilometer ?? member.averagePaceSecondsPerKilometer).map(TimeInterval.init)
+            )
         )
     }
 
@@ -768,8 +772,10 @@ struct TeamMemberSeasonDetailSheet: View {
             }
 
             HStack(spacing: 6) {
-                Image(systemName: "calendar")
-                    .font(.system(size: 16, weight: .medium))
+                Image("icon_calender")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 13, height: 13)
                 Text("\(detail.joinedAtText) 합류")
                     .font(AppTheme.Typography.font(size: 16, weight: .medium))
                     .lineLimit(1)
