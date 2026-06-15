@@ -738,9 +738,9 @@ private struct TeamMemberRunCard: View {
 private struct TeamCurrentUserBadge: View {
     var body: some View {
         Text("나")
-            .font(AppTheme.Typography.font(size: 10, weight: .bold))
+            .font(AppTheme.Typography.font(size: 10, weight: .black))
             .foregroundStyle(.white)
-            .frame(width: 18, height: 18)
+            .frame(width: 19, height: 20)
             .background(AppTheme.Colors.primary)
             .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
             .accessibilityLabel("내 카드")
