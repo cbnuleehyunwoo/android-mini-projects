@@ -574,7 +574,8 @@ private struct TeamMemberRunCardSkeleton: View {
                     .frame(width: 70, height: 90)
             }
         }
-        .padding(.horizontal, 16)
+        .padding(.leading, 16)
+        .padding(.trailing, 25)
         .padding(.top, 26)
         .padding(.bottom, 32)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -705,7 +706,8 @@ private struct TeamMemberRunCard: View {
                 TeamCompletionStamp(isCompleted: member.hasRunRecord)
             }
         }
-        .padding(.horizontal, 16)
+        .padding(.leading, 16)
+        .padding(.trailing, 25)
         .padding(.top, 26)
         .padding(.bottom, 32)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -777,7 +779,7 @@ private struct TeamCompletionStamp: View {
                 Image("stamp")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 59, height: 59)
+                    .frame(width: 64, height: 64)
                     .accessibilityLabel("러닝 완료")
             }
         }
