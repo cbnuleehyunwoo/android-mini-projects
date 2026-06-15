@@ -1,6 +1,10 @@
 import SwiftUI
 
 struct MainTabView: View {
+    private enum MyPageSheet {
+        static let heightRatio: CGFloat = 0.93
+    }
+
     @State private var selectedTab: MainTab = .home
     @State private var presentedAction: HomeAction?
     @State private var team: RunningTeam?
@@ -110,6 +114,7 @@ struct MainTabView: View {
             ) { updatedNickname in
                 nickname = updatedNickname
             }
+            .presentationDetents([.fraction(MyPageSheet.heightRatio)])
             .networkErrorOverlay()
         }
         .runpamineFullScreenCover(isPresented: $isRunning) {
