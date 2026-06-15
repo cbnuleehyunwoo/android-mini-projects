@@ -1,4 +1,8 @@
+import CoreLocation
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 struct HomeView: View {
     let nickname: String
@@ -7,6 +11,7 @@ struct HomeView: View {
     let onJoinTeam: () -> Void
     let onOpenMyPage: () -> Void
     let onStartRunning: () -> Void
+    @StateObject private var runningPermissionRequester = RunningStartPermissionRequester()
     @State private var isShowingStartDialog = false
 
     var body: some View {
@@ -24,7 +29,9 @@ struct HomeView: View {
                     .padding(.horizontal, 8)
 
                 Button {
-                    isShowingStartDialog = true
+                    runningPermissionRequester.requestStart {
+                        isShowingStartDialog = true
+                    }
                 } label: {
                     Text("시작")
                         .font(AppTheme.Typography.font(size: 24, weight: .bold))
@@ -56,9 +63,98 @@ struct HomeView: View {
                     }
                 )
             }
+
+            if runningPermissionRequester.isShowingPermissionDialog {
+                RunpamineConfirmationDialog(
+                    title: "위치 권한 필요",
+                    message: "러닝을 시작하려면 위치 권한이 필요해요.",
+                    dismissText: "취소",
+                    confirmText: "설정",
+                    onDismiss: {
+                        runningPermissionRequester.dismissPermissionDialog()
+                    },
+                    onConfirm: {
+                        runningPermissionRequester.openAppSettings()
+                    }
+                )
+            }
         }
     }
 
+}
+
+@MainActor
+private final class RunningStartPermissionRequester: NSObject, ObservableObject {
+    @Published var isShowingPermissionDialog = false
+    @Published private(set) var authorizationStatus: CLAuthorizationStatus = .notDetermined
+
+    private let manager = CLLocationManager()
+    private var onAuthorized: (() -> Void)?
+
+    override init() {
+        super.init()
+        manager.delegate = self
+        authorizationStatus = manager.authorizationStatus
+    }
+
+    func requestStart(onAuthorized: @escaping () -> Void) {
+        self.onAuthorized = onAuthorized
+        authorizationStatus = manager.authorizationStatus
+
+        guard CLLocationManager.locationServicesEnabled() else {
+            isShowingPermissionDialog = true
+            return
+        }
+
+        switch authorizationStatus {
+        case .notDetermined:
+            manager.requestWhenInUseAuthorization()
+        case .authorizedWhenInUse, .authorizedAlways:
+            onAuthorized()
+            self.onAuthorized = nil
+        case .denied, .restricted:
+            isShowingPermissionDialog = true
+        @unknown default:
+            isShowingPermissionDialog = true
+        }
+    }
+
+    func dismissPermissionDialog() {
+        isShowingPermissionDialog = false
+        onAuthorized = nil
+    }
+
+    func openAppSettings() {
+        isShowingPermissionDialog = false
+        onAuthorized = nil
+
+        #if os(iOS)
+        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+        UIApplication.shared.open(url)
+        #endif
+    }
+}
+
+extension RunningStartPermissionRequester: CLLocationManagerDelegate {
+    nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        Task { @MainActor in
+            authorizationStatus = manager.authorizationStatus
+
+            switch authorizationStatus {
+            case .authorizedWhenInUse, .authorizedAlways:
+                onAuthorized?()
+                onAuthorized = nil
+            case .denied, .restricted:
+                isShowingPermissionDialog = true
+                onAuthorized = nil
+            case .notDetermined:
+                break
+            @unknown default:
+                isShowingPermissionDialog = true
+                onAuthorized = nil
+            }
+        }
+    }
 }
 
 private struct HomeHeaderView: View {
