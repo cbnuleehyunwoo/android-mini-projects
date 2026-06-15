@@ -103,6 +103,7 @@ struct TeamDashboardView: View {
                             TeamMemberRunCard(member: member)
                                 .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
                                 .onTapGesture {
+                                    logTeamMemberTap(member)
                                     guard let detail = member.detail else { return }
                                     onSelectMember(detail)
                                 }
@@ -399,6 +400,7 @@ struct TeamDashboardView: View {
             let fetchedDailySummary = try await nextDailySummary
             do {
                 let fetchedSeasonStats = try await nextSeasonStats
+                logFetchedSeasonStats(fetchedSeasonStats)
                 dailySummary = fetchedDailySummary
                 seasonStats = fetchedSeasonStats
             } catch {
@@ -417,6 +419,29 @@ struct TeamDashboardView: View {
         }
 
         hasResolvedDashboard = true
+    }
+
+    private func logFetchedSeasonStats(_ stats: TeamSeasonStats) {
+        #if DEBUG
+        print(
+            """
+            [TeamDashboard][season-stats] seasonID=\(stats.season.id) memberCount=\(stats.members.count)
+            \(stats.members.map { member in
+                "- id=\(member.id), matchingID=\(member.matchingID), name=\(member.nickname), distance=\(member.seasonDistanceMeters), duration=\(member.seasonDurationSeconds), runs=\(member.seasonRunCount), pace=\(member.averagePaceSecondsPerKilometer.map(String.init) ?? "nil"), joinedAt=\(member.teamJoinedAt)"
+            }.joined(separator: "\n"))
+            """
+        )
+        #endif
+    }
+
+    private func logTeamMemberTap(_ member: TeamMemberCardModel) {
+        #if DEBUG
+        print(
+            """
+            [TeamDashboard][member-tap] cardID=\(member.id), name=\(member.name), hasDetail=\(member.detail != nil), dailyID=\(member.debugDailyID ?? "nil"), seasonID=\(member.debugSeasonID ?? "nil"), seasonMatchingID=\(member.debugSeasonMatchingID ?? "nil"), seasonDistance=\(member.debugSeasonDistanceMeters.map(String.init) ?? "nil"), seasonDuration=\(member.debugSeasonDurationSeconds.map(String.init) ?? "nil"), seasonRuns=\(member.debugSeasonRunCount.map(String.init) ?? "nil"), seasonPace=\(member.debugSeasonAveragePaceSecondsPerKilometer.map(String.init) ?? "nil")
+            """
+        )
+        #endif
     }
 
     @MainActor
@@ -676,6 +701,13 @@ private struct TeamMemberCardModel: Identifiable {
     let hasRunRecord: Bool
     let isCurrentUser: Bool
     let detail: TeamMemberSeasonDetail?
+    let debugDailyID: String?
+    let debugSeasonID: String?
+    let debugSeasonMatchingID: String?
+    let debugSeasonDistanceMeters: Int?
+    let debugSeasonDurationSeconds: Int?
+    let debugSeasonRunCount: Int?
+    let debugSeasonAveragePaceSecondsPerKilometer: Int?
 
     init(
         id: String,
@@ -686,7 +718,14 @@ private struct TeamMemberCardModel: Identifiable {
         paceText: String,
         hasRunRecord: Bool,
         isCurrentUser: Bool,
-        detail: TeamMemberSeasonDetail?
+        detail: TeamMemberSeasonDetail?,
+        debugDailyID: String? = nil,
+        debugSeasonID: String? = nil,
+        debugSeasonMatchingID: String? = nil,
+        debugSeasonDistanceMeters: Int? = nil,
+        debugSeasonDurationSeconds: Int? = nil,
+        debugSeasonRunCount: Int? = nil,
+        debugSeasonAveragePaceSecondsPerKilometer: Int? = nil
     ) {
         self.id = id
         self.name = name
@@ -697,6 +736,13 @@ private struct TeamMemberCardModel: Identifiable {
         self.hasRunRecord = hasRunRecord
         self.isCurrentUser = isCurrentUser
         self.detail = detail
+        self.debugDailyID = debugDailyID
+        self.debugSeasonID = debugSeasonID
+        self.debugSeasonMatchingID = debugSeasonMatchingID
+        self.debugSeasonDistanceMeters = debugSeasonDistanceMeters
+        self.debugSeasonDurationSeconds = debugSeasonDurationSeconds
+        self.debugSeasonRunCount = debugSeasonRunCount
+        self.debugSeasonAveragePaceSecondsPerKilometer = debugSeasonAveragePaceSecondsPerKilometer
     }
 
     init(
@@ -717,6 +763,13 @@ private struct TeamMemberCardModel: Identifiable {
         paceText = "\(RunningMetricFormatter.pace(dailyMember?.averagePaceSecondsPerKilometer.map(TimeInterval.init)))/km"
         hasRunRecord = dailyMember?.completed ?? false
         self.isCurrentUser = isCurrentUser
+        debugDailyID = dailyMember?.id
+        debugSeasonID = seasonMember?.id
+        debugSeasonMatchingID = seasonMember?.matchingID
+        debugSeasonDistanceMeters = seasonMember?.seasonDistanceMeters
+        debugSeasonDurationSeconds = seasonMember?.seasonDurationSeconds
+        debugSeasonRunCount = seasonMember?.seasonRunCount
+        debugSeasonAveragePaceSecondsPerKilometer = seasonMember?.averagePaceSecondsPerKilometer
         detail = seasonMember.map { member in
             TeamMemberSeasonDetail(
                 id: member.id,
@@ -741,6 +794,13 @@ private struct TeamMemberCardModel: Identifiable {
         paceText = memberPaceText
         hasRunRecord = member.completed
         self.isCurrentUser = isCurrentUser
+        debugDailyID = member.id
+        debugSeasonID = seasonMember?.id
+        debugSeasonMatchingID = seasonMember?.matchingID
+        debugSeasonDistanceMeters = seasonMember?.seasonDistanceMeters
+        debugSeasonDurationSeconds = seasonMember?.seasonDurationSeconds
+        debugSeasonRunCount = seasonMember?.seasonRunCount
+        debugSeasonAveragePaceSecondsPerKilometer = seasonMember?.averagePaceSecondsPerKilometer
         detail = seasonMember.map { member in
             TeamMemberSeasonDetail(
                 id: member.id,
