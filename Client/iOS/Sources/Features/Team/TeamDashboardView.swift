@@ -12,6 +12,8 @@ struct TeamDashboardView: View {
     @State private var dailySummary: TeamDailySummary?
     @State private var seasonStats: TeamSeasonStats?
     @State private var hasResolvedDashboard = false
+    @State private var selectedDate = Calendar.current.startOfDay(for: Date())
+    @State private var isDateLoading = false
 
     var body: some View {
         Group {
@@ -53,10 +55,27 @@ struct TeamDashboardView: View {
                 .padding(.horizontal, 24)
                 .padding(.top, 32)
 
-                Text(summaryDateText)
-                    .font(AppTheme.Typography.font(size: 18, weight: .medium))
-                    .foregroundStyle(.black)
-                    .padding(.top, 10)
+                HStack(spacing: 8) {
+                    dateButton(
+                        systemName: "chevron.left",
+                        accessibilityLabel: "이전 날짜",
+                        isEnabled: !isDateLoading,
+                        action: moveToPreviousDate
+                    )
+
+                    Text(summaryDateText)
+                        .font(AppTheme.Typography.font(size: 18, weight: .medium))
+                        .foregroundStyle(.black)
+                        .frame(minWidth: 190)
+
+                    dateButton(
+                        systemName: "chevron.right",
+                        accessibilityLabel: "다음 날짜",
+                        isEnabled: canMoveToNextDate && !isDateLoading,
+                        action: moveToNextDate
+                    )
+                }
+                .padding(.top, 10)
 
                 HStack(spacing: 8) {
                     metricCard(value: teamDistanceText, label: "팀 총 거리")
@@ -95,6 +114,24 @@ struct TeamDashboardView: View {
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .shadow(color: .black.opacity(0.10), radius: 8, x: 0, y: 2)
+    }
+
+    private func dateButton(
+        systemName: String,
+        accessibilityLabel: String,
+        isEnabled: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Image(systemName: systemName)
+                .font(.system(size: 18, weight: .bold))
+                .foregroundStyle(isEnabled ? Color.black : Color.gray.opacity(0.3))
+                .frame(width: 40, height: 40)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(!isEnabled)
+        .accessibilityLabel(accessibilityLabel)
     }
 
     private var memberCards: [TeamMemberCardModel] {
@@ -167,18 +204,44 @@ struct TeamDashboardView: View {
     }
 
     private var summaryDateText: String {
-        TeamDashboardFormatter.dateString(from: dailySummary?.date ?? Date())
+        TeamDashboardFormatter.dateString(from: selectedDate)
+    }
+
+    private var canMoveToNextDate: Bool {
+        selectedDate < Calendar.current.startOfDay(for: Date())
+    }
+
+    private func moveToPreviousDate() {
+        moveDate(by: -1)
+    }
+
+    private func moveToNextDate() {
+        guard canMoveToNextDate else { return }
+        moveDate(by: 1)
+    }
+
+    private func moveDate(by value: Int) {
+        guard !isDateLoading else { return }
+        guard let date = Calendar.current.date(byAdding: .day, value: value, to: selectedDate) else { return }
+
+        selectedDate = Calendar.current.startOfDay(for: date)
+        isDateLoading = true
+        let requestDate = selectedDate
+        Task {
+            await refreshDailySummary(for: requestDate)
+        }
     }
 
     @MainActor
     private func refreshDashboard() async {
         guard team != nil, let accessToken else { return }
+        selectedDate = Calendar.current.startOfDay(for: Date())
         dailySummary = nil
         seasonStats = nil
         hasResolvedDashboard = false
 
         do {
-            async let nextDailySummary = teamService.fetchDailySummary(date: Date(), accessToken: accessToken)
+            async let nextDailySummary = teamService.fetchDailySummary(date: selectedDate, accessToken: accessToken)
             async let nextSeasonStats = teamService.fetchMyTeamSeasonStats(seasonID: nil, accessToken: accessToken)
 
             dailySummary = try await nextDailySummary
@@ -189,6 +252,24 @@ struct TeamDashboardView: View {
         }
 
         hasResolvedDashboard = true
+    }
+
+    @MainActor
+    private func refreshDailySummary(for date: Date) async {
+        guard team != nil, let accessToken else {
+            isDateLoading = false
+            return
+        }
+        defer { isDateLoading = false }
+
+        do {
+            let summary = try await teamService.fetchDailySummary(date: date, accessToken: accessToken)
+            guard Calendar.current.isDate(date, inSameDayAs: selectedDate) else { return }
+            dailySummary = summary
+        } catch {
+            guard Calendar.current.isDate(date, inSameDayAs: selectedDate) else { return }
+            dailySummary = nil
+        }
     }
 }
 
