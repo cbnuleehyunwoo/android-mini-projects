@@ -303,7 +303,7 @@ struct TeamDashboardView: View {
         }
 
         let totalDistance = cache.records.reduce(0) { $0 + $1.distanceKilometers }
-        return "\(totalDistance.formatted(.number.precision(.fractionLength(1)))) km"
+        return "\(totalDistance.formatted(.number.precision(.fractionLength(2)))) km"
     }
 
     private var completedMemberCount: Int {
@@ -802,7 +802,7 @@ private struct TeamMemberCardModel: Identifiable {
         let totalElapsedTime = records.reduce(0) { $0 + $1.elapsedTime }
         let totalDistanceKilometers = totalDistanceMeters / 1_000
         let averagePace = totalDistanceKilometers > 0.01 ? totalElapsedTime / totalDistanceKilometers : nil
-        let distanceText = "\(totalDistanceKilometers.formatted(.number.precision(.fractionLength(1)))) km"
+        let distanceText = "\(totalDistanceKilometers.formatted(.number.precision(.fractionLength(2)))) km"
 
         return TeamMemberCardModel(
             id: id,
@@ -817,7 +817,7 @@ private struct TeamMemberCardModel: Identifiable {
                 id: id,
                 name: name,
                 joinedAt: "",
-                seasonDistance: totalDistanceKilometers.formatted(.number.precision(.fractionLength(1))),
+                seasonDistance: totalDistanceKilometers.formatted(.number.precision(.fractionLength(2))),
                 seasonRunCount: "\(records.count)",
                 seasonAveragePace: RunningMetricFormatter.pace(averagePace)
             )
@@ -829,7 +829,7 @@ private struct TeamMemberCardModel: Identifiable {
             id: "member-empty-\(index)",
             name: "버거킹 스마일",
             animation: .hamburger,
-            distanceText: "0.0 km",
+            distanceText: "0.00 km",
             timeText: "--:--",
             paceText: "0'00\"/km",
             hasRunRecord: false,
@@ -838,7 +838,7 @@ private struct TeamMemberCardModel: Identifiable {
                 id: "member-empty-\(index)",
                 name: "버거킹 스마일",
                 joinedAt: "",
-                seasonDistance: "0.0",
+                seasonDistance: "0.00",
                 seasonRunCount: "0",
                 seasonAveragePace: "0'00\""
             )
@@ -1180,18 +1180,18 @@ private enum TeamDashboardFormatter {
 
     static func distanceKilometers(_ distanceMeters: Int) -> String {
         let kilometers = Double(distanceMeters) / 1_000
-        let formatted = kilometers.formatted(.number.precision(.fractionLength(kilometers.truncatingRemainder(dividingBy: 1) == 0 ? 0 : 1)))
+        let formatted = kilometers.formatted(.number.precision(.fractionLength(2)))
         return "\(formatted) km"
     }
 
     static func memberDistanceKilometers(_ distanceMeters: Int) -> String {
         let kilometers = Double(distanceMeters) / 1_000
-        return "\(kilometers.formatted(.number.precision(.fractionLength(1)))) km"
+        return "\(kilometers.formatted(.number.precision(.fractionLength(2)))) km"
     }
 
     static func seasonDistanceKilometers(_ distanceMeters: Int) -> String {
         let kilometers = Double(distanceMeters) / 1_000
-        return kilometers.formatted(.number.precision(.fractionLength(1)))
+        return kilometers.formatted(.number.precision(.fractionLength(2)))
     }
 }
 
@@ -1291,7 +1291,7 @@ private enum TeamRunStreakCalculator {
             id: "member-preview",
             name: "커비",
             animation: .running,
-            distanceText: "12.0 km",
+            distanceText: "12.00 km",
             timeText: "10:00",
             paceText: "0'50\"/km",
             hasRunRecord: true,
@@ -1300,7 +1300,7 @@ private enum TeamRunStreakCalculator {
                 id: "member-preview",
                 name: "커비",
                 joinedAt: "2026-05-01",
-                seasonDistance: "87.3",
+                seasonDistance: "87.30",
                 seasonRunCount: "12",
                 seasonAveragePace: "5'24\""
             )

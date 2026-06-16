@@ -169,10 +169,10 @@ struct HistoryView: View {
     }
 
     private var totalDistanceText: String {
-        guard !isWaitingForRemoteRecords else { return "0.0" }
+        guard !isWaitingForRemoteRecords else { return "0.00" }
 
         let total = cache.totalDistanceMeters.map { Double($0) / 1_000 } ?? visibleSelectedRecords.reduce(0) { $0 + $1.distanceKilometers }
-        return total.formatted(.number.precision(.fractionLength(1)))
+        return total.formatted(.number.precision(.fractionLength(2)))
     }
 
     private var refreshIdentifier: String {
@@ -739,7 +739,7 @@ private struct RunningRecordCard: View {
                     .font(AppTheme.Typography.caption1)
                     .foregroundStyle(Color.gray)
 
-                Text("\(record.distanceKilometers.formatted(.number.precision(.fractionLength(1))))KM")
+                Text("\(record.distanceKilometers.formatted(.number.precision(.fractionLength(2))))KM")
                     .font(AppTheme.Typography.font(size: 22, weight: .bold))
                     .foregroundStyle(.black)
 
