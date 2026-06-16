@@ -40,10 +40,9 @@ struct HomeView: View {
                         .background(AppTheme.Colors.primary)
                         .clipShape(Circle())
                 }
-                .padding(.bottom, -32)
+                .padding(.bottom, 16)
             }
             .padding(.top, 8)
-            .padding(.bottom, 55)
             .frame(maxHeight: .infinity)
         }
         .background(Color.white)
