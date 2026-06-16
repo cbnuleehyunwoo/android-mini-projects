@@ -25,10 +25,10 @@ struct RunningSummaryView: View {
                 .padding(.top, 28)
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                    SummaryMetric(title: "시간", value: RunningMetricFormatter.duration(record.elapsedTime), suffix: "", icon: "icon_metric_time")
-                    SummaryMetric(title: "거리", value: RunningMetricFormatter.distanceKilometers(record.distanceMeters), suffix: "km", icon: "icon_footprint")
-                    SummaryMetric(title: "페이스", value: RunningMetricFormatter.pace(record.averagePaceSecondsPerKilometer), suffix: "/km", icon: "icon_metric_pace")
-                    SummaryMetric(title: "칼로리", value: "\(record.estimatedCalories)", suffix: "kcal", icon: "icon_metric_kcal")
+                    SummaryMetric(title: "시간", value: RunningMetricFormatter.duration(record.elapsedTime), suffix: "")
+                    SummaryMetric(title: "거리", value: RunningMetricFormatter.distanceKilometers(record.distanceMeters), suffix: "km")
+                    SummaryMetric(title: "페이스", value: RunningMetricFormatter.pace(record.averagePaceSecondsPerKilometer), suffix: "/km")
+                    SummaryMetric(title: "칼로리", value: "\(record.estimatedCalories)", suffix: "kcal")
                 }
                 .padding(.horizontal, 22)
 
@@ -64,19 +64,13 @@ private struct SummaryMetric: View {
     let title: String
     let value: String
     let suffix: String
-    let icon: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 6) {
-                Image(icon)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 16, height: 16)
-                Text(title)
-                    .font(AppTheme.Typography.font(size: 13, weight: .medium))
-                    .foregroundStyle(AppTheme.Colors.textPrimary)
-            }
+            Text(title)
+                .font(AppTheme.Typography.font(size: 13, weight: .medium))
+                .foregroundStyle(AppTheme.Colors.textPrimary)
+
             HStack(alignment: .lastTextBaseline, spacing: 3) {
                 Text(value)
                     .font(AppTheme.Typography.font(size: 27, weight: .black))
