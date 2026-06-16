@@ -25,11 +25,11 @@ struct RunpamineConfirmationDialog: View {
 
             VStack(spacing: 0) {
                 Text(title)
-                    .font(AppTheme.Typography.font(size: 24, weight: .semibold))
+                    .font(AppTheme.Typography.font(size: 20, weight: .semibold))
                     .foregroundStyle(titleColor)
 
                 Text(message)
-                    .font(AppTheme.Typography.font(size: 20, weight: .regular))
+                    .font(AppTheme.Typography.font(size: 16, weight: .regular))
                     .foregroundStyle(messageColor)
                     .padding(.top, messageTopPadding)
                     .multilineTextAlignment(.center)
@@ -87,7 +87,7 @@ struct RunpamineConfirmationDialog: View {
             let hasBorder = !isPrimary && dismissButtonColor == nil
             
             Text(title)
-                .font(AppTheme.Typography.font(size: 22, weight: .semibold))
+                .font(AppTheme.Typography.font(size: 16, weight: .semibold))
                 .foregroundStyle(textColor)
                 .frame(maxWidth: .infinity)
                 .frame(height: 54)
