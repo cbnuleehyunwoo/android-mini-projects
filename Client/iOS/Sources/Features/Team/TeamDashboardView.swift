@@ -559,6 +559,7 @@ private struct TeamMemberRunCardSkeleton: View {
                 RoundedRectangle(cornerRadius: 0, style: .continuous)
                     .fill(TeamSkeletonStyle.fill)
                     .frame(width: 80, height: 80)
+                    .padding(.leading, 25)
 
                 Spacer()
                     .frame(width: 4)
@@ -594,20 +595,16 @@ private struct TeamMetricRowSkeleton: View {
         HStack(spacing: 0) {
             RoundedRectangle(cornerRadius: 4, style: .continuous)
                 .fill(TeamSkeletonStyle.fill)
-                .frame(width: 18, height: 18)
-                .frame(width: 24, height: 20, alignment: .leading)
-
-            RoundedRectangle(cornerRadius: 4, style: .continuous)
-                .fill(TeamSkeletonStyle.fill)
                 .frame(width: 34, height: 16)
                 .frame(width: 48, alignment: .leading)
+
+            Spacer(minLength: 0)
 
             RoundedRectangle(cornerRadius: 4, style: .continuous)
                 .fill(TeamSkeletonStyle.fill)
                 .frame(width: 58, height: 16)
-                .frame(maxWidth: .infinity, alignment: .trailing)
         }
-        .frame(width: 136, height: 20, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: 20, maxHeight: 20, alignment: .leading)
     }
 }
 
@@ -714,6 +711,7 @@ private struct TeamMemberRunCard: View {
                 RunpamineLottieView(animation: member.animation)
                     .frame(width: 80, height: 80)
                     .clipped()
+                    .padding(.leading, 25)
 
                 Spacer()
                     .frame(width: 4)
@@ -769,20 +767,19 @@ private struct TeamRunMetricRow: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            TeamRunMetricIcon(icon: icon)
-
             Text(label)
                 .font(AppTheme.Typography.font(size: 14, weight: .medium))
                 .foregroundStyle(Color(red: 0.58, green: 0.64, blue: 0.72))
                 .lineLimit(1)
                 .frame(width: 48, alignment: .leading)
 
+            Spacer(minLength: 0)
+
             Text(value)
                 .font(AppTheme.Typography.font(size: 14, weight: .bold))
                 .foregroundStyle(AppTheme.Colors.textPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.72)
-                .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .frame(maxWidth: .infinity, minHeight: 20, maxHeight: 20, alignment: .leading)
     }
