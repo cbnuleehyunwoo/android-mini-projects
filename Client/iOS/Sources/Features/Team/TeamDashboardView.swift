@@ -560,14 +560,15 @@ private struct TeamMemberRunCardSkeleton: View {
                     .fill(TeamSkeletonStyle.fill)
                     .frame(width: 80, height: 80)
 
-                Spacer(minLength: 14)
+                Spacer()
+                    .frame(width: 14)
 
                 VStack(alignment: .leading, spacing: 10) {
                     TeamMetricRowSkeleton()
                     TeamMetricRowSkeleton()
                     TeamMetricRowSkeleton()
                 }
-                .frame(width: 136, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
                 Spacer()
                     .frame(width: 10)
@@ -714,7 +715,8 @@ private struct TeamMemberRunCard: View {
                     .frame(width: 80, height: 80)
                     .clipped()
 
-                Spacer(minLength: 14)
+                Spacer()
+                    .frame(width: 14)
 
                 TeamRunMetricsBlock(member: member)
 
@@ -756,7 +758,7 @@ private struct TeamRunMetricsBlock: View {
             TeamRunMetricRow(icon: "icon_metric_time", label: "시간", value: member.timeText)
             TeamRunMetricRow(icon: "icon_metric_pace", label: "페이스", value: member.paceText)
         }
-        .frame(width: 136, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -782,7 +784,7 @@ private struct TeamRunMetricRow: View {
                 .minimumScaleFactor(0.72)
                 .frame(maxWidth: .infinity, alignment: .trailing)
         }
-        .frame(width: 136, height: 20, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: 20, maxHeight: 20, alignment: .leading)
     }
 }
 
