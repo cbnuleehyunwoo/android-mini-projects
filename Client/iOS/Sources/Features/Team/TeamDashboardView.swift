@@ -560,8 +560,7 @@ private struct TeamMemberRunCardSkeleton: View {
                     .fill(TeamSkeletonStyle.fill)
                     .frame(width: 80, height: 80)
 
-                Spacer()
-                    .frame(width: 14)
+                Spacer(minLength: 14)
 
                 VStack(alignment: .leading, spacing: 10) {
                     TeamMetricRowSkeleton()
@@ -570,7 +569,8 @@ private struct TeamMemberRunCardSkeleton: View {
                 }
                 .frame(width: 136, alignment: .leading)
 
-                Spacer(minLength: 0)
+                Spacer()
+                    .frame(width: 10)
 
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .fill(TeamSkeletonStyle.fill)
@@ -714,12 +714,12 @@ private struct TeamMemberRunCard: View {
                     .frame(width: 80, height: 80)
                     .clipped()
 
-                Spacer()
-                    .frame(width: 14)
+                Spacer(minLength: 14)
 
                 TeamRunMetricsBlock(member: member)
 
-                Spacer(minLength: 0)
+                Spacer()
+                    .frame(width: 10)
 
                 TeamCompletionStamp(isCompleted: member.hasRunRecord)
             }
@@ -776,7 +776,7 @@ private struct TeamRunMetricRow: View {
                 .frame(width: 48, alignment: .leading)
 
             Text(value)
-                .font(AppTheme.Typography.font(size: 14, weight: .black))
+                .font(AppTheme.Typography.font(size: 14, weight: .bold))
                 .foregroundStyle(AppTheme.Colors.textPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.72)
