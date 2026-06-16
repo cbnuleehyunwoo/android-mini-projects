@@ -5,6 +5,15 @@ struct RunpamineConfirmationDialog: View {
     let message: String
     let dismissText: String
     let confirmText: String
+    var confirmButtonColor: Color = AppTheme.Colors.primary
+    var dismissButtonColor: Color? = nil
+    var dismissButtonTextColor: Color? = nil
+    var titleColor: Color = AppTheme.Colors.primary
+    var messageColor: Color = .black
+    var confirmButtonWidthRatio: Double = 0.5
+    var verticalPadding: CGFloat = 30
+    var messageTopPadding: CGFloat = 20
+    var buttonTopPadding: CGFloat = 36
     let onDismiss: () -> Void
     let onConfirm: () -> Void
 
@@ -17,24 +26,40 @@ struct RunpamineConfirmationDialog: View {
             VStack(spacing: 0) {
                 Text(title)
                     .font(AppTheme.Typography.font(size: 24, weight: .semibold))
-                    .foregroundStyle(AppTheme.Colors.primary)
+                    .foregroundStyle(titleColor)
 
                 Text(message)
                     .font(AppTheme.Typography.font(size: 20, weight: .regular))
-                    .foregroundStyle(.black)
-                    .padding(.top, 20)
+                    .foregroundStyle(messageColor)
+                    .padding(.top, messageTopPadding)
+                    .multilineTextAlignment(.center)
 
                 HStack(spacing: 16) {
-                    dialogButton(title: dismissText, isPrimary: false, action: onDismiss)
-                    dialogButton(title: confirmText, isPrimary: true, action: onConfirm)
+                    if confirmButtonWidthRatio == 0.5 {
+                        dialogButton(title: dismissText, isPrimary: false, action: onDismiss)
+                        dialogButton(title: confirmText, isPrimary: true, action: onConfirm)
+                    } else {
+                        GeometryReader { geometry in
+                            let totalWidth = geometry.size.width
+                            let spacing: CGFloat = 16
+                            let availableWidth = totalWidth - spacing
+                            HStack(spacing: spacing) {
+                                dialogButton(title: dismissText, isPrimary: false, action: onDismiss)
+                                    .frame(width: availableWidth * (1.0 - confirmButtonWidthRatio))
+                                dialogButton(title: confirmText, isPrimary: true, action: onConfirm)
+                                    .frame(width: availableWidth * confirmButtonWidthRatio)
+                            }
+                        }
+                        .frame(height: 54)
+                    }
                 }
-                .padding(.top, 36)
+                .padding(.top, buttonTopPadding)
             }
             .padding(.horizontal, 24)
-            .padding(.vertical, 30)
+            .padding(.vertical, verticalPadding)
             .frame(maxWidth: 432)
             .background(Color.white)
-            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: 21, style: .continuous))
             .padding(.horizontal, 28)
         }
         .transition(.opacity)
@@ -43,15 +68,35 @@ struct RunpamineConfirmationDialog: View {
 
     private func dialogButton(title: String, isPrimary: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
+            let textColor: Color = {
+                if isPrimary {
+                    return .white
+                } else {
+                    return dismissButtonTextColor ?? AppTheme.Colors.primary
+                }
+            }()
+            
+            let backgroundColor: Color = {
+                if isPrimary {
+                    return confirmButtonColor
+                } else {
+                    return dismissButtonColor ?? Color.white
+                }
+            }()
+            
+            let hasBorder = !isPrimary && dismissButtonColor == nil
+            
             Text(title)
-                .font(AppTheme.Typography.font(size: 16, weight: .bold))
-                .foregroundStyle(isPrimary ? .white : AppTheme.Colors.primary)
+                .font(AppTheme.Typography.font(size: 22, weight: .semibold))
+                .foregroundStyle(textColor)
                 .frame(maxWidth: .infinity)
                 .frame(height: 54)
-                .background(isPrimary ? AppTheme.Colors.primary : Color.white)
+                .background(backgroundColor)
                 .overlay {
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(AppTheme.Colors.primary, lineWidth: isPrimary ? 0 : 1.5)
+                    if hasBorder {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(AppTheme.Colors.primary, lineWidth: 1.5)
+                    }
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
