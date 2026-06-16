@@ -106,13 +106,13 @@ fun TeamMemberSeasonBottomSheet(
                     modifier = Modifier.weight(1f),
                 )
                 SeasonMetric(
-                    label = "총 시간",
-                    value = member.seasonDuration,
+                    label = "총 러닝 횟수",
+                    value = member.seasonRunCount.toString(),
                     modifier = Modifier.weight(1f),
                 )
                 SeasonMetric(
-                    label = "총 러닝 횟수",
-                    value = member.seasonRunCount.toString(),
+                    label = "평균 페이스",
+                    value = member.seasonAveragePace,
                     modifier = Modifier.weight(1f),
                 )
             }
