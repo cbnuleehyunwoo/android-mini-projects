@@ -87,6 +87,8 @@ private fun HomeContent(
         uiState.teamName?.let { teamName ->
             HomeTeamSection(
                 teamName = teamName,
+                todayRunMemberCount = uiState.todayRunMemberCount,
+                teamMemberCount = uiState.teamMemberCount,
                 onClick = onTeamClick,
                 modifier = Modifier.padding(horizontal = 24.dp),
             )

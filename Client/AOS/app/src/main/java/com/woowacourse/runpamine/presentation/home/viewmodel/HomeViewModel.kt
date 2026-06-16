@@ -35,6 +35,8 @@ class HomeViewModel(
                     it.copy(
                         nickname = homeState.profile?.nickname.orEmpty(),
                         teamName = homeState.team?.name,
+                        teamMemberCount = homeState.team?.memberCount ?: 0,
+                        todayRunMemberCount = homeState.team?.todayRunMemberCount ?: 0,
                         isLoading = false,
                     )
                 }

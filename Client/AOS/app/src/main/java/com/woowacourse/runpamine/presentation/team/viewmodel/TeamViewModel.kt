@@ -220,9 +220,7 @@ private fun TeamRunSummary.toTeamMember(seasonStats: TeamMemberSeasonStats?): Te
         seasonAveragePace = totalAveragePaceSecondsPerKm.toSeasonPaceText(),
     )
 
-private fun TeamMemberSummary.toEmptyTeamMember(
-    seasonStats: TeamMemberSeasonStats? = null,
-): TeamMember =
+private fun TeamMemberSummary.toEmptyTeamMember(seasonStats: TeamMemberSeasonStats? = null): TeamMember =
     TeamMember(
         id = id,
         name = nickname,

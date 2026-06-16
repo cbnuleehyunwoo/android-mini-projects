@@ -6,14 +6,21 @@ import android.content.Context
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,12 +31,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -43,6 +54,7 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.woowacourse.runpamine.R
+import com.woowacourse.runpamine.ui.theme.Blue40
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
@@ -78,7 +90,6 @@ fun HomeMapSection(modifier: Modifier = Modifier) {
     } else {
         LocationPermissionRequest(
             onRequestPermission = { permissionLauncher.launch(LOCATION_PERMISSIONS) },
-            modifier = modifier,
         )
     }
 }
@@ -129,24 +140,65 @@ private fun LocationPermissionRequest(
     Box(
         modifier =
             modifier
-                .clip(RoundedCornerShape(15.dp)),
+                .fillMaxSize()
+                .padding(horizontal = 24.dp),
         contentAlignment = Alignment.Center,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+            modifier = Modifier.padding(horizontal = 24.dp),
         ) {
-            Text(
-                text = stringResource(R.string.map_permission_rationale),
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            Button(onClick = onRequestPermission) {
-                Text(
-                    text = stringResource(R.string.map_permission_request),
-                    color = Color.White,
+            Box(
+                modifier =
+                    Modifier
+                        .size(64.dp)
+                        .background(Color(0xFFEAF4FF), CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.no_gps),
+                    contentDescription = null,
+                    colorFilter = ColorFilter.tint(Blue40),
+                    modifier = Modifier.size(28.dp),
                 )
             }
+            Text(
+                text = stringResource(R.string.map_permission_title),
+                style =
+                    MaterialTheme.typography.headlineSmall.copy(
+                        fontSize = 18.sp,
+                    ),
+                color = Color(0xFF111827),
+                fontWeight = FontWeight.ExtraBold,
+                textAlign = TextAlign.Center,
+            )
+            Text(
+                text = stringResource(R.string.map_permission_rationale),
+                style =
+                    MaterialTheme.typography.bodyLarge.copy(
+                        fontSize = 14.sp,
+                    ),
+                color = Color(0xFF6B7280),
+                textAlign = TextAlign.Center,
+            )
+            Button(
+                onClick = onRequestPermission,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(26.dp),
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = Blue40,
+                        contentColor = Color.White,
+                    ),
+            ) {
+                Text(
+                    text = stringResource(R.string.map_permission_request),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                )
+            }
+            Spacer(modifier = Modifier.height(48.dp))
         }
     }
 }

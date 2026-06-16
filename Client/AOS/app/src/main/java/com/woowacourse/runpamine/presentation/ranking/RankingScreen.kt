@@ -407,7 +407,7 @@ private fun previewUiState(scope: RankingScope = RankingScope.PERSONAL): Ranking
         homeState =
             HomeState(
                 profile = UserProfile("user-2", "김영희", null, "team-2"),
-                team = TeamSummary("team-2", "김영희", null, null, 5, false),
+                team = TeamSummary("team-2", "김영희", null, null, 5, 0, false),
             ),
         myRankingSummary =
             MyRankingSummary(
