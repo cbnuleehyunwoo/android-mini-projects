@@ -832,34 +832,28 @@ private struct TeamMemberCardModel: Identifiable {
         dailyMember: TeamDailyMember?
     ) -> TeamMemberSeasonDetail? {
         guard let seasonMember else {
-            guard let dailyMember, dailyMember.completed, dailyMember.distanceMeters > 0 else { return nil }
+            guard let dailyMember else { return nil }
+            let hasTotalProfile = dailyMember.totalDistanceMeters != nil || dailyMember.totalRunCount != nil || dailyMember.totalAveragePaceSecondsPerKilometer != nil
+            guard hasTotalProfile || (dailyMember.completed && dailyMember.distanceMeters > 0) else { return nil }
 
             return TeamMemberSeasonDetail(
                 id: id,
                 name: name,
-                joinedAt: "",
-                seasonDistance: TeamDashboardFormatter.seasonDistanceKilometers(dailyMember.distanceMeters),
-                seasonRunCount: "1",
-                seasonAveragePace: RunningMetricFormatter.pace(dailyMember.averagePaceSecondsPerKilometer.map(TimeInterval.init))
+                joinedAt: dailyMember.teamJoinedAt,
+                seasonDistance: TeamDashboardFormatter.seasonDistanceKilometers(dailyMember.totalDistanceMeters ?? dailyMember.distanceMeters),
+                seasonRunCount: "\(dailyMember.totalRunCount ?? 1)",
+                seasonAveragePace: RunningMetricFormatter.pace((dailyMember.totalAveragePaceSecondsPerKilometer ?? dailyMember.averagePaceSecondsPerKilometer).map(TimeInterval.init))
             )
         }
 
-        let shouldUseDailyMinimum =
-            seasonMember.seasonDistanceMeters == 0 &&
-            seasonMember.seasonRunCount == 0 &&
-            (seasonMember.averagePaceSecondsPerKilometer ?? 0) == 0 &&
-            dailyMember?.completed == true &&
-            (dailyMember?.distanceMeters ?? 0) > 0
-
-        let distanceMeters = shouldUseDailyMinimum ? dailyMember?.distanceMeters ?? 0 : seasonMember.seasonDistanceMeters
-        let runCount = shouldUseDailyMinimum ? 1 : seasonMember.seasonRunCount
-        let averagePaceSecondsPerKilometer =
-            shouldUseDailyMinimum ? dailyMember?.averagePaceSecondsPerKilometer : seasonMember.averagePaceSecondsPerKilometer
+        let distanceMeters = dailyMember?.totalDistanceMeters ?? seasonMember.seasonDistanceMeters
+        let runCount = dailyMember?.totalRunCount ?? seasonMember.seasonRunCount
+        let averagePaceSecondsPerKilometer = dailyMember?.totalAveragePaceSecondsPerKilometer ?? seasonMember.averagePaceSecondsPerKilometer
 
         return TeamMemberSeasonDetail(
             id: seasonMember.id,
             name: seasonMember.nickname,
-            joinedAt: seasonMember.teamJoinedAt,
+            joinedAt: dailyMember.flatMap { $0.teamJoinedAt.isEmpty ? nil : $0.teamJoinedAt } ?? seasonMember.teamJoinedAt,
             seasonDistance: TeamDashboardFormatter.seasonDistanceKilometers(distanceMeters),
             seasonRunCount: "\(runCount)",
             seasonAveragePace: RunningMetricFormatter.pace(averagePaceSecondsPerKilometer.map(TimeInterval.init))
@@ -928,7 +922,7 @@ struct TeamMemberSeasonDetailSheet: View {
         VStack(spacing: 0) {
             HStack(alignment: .center, spacing: 16) {
                 Text(detail.name)
-                    .font(AppTheme.Typography.font(size: 32, weight: .bold))
+                    .font(AppTheme.Typography.font(size: 26, weight: .bold))
                     .foregroundStyle(.white)
                     .lineLimit(1)
                     .minimumScaleFactor(0.65)
@@ -1282,7 +1276,8 @@ private enum TeamMemberSeasonDetailFormatter {
     static func joinedDateText(from value: String) -> String {
         guard !value.isEmpty else { return "가입일 정보 없음" }
 
-        if let date = dateFormatter.date(from: value) {
+        let dateText = String(value.prefix(10))
+        if let date = dateFormatter.date(from: dateText) {
             return displayFormatter.string(from: date)
         }
 

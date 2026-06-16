@@ -220,21 +220,31 @@ final class MockTeamService: TeamServiceProtocol {
                     userID: "member-primary",
                     nickname: store.nickname,
                     avatarKey: "runner_default",
+                    teamJoinedAt: "2026-05-01",
                     distanceMeters: 12_000,
                     durationSeconds: 600,
                     averagePaceSecondsPerKilometer: 50,
                     calories: 200,
-                    completed: true
+                    completed: true,
+                    totalDistanceMeters: 42_800,
+                    totalDurationSeconds: 13_200,
+                    totalRunCount: 8,
+                    totalAveragePaceSecondsPerKilometer: 308
                 ),
                 TeamDailyMember(
                     userID: "member-burger-1",
                     nickname: "버거킹 스마일",
                     avatarKey: "burger_default",
+                    teamJoinedAt: "2026-05-01",
                     distanceMeters: 0,
                     durationSeconds: 0,
                     averagePaceSecondsPerKilometer: nil,
                     calories: 0,
-                    completed: false
+                    completed: false,
+                    totalDistanceMeters: 3_800,
+                    totalDurationSeconds: 1_400,
+                    totalRunCount: 2,
+                    totalAveragePaceSecondsPerKilometer: 368
                 )
             ]
         )
@@ -480,22 +490,76 @@ private struct TeamDailyMemberPayload: Decodable {
     let userId: String
     let nickname: String
     let avatarKey: String?
+    let teamJoinedAt: String?
     let distanceMeters: Int
     let durationSeconds: Int
     let averagePaceSecondsPerKm: Int?
     let calories: Int
     let completed: Bool
+    let totalDistanceMeters: Int?
+    let totalDurationSeconds: Int?
+    let totalRunCount: Int?
+    let totalAveragePaceSecondsPerKm: Int?
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case userId
+        case nickname
+        case avatarKey
+        case teamJoinedAt
+        case distanceMeters
+        case durationSeconds
+        case averagePaceSecondsPerKm
+        case calories
+        case completed
+        case totalDistanceMeters
+        case totalDurationSeconds
+        case totalRunCount
+        case totalAveragePaceSecondsPerKm
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let decodedUserID = try container.decodeIfPresent(String.self, forKey: .userId)
+        let decodedID = try container.decodeIfPresent(String.self, forKey: .id)
+
+        guard let userId = decodedUserID ?? decodedID else {
+            throw DecodingError.keyNotFound(
+                CodingKeys.userId,
+                DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Team daily member user id is missing")
+            )
+        }
+
+        self.userId = userId
+        nickname = try container.decode(String.self, forKey: .nickname)
+        avatarKey = try container.decodeIfPresent(String.self, forKey: .avatarKey)
+        teamJoinedAt = try container.decodeIfPresent(String.self, forKey: .teamJoinedAt)
+        distanceMeters = try container.decode(Int.self, forKey: .distanceMeters)
+        durationSeconds = try container.decode(Int.self, forKey: .durationSeconds)
+        averagePaceSecondsPerKm = try container.decodeIfPresent(Int.self, forKey: .averagePaceSecondsPerKm)
+        calories = try container.decode(Int.self, forKey: .calories)
+        completed = try container.decode(Bool.self, forKey: .completed)
+        totalDistanceMeters = try container.decodeIfPresent(Int.self, forKey: .totalDistanceMeters)
+        totalDurationSeconds = try container.decodeIfPresent(Int.self, forKey: .totalDurationSeconds)
+        totalRunCount = try container.decodeIfPresent(Int.self, forKey: .totalRunCount)
+        totalAveragePaceSecondsPerKm = try container.decodeIfPresent(Int.self, forKey: .totalAveragePaceSecondsPerKm)
+    }
 
     var domain: TeamDailyMember {
         TeamDailyMember(
             userID: userId,
             nickname: nickname,
             avatarKey: avatarKey,
+            teamJoinedAt: teamJoinedAt ?? "",
             distanceMeters: distanceMeters,
             durationSeconds: durationSeconds,
             averagePaceSecondsPerKilometer: averagePaceSecondsPerKm,
             calories: calories,
-            completed: completed
+            completed: completed,
+            totalDistanceMeters: totalDistanceMeters,
+            totalDurationSeconds: totalDurationSeconds,
+            totalRunCount: totalRunCount,
+            totalAveragePaceSecondsPerKilometer: totalAveragePaceSecondsPerKm
         )
     }
 }
