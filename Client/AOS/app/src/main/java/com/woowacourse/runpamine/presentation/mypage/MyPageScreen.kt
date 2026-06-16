@@ -100,6 +100,7 @@ fun MyPageScreen(
 
     LaunchedEffect(uiState.isLoggedOut) {
         if (uiState.isLoggedOut) {
+            viewModel.onLoggedOutHandled()
             onLogoutCompleted()
         }
     }

@@ -11,6 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
@@ -35,6 +36,7 @@ class DefaultRunTrackingRepository(
     private val scope = CoroutineScope(SupervisorJob() + dispatcher)
     private val mutex = Mutex()
     private var trackingJob: Job? = null
+    private var inactivityJob: Job? = null
     private val isPaused = MutableStateFlow(false)
 
     @Volatile
@@ -44,6 +46,9 @@ class DefaultRunTrackingRepository(
     private var currentSegmentStartedAt: Instant? = null
 
     private var activeSessionId: String? = null
+
+    @Volatile
+    private var lastMovementAt: Instant? = null
 
     override suspend fun startRun(): RunSession =
         mutex.withLock {
@@ -58,6 +63,7 @@ class DefaultRunTrackingRepository(
                 activeSessionId = session.id
                 accumulatedDurationSeconds = session.durationSeconds
                 currentSegmentStartedAt = now()
+                lastMovementAt = now()
                 isPaused.value = false
             }
             startCollectingIfNeeded(session, resetLastPoint = false)
@@ -74,6 +80,8 @@ class DefaultRunTrackingRepository(
             isPaused.value = true
             trackingJob?.cancel()
             trackingJob = null
+            inactivityJob?.cancel()
+            inactivityJob = null
             saveCurrentMetrics(activeSession, accumulatedDurationSeconds)
         }
     }
@@ -84,6 +92,7 @@ class DefaultRunTrackingRepository(
             if (!isPaused.value) return@withLock
 
             currentSegmentStartedAt = now()
+            lastMovementAt = now()
             isPaused.value = false
             startCollectingIfNeeded(activeSession, resetLastPoint = true)
         }
@@ -94,6 +103,8 @@ class DefaultRunTrackingRepository(
             val activeSession = localDataSource.findActiveSession() ?: return@withLock null
             trackingJob?.cancel()
             trackingJob = null
+            inactivityJob?.cancel()
+            inactivityJob = null
 
             val endedAt = now()
             val durationSeconds = currentElapsedSeconds()
@@ -112,6 +123,7 @@ class DefaultRunTrackingRepository(
             activeSessionId = null
             accumulatedDurationSeconds = 0
             currentSegmentStartedAt = null
+            lastMovementAt = null
             isPaused.value = false
             localDataSource.findSession(finishedSession.id)
         }
@@ -147,6 +159,23 @@ class DefaultRunTrackingRepository(
             scope.launch {
                 collectLocation(session, resetLastPoint)
             }
+        startInactivityMonitorIfNeeded()
+    }
+
+    private fun startInactivityMonitorIfNeeded() {
+        if (inactivityJob?.isActive == true) return
+
+        inactivityJob =
+            scope.launch {
+                while (true) {
+                    delay(INACTIVITY_CHECK_INTERVAL_MILLIS)
+                    val lastMovement = lastMovementAt ?: currentSegmentStartedAt ?: now()
+                    val inactiveSeconds = Duration.between(lastMovement, now()).seconds
+                    if (!isPaused.value && inactiveSeconds >= AUTO_PAUSE_INACTIVITY_SECONDS) {
+                        pauseRun()
+                    }
+                }
+            }
     }
 
     private suspend fun collectLocation(
@@ -171,7 +200,11 @@ class DefaultRunTrackingRepository(
                 if (lastPoint != null && !point.isPlausibleAfter(requireNotNull(lastPoint))) {
                     return@collect
                 }
-                distanceMeters += lastPoint?.let { metricCalculator.distanceBetweenMeters(it, point) } ?: 0
+                val movementMeters = lastPoint?.let { metricCalculator.distanceBetweenMeters(it, point) } ?: 0
+                if (lastPoint == null || movementMeters >= MOVEMENT_DISTANCE_THRESHOLD_METERS) {
+                    lastMovementAt = now()
+                }
+                distanceMeters += movementMeters
 
                 val durationSeconds = currentElapsedSeconds()
                 val averagePaceSecondsPerKm =
@@ -220,3 +253,7 @@ class DefaultRunTrackingRepository(
         )
     }
 }
+
+private const val AUTO_PAUSE_INACTIVITY_SECONDS = 10L
+private const val INACTIVITY_CHECK_INTERVAL_MILLIS = 1_000L
+private const val MOVEMENT_DISTANCE_THRESHOLD_METERS = 1
