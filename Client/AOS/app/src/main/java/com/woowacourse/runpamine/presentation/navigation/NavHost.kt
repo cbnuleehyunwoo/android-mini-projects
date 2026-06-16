@@ -143,6 +143,9 @@ fun NavHost(
                             time = record.duration,
                             pace = record.pace.removeSuffix("/km"),
                             calories = record.calories.toString(),
+                            date = record.dateText,
+                            startTime = record.startTime,
+                            endTime = record.endTime,
                         ),
                     )
                 },
@@ -168,6 +171,15 @@ fun NavHost(
                     navArgument(AppRoute.History.CALORIES) {
                         type = NavType.StringType
                     },
+                    navArgument(AppRoute.History.DATE) {
+                        type = NavType.StringType
+                    },
+                    navArgument(AppRoute.History.START_TIME) {
+                        type = NavType.StringType
+                    },
+                    navArgument(AppRoute.History.END_TIME) {
+                        type = NavType.StringType
+                    },
                 ),
         ) { backStackEntry ->
             HistoryScreen(
@@ -176,6 +188,9 @@ fun NavHost(
                 time = backStackEntry.arguments?.getString(AppRoute.History.TIME).orEmpty(),
                 pace = backStackEntry.arguments?.getString(AppRoute.History.PACE).orEmpty(),
                 calories = backStackEntry.arguments?.getString(AppRoute.History.CALORIES).orEmpty(),
+                date = backStackEntry.arguments?.getString(AppRoute.History.DATE).orEmpty(),
+                startTime = backStackEntry.arguments?.getString(AppRoute.History.START_TIME).orEmpty(),
+                endTime = backStackEntry.arguments?.getString(AppRoute.History.END_TIME).orEmpty(),
                 onBack = navController::popBackStack,
             )
         }

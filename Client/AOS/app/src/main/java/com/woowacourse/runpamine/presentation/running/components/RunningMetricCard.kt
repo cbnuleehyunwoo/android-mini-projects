@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.woowacourse.runpamine.R
@@ -33,12 +34,13 @@ fun RunningMetricCard(
     value: String,
     unit: String,
     modifier: Modifier = Modifier,
+    shadowElevation: Dp = 16.dp,
 ) {
     Surface(
         modifier = modifier.heightIn(min = 129.dp),
         shape = RoundedCornerShape(10.dp),
         color = Color.White,
-        shadowElevation = 16.dp,
+        shadowElevation = shadowElevation,
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 18.dp, vertical = 24.dp),
