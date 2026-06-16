@@ -23,6 +23,8 @@ final class RunningTracker: NSObject, ObservableObject {
     private var timer: Timer?
     private var shouldStartAfterAuthorization = false
     private var shouldValidateJumpFromPreviousLocation = false
+    private var stationaryReferenceLocation: CLLocation?
+    private var lastLocationMovementDate: Date?
 
     init(historyStore: RunningHistoryStore = RunningHistoryStore()) {
         self.historyStore = historyStore
@@ -69,6 +71,7 @@ final class RunningTracker: NSObject, ObservableObject {
         session.reset()
         shouldStartAfterAuthorization = true
         shouldValidateJumpFromPreviousLocation = false
+        resetStationaryLocationTracking()
 
         switch authorizationStatus {
         case .notDetermined:
@@ -95,12 +98,14 @@ final class RunningTracker: NSObject, ObservableObject {
         stopElapsedTimer()
         session.pauseDistanceMeasurement()
         shouldValidateJumpFromPreviousLocation = false
+        resetStationaryLocationTracking()
         trackingState = .paused
     }
 
     func resume() {
         guard trackingState == .paused else { return }
         shouldStartAfterAuthorization = true
+        resetStationaryLocationTracking()
         #if os(iOS)
         if authorizationStatus == .authorizedWhenInUse {
             manager.requestAlwaysAuthorization()
@@ -113,6 +118,7 @@ final class RunningTracker: NSObject, ObservableObject {
     func end() -> RunningRecord? {
         let endedAt = Date()
         shouldStartAfterAuthorization = false
+        resetStationaryLocationTracking()
         manager.stopUpdatingLocation()
         manager.allowsBackgroundLocationUpdates = false
         stopElapsedTimer()
@@ -136,6 +142,7 @@ final class RunningTracker: NSObject, ObservableObject {
         manager.allowsBackgroundLocationUpdates = true
         manager.startUpdatingLocation()
         session.markStartedIfNeeded()
+        resetStationaryLocationTracking(at: Date())
         startElapsedTimer()
         trackingState = .tracking
         shouldStartAfterAuthorization = false
@@ -146,7 +153,10 @@ final class RunningTracker: NSObject, ObservableObject {
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor in
-                self?.session.updateElapsedTime()
+                guard let self else { return }
+                let now = Date()
+                self.session.updateElapsedTime(at: now)
+                self.pauseIfLocationHasNotChanged(at: now)
             }
         }
     }
@@ -186,6 +196,7 @@ extension RunningTracker: CLLocationManagerDelegate {
         Task { @MainActor in
             guard trackingState == .tracking else { return }
             for location in locations where isAcceptable(location) {
+                updateStationaryLocationTracking(with: location, at: Date())
                 session.append(location)
                 shouldValidateJumpFromPreviousLocation = true
             }
@@ -219,11 +230,42 @@ private extension RunningTracker {
         let allowedDistance = elapsedSeconds * maxRunningMetersPerSecond + jumpToleranceMeters
         return location.distance(from: previousLocation) <= allowedDistance
     }
+
+    func updateStationaryLocationTracking(with location: CLLocation, at date: Date) {
+        guard let referenceLocation = stationaryReferenceLocation else {
+            stationaryReferenceLocation = location
+            lastLocationMovementDate = date
+            return
+        }
+
+        if location.distance(from: referenceLocation) > stationaryLocationMovementThresholdMeters {
+            stationaryReferenceLocation = location
+            lastLocationMovementDate = date
+        }
+    }
+
+    func pauseIfLocationHasNotChanged(at date: Date) {
+        guard trackingState == .tracking,
+              let lastLocationMovementDate,
+              date.timeIntervalSince(lastLocationMovementDate) >= stationaryLocationPauseInterval
+        else {
+            return
+        }
+
+        pause()
+    }
+
+    func resetStationaryLocationTracking(at date: Date? = nil) {
+        stationaryReferenceLocation = nil
+        lastLocationMovementDate = date
+    }
 }
 
 private let maxHorizontalAccuracyMeters: CLLocationAccuracy = 30
 private let maxRunningMetersPerSecond: CLLocationDistance = 7
 private let jumpToleranceMeters: CLLocationDistance = 6
+private let stationaryLocationMovementThresholdMeters: CLLocationDistance = 1
+private let stationaryLocationPauseInterval: TimeInterval = 10
 
 private func isRunnableAuthorizationStatus(_ status: CLAuthorizationStatus) -> Bool {
     #if os(iOS)
