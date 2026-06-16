@@ -1,18 +1,22 @@
 import MapKit
 import SwiftUI
 
+final class HistoryCache: ObservableObject {
+    @Published var selectedPeriod: HistoryPeriod = .week
+    @Published var displayedWeek = Date()
+    @Published var displayedMonth = Date()
+    @Published var records: [RunningRecord] = RunningHistoryStore().load()
+    @Published var daySummaries: [RunDaySummary] = []
+    @Published var totalDistanceMeters: Int?
+    @Published var weeklySummaries: [Date: RunPeriodSummary] = [:]
+    @Published var loadedRefreshIdentifier: String?
+    @Published var thumbnailRecordsByID: [UUID: RunningRecord] = [:]
+    @Published var thumbnailFetchIDs: Set<UUID> = []
+}
+
 struct HistoryView: View {
-    @State private var selectedPeriod: HistoryPeriod = .week
-    @State private var displayedWeek = Date()
-    @State private var displayedMonth = Date()
-    @State private var records: [RunningRecord]
-    @State private var daySummaries: [RunDaySummary] = []
-    @State private var totalDistanceMeters: Int?
-    @State private var weeklySummaries: [Date: RunPeriodSummary] = [:]
-    @State private var loadedRefreshIdentifier: String?
+    @ObservedObject var cache: HistoryCache
     @State private var selectedRecord: RunningRecord?
-    @State private var thumbnailRecordsByID: [UUID: RunningRecord] = [:]
-    @State private var thumbnailFetchIDs: Set<UUID> = []
 
     private let runService: RunServiceProtocol
     private let accessToken: String?
@@ -22,10 +26,10 @@ struct HistoryView: View {
         return calendar
     }
 
-    init(runService: RunServiceProtocol = MockRunService(), accessToken: String? = nil) {
+    init(runService: RunServiceProtocol = MockRunService(), accessToken: String? = nil, cache: HistoryCache = HistoryCache()) {
         self.runService = runService
         self.accessToken = accessToken
-        _records = State(initialValue: RunningHistoryStore().load())
+        self.cache = cache
     }
 
     var body: some View {
@@ -44,11 +48,11 @@ struct HistoryView: View {
                 .padding(.horizontal, 30)
                 .padding(.top, 20)
 
-                if selectedPeriod == .week {
+                if cache.selectedPeriod == .week {
                     WeekDotsView(
-                        week: displayedWeek,
+                        week: cache.displayedWeek,
                         previousSummary: weeklySummary(for: previousWeek),
-                        currentSummary: weeklySummary(for: displayedWeek),
+                        currentSummary: weeklySummary(for: cache.displayedWeek),
                         nextSummary: weeklySummary(for: nextWeek),
                         canMoveToNextWeek: canMoveToNextWeek,
                         onPreviousWeek: moveToPreviousWeek,
@@ -58,7 +62,7 @@ struct HistoryView: View {
                         .padding(.top, 28)
                 } else {
                     MonthCalendarView(
-                        month: displayedMonth,
+                        month: cache.displayedMonth,
                         records: visibleRecords,
                         daySummaries: visibleDaySummaries,
                         canMoveToNextMonth: canMoveToNextMonth,
@@ -83,7 +87,7 @@ struct HistoryView: View {
                             } label: {
                                 RunningRecordCard(
                                     record: record,
-                                    thumbnailRecord: thumbnailRecordsByID[record.id] ?? record
+                                    thumbnailRecord: cache.thumbnailRecordsByID[record.id] ?? record
                                 )
                             }
                             .buttonStyle(.plain)
@@ -98,7 +102,7 @@ struct HistoryView: View {
         .background(Color.white)
         .onAppear {
             if accessToken == nil {
-                records = RunningHistoryStore().load()
+                cache.records = RunningHistoryStore().load()
             }
         }
         .task(id: refreshIdentifier) {
@@ -123,7 +127,12 @@ struct HistoryView: View {
 
             Spacer()
 
-            HistoryPeriodControl(selectedPeriod: $selectedPeriod)
+            HistoryPeriodControl(
+                selectedPeriod: Binding(
+                    get: { cache.selectedPeriod },
+                    set: { cache.selectedPeriod = $0 }
+                )
+            )
                 .frame(width: 150)
         }
         .padding(.horizontal, 30)
@@ -135,26 +144,26 @@ struct HistoryView: View {
     }
 
     private var visibleRecords: [RunningRecord] {
-        guard accessToken != nil else { return records }
-        return loadedRefreshIdentifier == refreshIdentifier ? records : []
+        guard accessToken != nil else { return cache.records }
+        return cache.loadedRefreshIdentifier == refreshIdentifier ? cache.records : []
     }
 
     private var visibleDaySummaries: [RunDaySummary] {
-        guard accessToken != nil else { return daySummaries }
-        return loadedRefreshIdentifier == refreshIdentifier ? daySummaries : []
+        guard accessToken != nil else { return cache.daySummaries }
+        return cache.loadedRefreshIdentifier == refreshIdentifier ? cache.daySummaries : []
     }
 
     private var isWaitingForRemoteRecords: Bool {
-        accessToken != nil && loadedRefreshIdentifier != refreshIdentifier
+        accessToken != nil && cache.loadedRefreshIdentifier != refreshIdentifier && cache.records.isEmpty
     }
 
     private func records(in records: [RunningRecord]) -> [RunningRecord] {
         records.filter { record in
-            switch selectedPeriod {
+            switch cache.selectedPeriod {
             case .week:
-                return calendar.isDate(record.startedAt, equalTo: displayedWeek, toGranularity: .weekOfYear)
+                return calendar.isDate(record.startedAt, equalTo: cache.displayedWeek, toGranularity: .weekOfYear)
             case .month:
-                return calendar.isDate(record.startedAt, equalTo: displayedMonth, toGranularity: .month)
+                return calendar.isDate(record.startedAt, equalTo: cache.displayedMonth, toGranularity: .month)
             }
         }
     }
@@ -162,18 +171,18 @@ struct HistoryView: View {
     private var totalDistanceText: String {
         guard !isWaitingForRemoteRecords else { return "0.0" }
 
-        let total = totalDistanceMeters.map { Double($0) / 1_000 } ?? visibleSelectedRecords.reduce(0) { $0 + $1.distanceKilometers }
+        let total = cache.totalDistanceMeters.map { Double($0) / 1_000 } ?? visibleSelectedRecords.reduce(0) { $0 + $1.distanceKilometers }
         return total.formatted(.number.precision(.fractionLength(1)))
     }
 
     private var refreshIdentifier: String {
-        switch selectedPeriod {
+        switch cache.selectedPeriod {
         case .week:
-            let weekStart = calendar.dateInterval(of: .weekOfYear, for: displayedWeek)?.start ?? displayedWeek
-            return "\(selectedPeriod.rawValue)-\(Int(weekStart.timeIntervalSince1970))"
+            let weekStart = calendar.dateInterval(of: .weekOfYear, for: cache.displayedWeek)?.start ?? cache.displayedWeek
+            return "\(cache.selectedPeriod.rawValue)-\(Int(weekStart.timeIntervalSince1970))"
         case .month:
-            let components = calendar.dateComponents([.year, .month], from: displayedMonth)
-            return "\(selectedPeriod.rawValue)-\(components.year ?? 0)-\(components.month ?? 0)"
+            let components = calendar.dateComponents([.year, .month], from: cache.displayedMonth)
+            return "\(cache.selectedPeriod.rawValue)-\(components.year ?? 0)-\(components.month ?? 0)"
         }
     }
 
@@ -188,7 +197,7 @@ struct HistoryView: View {
             Image(systemName: "figure.run")
                 .font(.system(size: 34, weight: .semibold))
                 .foregroundStyle(Color.gray)
-            Text(selectedPeriod == .week ? "이번 주 러닝 기록이 없어요" : "이번 달 러닝 기록이 없어요")
+            Text(cache.selectedPeriod == .week ? "이번 주 러닝 기록이 없어요" : "이번 달 러닝 기록이 없어요")
                 .font(AppTheme.Typography.font(size: 15, weight: .bold))
                 .foregroundStyle(AppTheme.Colors.textSecondary)
         }
@@ -209,43 +218,43 @@ struct HistoryView: View {
     }
 
     private func moveToPreviousMonth() {
-        displayedMonth = calendar.date(byAdding: .month, value: -1, to: displayedMonth) ?? displayedMonth
+        cache.displayedMonth = calendar.date(byAdding: .month, value: -1, to: cache.displayedMonth) ?? cache.displayedMonth
     }
 
     private func moveToNextMonth() {
         guard canMoveToNextMonth else { return }
-        displayedMonth = calendar.date(byAdding: .month, value: 1, to: displayedMonth) ?? displayedMonth
+        cache.displayedMonth = calendar.date(byAdding: .month, value: 1, to: cache.displayedMonth) ?? cache.displayedMonth
     }
 
     private var canMoveToNextMonth: Bool {
-        let displayedMonthStart = calendar.dateInterval(of: .month, for: displayedMonth)?.start
+        let displayedMonthStart = calendar.dateInterval(of: .month, for: cache.displayedMonth)?.start
         let currentMonthStart = calendar.dateInterval(of: .month, for: Date())?.start
         guard let displayedMonthStart, let currentMonthStart else { return false }
         return displayedMonthStart < currentMonthStart
     }
 
     private var canMoveToNextWeek: Bool {
-        let displayedWeekStart = calendar.dateInterval(of: .weekOfYear, for: displayedWeek)?.start
+        let displayedWeekStart = calendar.dateInterval(of: .weekOfYear, for: cache.displayedWeek)?.start
         let currentWeekStart = calendar.dateInterval(of: .weekOfYear, for: Date())?.start
         guard let displayedWeekStart, let currentWeekStart else { return false }
         return displayedWeekStart < currentWeekStart
     }
 
     private func moveToPreviousWeek() {
-        displayedWeek = calendar.date(byAdding: .weekOfYear, value: -1, to: displayedWeek) ?? displayedWeek
+        cache.displayedWeek = calendar.date(byAdding: .weekOfYear, value: -1, to: cache.displayedWeek) ?? cache.displayedWeek
     }
 
     private func moveToNextWeek() {
         guard canMoveToNextWeek else { return }
-        displayedWeek = calendar.date(byAdding: .weekOfYear, value: 1, to: displayedWeek) ?? displayedWeek
+        cache.displayedWeek = calendar.date(byAdding: .weekOfYear, value: 1, to: cache.displayedWeek) ?? cache.displayedWeek
     }
 
     private var previousWeek: Date {
-        calendar.date(byAdding: .weekOfYear, value: -1, to: displayedWeek) ?? displayedWeek
+        calendar.date(byAdding: .weekOfYear, value: -1, to: cache.displayedWeek) ?? cache.displayedWeek
     }
 
     private var nextWeek: Date {
-        calendar.date(byAdding: .weekOfYear, value: 1, to: displayedWeek) ?? displayedWeek
+        calendar.date(byAdding: .weekOfYear, value: 1, to: cache.displayedWeek) ?? cache.displayedWeek
     }
 
     private func weekStart(for date: Date) -> Date {
@@ -253,12 +262,12 @@ struct HistoryView: View {
     }
 
     private func weeklySummary(for date: Date) -> RunPeriodSummary {
-        if let summary = weeklySummaries[weekStart(for: date)] {
+        if let summary = cache.weeklySummaries[weekStart(for: date)] {
             return summary
         }
 
         if accessToken == nil {
-            let weeklyRecords = records.filter {
+            let weeklyRecords = cache.records.filter {
                 calendar.isDate($0.startedAt, equalTo: date, toGranularity: .weekOfYear)
             }
             return RunPeriodSummary(
@@ -268,12 +277,12 @@ struct HistoryView: View {
             )
         }
 
-        guard calendar.isDate(date, equalTo: displayedWeek, toGranularity: .weekOfYear) else {
+        guard calendar.isDate(date, equalTo: cache.displayedWeek, toGranularity: .weekOfYear) else {
             return RunPeriodSummary(totalDistanceMeters: 0, days: [], runs: [])
         }
 
         return RunPeriodSummary(
-            totalDistanceMeters: totalDistanceMeters ?? 0,
+            totalDistanceMeters: cache.totalDistanceMeters ?? 0,
             days: visibleDaySummaries,
             runs: visibleRecords
         )
@@ -287,19 +296,14 @@ struct HistoryView: View {
         }
 
         let requestIdentifier = refreshIdentifier
-        loadedRefreshIdentifier = nil
-        records = []
-        daySummaries = []
-        totalDistanceMeters = 0
-        pruneThumbnailCache(for: [])
 
         do {
             let summary: RunPeriodSummary
-            switch selectedPeriod {
+            switch cache.selectedPeriod {
             case .week:
-                summary = try await runService.fetchWeeklyRuns(anchorDate: displayedWeek, accessToken: accessToken)
+                summary = try await runService.fetchWeeklyRuns(anchorDate: cache.displayedWeek, accessToken: accessToken)
             case .month:
-                let components = calendar.dateComponents([.year, .month], from: displayedMonth)
+                let components = calendar.dateComponents([.year, .month], from: cache.displayedMonth)
                 summary = try await runService.fetchMonthlyRuns(
                     year: components.year ?? calendar.component(.year, from: Date()),
                     month: components.month ?? calendar.component(.month, from: Date()),
@@ -309,45 +313,51 @@ struct HistoryView: View {
 
             guard requestIdentifier == refreshIdentifier else { return }
 
-            records = summary.runs
-            daySummaries = summary.days
-            totalDistanceMeters = summary.totalDistanceMeters
-            if selectedPeriod == .week {
-                weeklySummaries[weekStart(for: displayedWeek)] = summary
+            if cache.records != summary.runs {
+                cache.records = summary.runs
             }
-            loadedRefreshIdentifier = requestIdentifier
+            if cache.daySummaries != summary.days {
+                cache.daySummaries = summary.days
+            }
+            if cache.totalDistanceMeters != summary.totalDistanceMeters {
+                cache.totalDistanceMeters = summary.totalDistanceMeters
+            }
+            if cache.selectedPeriod == .week {
+                cache.weeklySummaries[weekStart(for: cache.displayedWeek)] = summary
+            }
+            cache.loadedRefreshIdentifier = requestIdentifier
             pruneThumbnailCache(for: summary.runs)
 
-            if selectedPeriod == .week {
+            if cache.selectedPeriod == .week {
                 await preloadPreviousWeek(accessToken: accessToken)
             }
         } catch {
             guard requestIdentifier == refreshIdentifier else { return }
-
-            records = []
-            daySummaries = []
-            totalDistanceMeters = 0
-            loadedRefreshIdentifier = requestIdentifier
-            pruneThumbnailCache(for: [])
+            if cache.records.isEmpty {
+                cache.daySummaries = []
+                cache.totalDistanceMeters = 0
+                cache.loadedRefreshIdentifier = requestIdentifier
+                pruneThumbnailCache(for: [])
+            }
         }
     }
 
     private func useLocalRecords() {
-        loadedRefreshIdentifier = nil
-        records = RunningHistoryStore().load()
-        daySummaries = []
-        totalDistanceMeters = nil
-        pruneThumbnailCache(for: records)
+        cache.loadedRefreshIdentifier = nil
+        cache.records = RunningHistoryStore().load()
+        cache.daySummaries = []
+        cache.totalDistanceMeters = nil
+        pruneThumbnailCache(for: cache.records)
     }
 
     @MainActor
     private func preloadPreviousWeek(accessToken: String) async {
         let date = previousWeek
         let key = weekStart(for: date)
-        guard weeklySummaries[key] == nil else { return }
+        guard cache.weeklySummaries[key] == nil else { return }
 
         if let summary = try? await runService.fetchWeeklyRuns(anchorDate: date, accessToken: accessToken) {
-            weeklySummaries[key] = summary
+            cache.weeklySummaries[key] = summary
         }
     }
 
@@ -356,33 +366,33 @@ struct HistoryView: View {
         guard let accessToken else { return }
 
         let recordsNeedingRoute = visibleSelectedRecords.filter { record in
-            let cachedRouteCount = thumbnailRecordsByID[record.id]?.routeCoordinates.count ?? 0
+            let cachedRouteCount = cache.thumbnailRecordsByID[record.id]?.routeCoordinates.count ?? 0
             return record.routeCoordinates.count < 2
                 && cachedRouteCount < 2
-                && !thumbnailFetchIDs.contains(record.id)
+                && !cache.thumbnailFetchIDs.contains(record.id)
         }
 
         for record in recordsNeedingRoute {
-            thumbnailFetchIDs.insert(record.id)
+            cache.thumbnailFetchIDs.insert(record.id)
 
             do {
                 let detail = try await runService.fetchRunDetail(
                     runID: record.id.uuidString,
                     accessToken: accessToken
                 )
-                thumbnailRecordsByID[record.id] = detail
+                cache.thumbnailRecordsByID[record.id] = detail
             } catch {
-                thumbnailRecordsByID.removeValue(forKey: record.id)
+                cache.thumbnailRecordsByID.removeValue(forKey: record.id)
             }
 
-            thumbnailFetchIDs.remove(record.id)
+            cache.thumbnailFetchIDs.remove(record.id)
         }
     }
 
     private func pruneThumbnailCache(for records: [RunningRecord]) {
         let currentIDs = Set(records.map(\.id))
-        thumbnailRecordsByID = thumbnailRecordsByID.filter { currentIDs.contains($0.key) }
-        thumbnailFetchIDs = thumbnailFetchIDs.intersection(currentIDs)
+        cache.thumbnailRecordsByID = cache.thumbnailRecordsByID.filter { currentIDs.contains($0.key) }
+        cache.thumbnailFetchIDs = cache.thumbnailFetchIDs.intersection(currentIDs)
     }
 
     @MainActor
@@ -400,7 +410,7 @@ struct HistoryView: View {
     }
 }
 
-private enum HistoryPeriod: String {
+enum HistoryPeriod: String {
     case week = "주"
     case month = "월"
 }

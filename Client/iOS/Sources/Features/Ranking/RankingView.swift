@@ -1,14 +1,18 @@
 import SwiftUI
 
+final class RankingCache: ObservableObject {
+    @Published var selectedScope: RankingScope = .team
+    @Published var selectedMetric: UserRankingMetric = .distance
+    @Published var teamBoardsByMetric: [UserRankingMetric: TeamRankingBoard] = [:]
+    @Published var userBoardsByMetric: [UserRankingMetric: UserRankingBoard] = [:]
+    @Published var mySummary: MyRankingSummary?
+    @Published var isLoading = false
+    @Published var errorMessage: String?
+    @Published var activeRankingRequestID: UUID?
+}
+
 struct RankingView: View {
-    @State private var selectedScope: RankingScope = .team
-    @State private var selectedMetric: UserRankingMetric = .distance
-    @State private var teamBoard: TeamRankingBoard?
-    @State private var userBoard: UserRankingBoard?
-    @State private var mySummary: MyRankingSummary?
-    @State private var isLoading = false
-    @State private var errorMessage: String?
-    @State private var activeRankingRequestID: UUID?
+    @ObservedObject var cache: RankingCache
 
     private let rankingService: RankingServiceProtocol
     private let accessToken: String?
@@ -19,12 +23,14 @@ struct RankingView: View {
         rankingService: RankingServiceProtocol = MockRankingService(),
         accessToken: String? = nil,
         team: RunningTeam? = nil,
-        nickname: String = "김영희"
+        nickname: String = "김영희",
+        cache: RankingCache = RankingCache()
     ) {
         self.rankingService = rankingService
         self.accessToken = accessToken
         self.team = team
         self.nickname = nickname
+        self.cache = cache
     }
 
     var body: some View {
@@ -56,10 +62,10 @@ struct RankingView: View {
         .task {
             await loadRankings()
         }
-        .onChange(of: selectedScope) { _, _ in
+        .onChange(of: cache.selectedScope) { _, _ in
             Task { await loadRankings() }
         }
-        .onChange(of: selectedMetric) { _, _ in
+        .onChange(of: cache.selectedMetric) { _, _ in
             Task { await loadRankings() }
         }
     }
@@ -76,13 +82,13 @@ struct RankingView: View {
         HStack(spacing: 10) {
             metricButton(.distance, title: "전체 거리")
             metricButton(.pace, title: "페이스")
-            metricButton(.consistency, title: selectedScope == .team ? "평균 활동일" : "횟수")
+            metricButton(.consistency, title: cache.selectedScope == .team ? "평균 활동일" : "횟수")
         }
     }
 
     private var summaryCard: some View {
         Group {
-            if isLoading, currentSummary == nil {
+            if cache.isLoading, currentSummary == nil {
                 RankingSummarySkeletonCard()
             } else if let summary = currentSummary {
                 HStack(spacing: 18) {
@@ -107,7 +113,7 @@ struct RankingView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             } else {
                 HStack {
-                    Text(errorMessage ?? (isLoading ? "랭킹을 불러오는 중입니다." : "랭킹 데이터가 없습니다."))
+                    Text(cache.errorMessage ?? (cache.isLoading ? "랭킹을 불러오는 중입니다." : "랭킹 데이터가 없습니다."))
                         .font(AppTheme.Typography.font(size: 16, weight: .semibold))
                         .foregroundStyle(AppTheme.Colors.textSecondary)
                 }
@@ -122,21 +128,21 @@ struct RankingView: View {
     private var rankingCard: some View {
         VStack(spacing: 16) {
             HStack(alignment: .lastTextBaseline) {
-                Text(selectedScope == .team ? "전체 팀 순위" : "전체 개인 순위")
+                Text(cache.selectedScope == .team ? "전체 팀 순위" : "전체 개인 순위")
                     .font(AppTheme.Typography.font(size: 20, weight: .bold))
                     .foregroundStyle(AppTheme.Colors.textPrimary)
 
                 Spacer()
 
-                Text(selectedScope == .team ? teamSubtitle : personalSubtitle)
+                Text(cache.selectedScope == .team ? teamSubtitle : personalSubtitle)
                     .font(AppTheme.Typography.font(size: 12, weight: .regular))
                     .foregroundStyle(Color(red: 0.58, green: 0.63, blue: 0.70))
             }
 
-            if isLoading, rows.isEmpty {
+            if cache.isLoading, rows.isEmpty {
                 RankingRowsSkeleton()
             } else if rows.isEmpty {
-                Text(errorMessage ?? "아직 표시할 랭킹이 없습니다.")
+                Text(cache.errorMessage ?? "아직 표시할 랭킹이 없습니다.")
                     .font(AppTheme.Typography.font(size: 16, weight: .semibold))
                     .foregroundStyle(AppTheme.Colors.textSecondary)
                     .frame(maxWidth: .infinity)
@@ -156,17 +162,17 @@ struct RankingView: View {
     private func scopeButton(_ scope: RankingScope) -> some View {
         Button {
             withAnimation(.easeInOut(duration: 0.18)) {
-                selectedScope = scope
+                cache.selectedScope = scope
             }
         } label: {
             ZStack(alignment: .bottom) {
                 Text(scope.title)
                     .font(AppTheme.Typography.font(size: 15, weight: .bold))
-                    .foregroundStyle(selectedScope == scope ? AppTheme.Colors.primary : Color(red: 0.62, green: 0.67, blue: 0.74))
+                    .foregroundStyle(cache.selectedScope == scope ? AppTheme.Colors.primary : Color(red: 0.62, green: 0.67, blue: 0.74))
                     .frame(maxWidth: .infinity)
                     .frame(height: 45)
 
-                if selectedScope == scope {
+                if cache.selectedScope == scope {
                     Rectangle()
                         .fill(AppTheme.Colors.primary)
                         .frame(height: 4)
@@ -179,28 +185,28 @@ struct RankingView: View {
     private func metricButton(_ metric: UserRankingMetric, title: String) -> some View {
         Button {
             withAnimation(.easeInOut(duration: 0.18)) {
-                selectedMetric = metric
+                cache.selectedMetric = metric
             }
         } label: {
             Text(title)
                 .font(AppTheme.Typography.font(size: 13, weight: .bold))
-                .foregroundStyle(selectedMetric == metric ? AppTheme.Colors.primary : Color(red: 0.42, green: 0.45, blue: 0.50))
+                .foregroundStyle(cache.selectedMetric == metric ? AppTheme.Colors.primary : Color(red: 0.42, green: 0.45, blue: 0.50))
                 .lineLimit(1)
                 .minimumScaleFactor(0.82)
                 .frame(maxWidth: .infinity)
                 .frame(height: 38)
-                .background(selectedMetric == metric ? Color(red: 0.93, green: 0.95, blue: 1.0) : Color(red: 0.95, green: 0.95, blue: 0.96))
+                .background(cache.selectedMetric == metric ? Color(red: 0.93, green: 0.95, blue: 1.0) : Color(red: 0.95, green: 0.95, blue: 0.96))
                 .clipShape(Capsule())
                 .overlay(
                     Capsule()
-                        .stroke(selectedMetric == metric ? AppTheme.Colors.primary : Color.clear, lineWidth: 2)
+                        .stroke(cache.selectedMetric == metric ? AppTheme.Colors.primary : Color.clear, lineWidth: 2)
                 )
         }
         .buttonStyle(.plain)
     }
 
     private var currentSummary: RankingSummaryRow? {
-        switch selectedScope {
+        switch cache.selectedScope {
         case .team:
             guard let team else {
                 return RankingSummaryRow(rank: nil, name: "팀 없음", value: "랭킹 집계 전")
@@ -211,24 +217,24 @@ struct RankingView: View {
             return RankingSummaryRow(
                 rank: entry.rank,
                 name: entry.teamName,
-                value: "\(selectedMetric.value(from: entry)) (\(formatTopPercent(entry.topPercent)))"
+                value: "\(cache.selectedMetric.value(from: entry)) (\(formatTopPercent(entry.topPercent)))"
             )
         case .personal:
-            guard let summary = mySummary else { return highlightedUserEntry.map(summaryRow) }
-            guard let rank = selectedMetric.rank(from: summary) else {
+            guard let summary = cache.mySummary else { return highlightedUserEntry.map(summaryRow) }
+            guard let rank = cache.selectedMetric.rank(from: summary) else {
                 return RankingSummaryRow(rank: nil, name: nickname, value: "-")
             }
-            let topPercent = selectedMetric.topPercent(from: summary)
+            let topPercent = cache.selectedMetric.topPercent(from: summary)
             return RankingSummaryRow(
                 rank: rank,
                 name: nickname,
-                value: "\(selectedMetric.summaryValue(from: summary)) (\(topPercent.map(formatTopPercent) ?? "랭킹 대기"))"
+                value: "\(cache.selectedMetric.summaryValue(from: summary)) (\(topPercent.map(formatTopPercent) ?? "랭킹 대기"))"
             )
         }
     }
 
     private var highlightedTeamEntry: TeamRankingEntry? {
-        guard let board = teamBoard else { return nil }
+        guard let board = currentTeamBoard else { return nil }
 
         if let team, let entry = board.rankings.first(where: { $0.teamID == team.id.uuidString || $0.teamName == team.name }) {
             return entry
@@ -239,7 +245,7 @@ struct RankingView: View {
 
     private var highlightedUserEntry: UserRankingEntry? {
         guard let board = currentUserBoard else { return nil }
-        let summaryRank = mySummary.flatMap { selectedMetric.rank(from: $0) }
+        let summaryRank = cache.mySummary.flatMap { cache.selectedMetric.rank(from: $0) }
         if let entry = board.rankings.first(where: { $0.nickname == nickname }) {
             return entry
         }
@@ -252,15 +258,15 @@ struct RankingView: View {
     }
 
     private var rows: [RankingListRow] {
-        switch selectedScope {
+        switch cache.selectedScope {
         case .team:
             let highlightedID = highlightedTeamEntry?.teamID
-            return (teamBoard?.rankings ?? []).map { entry in
+            return (currentTeamBoard?.rankings ?? []).map { entry in
                 RankingListRow(
                     id: entry.teamID,
                     rank: entry.rank,
                     name: entry.teamName,
-                    value: selectedMetric.value(from: entry),
+                    value: cache.selectedMetric.value(from: entry),
                     isHighlighted: entry.teamID == highlightedID
                 )
             }
@@ -271,7 +277,7 @@ struct RankingView: View {
                     id: entry.userID,
                     rank: entry.rank,
                     name: entry.nickname,
-                    value: selectedMetric.value(from: entry),
+                    value: cache.selectedMetric.value(from: entry),
                     isHighlighted: entry.userID == highlightedID
                 )
             }
@@ -279,12 +285,15 @@ struct RankingView: View {
     }
 
     private var currentUserBoard: UserRankingBoard? {
-        guard let userBoard, userBoard.metric == selectedMetric else { return nil }
-        return userBoard
+        cache.userBoardsByMetric[cache.selectedMetric]
+    }
+
+    private var currentTeamBoard: TeamRankingBoard? {
+        cache.teamBoardsByMetric[cache.selectedMetric]
     }
 
     private var teamSubtitle: String {
-        switch selectedMetric {
+        switch cache.selectedMetric {
         case .distance:
             return "팀 총 거리 기준"
         case .pace:
@@ -295,7 +304,7 @@ struct RankingView: View {
     }
 
     private var personalSubtitle: String {
-        switch selectedMetric {
+        switch cache.selectedMetric {
         case .distance:
             return "누적 거리 기준"
         case .pace:
@@ -308,24 +317,17 @@ struct RankingView: View {
     @MainActor
     private func loadRankings() async {
         if accessToken == nil, !(rankingService is MockRankingService) {
-            errorMessage = "로그인이 필요합니다."
-            isLoading = false
+            cache.errorMessage = "로그인이 필요합니다."
+            cache.isLoading = false
             return
         }
 
         let requestID = UUID()
-        let requestScope = selectedScope
-        let requestMetric = selectedMetric
-        activeRankingRequestID = requestID
-        isLoading = true
-        errorMessage = nil
-
-        switch requestScope {
-        case .team:
-            teamBoard = nil
-        case .personal:
-            userBoard = nil
-        }
+        let requestScope = cache.selectedScope
+        let requestMetric = cache.selectedMetric
+        cache.activeRankingRequestID = requestID
+        cache.isLoading = true
+        cache.errorMessage = nil
 
         do {
             let token = accessToken ?? ""
@@ -337,23 +339,31 @@ struct RankingView: View {
                 let nextTeamBoard = try await teamRanking
                 let nextSummary = try await summary
                 guard shouldApplyRankingResponse(requestID: requestID, scope: requestScope, metric: requestMetric) else { return }
-                teamBoard = nextTeamBoard
-                mySummary = nextSummary
+                if cache.teamBoardsByMetric[requestMetric] != nextTeamBoard {
+                    cache.teamBoardsByMetric[requestMetric] = nextTeamBoard
+                }
+                if cache.mySummary != nextSummary {
+                    cache.mySummary = nextSummary
+                }
             case .personal:
                 async let userRanking = rankingService.fetchUserRankings(metric: requestMetric, seasonID: nil, accessToken: token)
                 let nextUserBoard = try await userRanking
                 let nextSummary = try await summary
                 guard shouldApplyRankingResponse(requestID: requestID, scope: requestScope, metric: requestMetric) else { return }
-                userBoard = nextUserBoard
-                mySummary = nextSummary
+                if cache.userBoardsByMetric[requestMetric] != nextUserBoard {
+                    cache.userBoardsByMetric[requestMetric] = nextUserBoard
+                }
+                if cache.mySummary != nextSummary {
+                    cache.mySummary = nextSummary
+                }
             }
         } catch {
             guard shouldApplyRankingResponse(requestID: requestID, scope: requestScope, metric: requestMetric) else { return }
-            errorMessage = error.localizedDescription
+            cache.errorMessage = error.localizedDescription
         }
 
         guard shouldApplyRankingResponse(requestID: requestID, scope: requestScope, metric: requestMetric) else { return }
-        isLoading = false
+        cache.isLoading = false
     }
 
     private func shouldApplyRankingResponse(
@@ -361,14 +371,14 @@ struct RankingView: View {
         scope: RankingScope,
         metric: UserRankingMetric
     ) -> Bool {
-        activeRankingRequestID == requestID && selectedScope == scope && selectedMetric == metric
+        cache.activeRankingRequestID == requestID && cache.selectedScope == scope && cache.selectedMetric == metric
     }
 
     private func summaryRow(from entry: UserRankingEntry) -> RankingSummaryRow {
         RankingSummaryRow(
             rank: entry.rank,
             name: entry.nickname,
-            value: "\(selectedMetric.value(from: entry)) (\(formatTopPercent(entry.topPercent)))"
+            value: "\(cache.selectedMetric.value(from: entry)) (\(formatTopPercent(entry.topPercent)))"
         )
     }
 
@@ -377,7 +387,7 @@ struct RankingView: View {
     }
 }
 
-private enum RankingScope {
+enum RankingScope {
     case team
     case personal
 

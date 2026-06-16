@@ -15,6 +15,9 @@ struct MainTabView: View {
     @State private var homeTeamProgress: HomeTeamProgress?
     @State private var nickname: String
     @State private var currentUserID: String?
+    @StateObject private var teamDashboardCache = TeamDashboardCache()
+    @StateObject private var rankingCache = RankingCache()
+    @StateObject private var historyCache = HistoryCache()
     private let teamService: TeamServiceProtocol
     private let profileService: ProfileServiceProtocol
     private let runService: RunServiceProtocol
@@ -71,6 +74,7 @@ struct MainTabView: View {
                         teamService: teamService,
                         accessToken: accessToken,
                         currentUserID: currentUserID,
+                        cache: teamDashboardCache,
                         onCreateTeam: {
                             presentedAction = .createTeam
                         },
@@ -94,10 +98,11 @@ struct MainTabView: View {
                         rankingService: rankingService,
                         accessToken: accessToken,
                         team: team,
-                        nickname: nickname
+                        nickname: nickname,
+                        cache: rankingCache
                     )
                 case .history:
-                    HistoryView(runService: runService, accessToken: accessToken)
+                    HistoryView(runService: runService, accessToken: accessToken, cache: historyCache)
                 }
             }
             .padding(.bottom, AppTabBar.height)
@@ -164,6 +169,7 @@ struct MainTabView: View {
         team = updatedTeam
         store.saveTeam(updatedTeam)
         homeTeamProgress = nil
+        teamDashboardCache.clearDashboard()
         selectedTab = .team
         presentedAction = nil
     }
@@ -171,6 +177,7 @@ struct MainTabView: View {
     private func handleTeamLeft() {
         team = nil
         homeTeamProgress = nil
+        teamDashboardCache.clearDashboard()
         store.clearTeam()
         selectedTab = .team
         selectedTeamMemberDetail = nil
@@ -196,6 +203,9 @@ struct MainTabView: View {
             }
 
             if let runningTeam = homeState.team?.runningTeam {
+                if team?.id != runningTeam.id {
+                    teamDashboardCache.clearDashboard()
+                }
                 team = runningTeam
                 store.saveTeam(runningTeam)
                 await refreshHomeTeamProgress(for: runningTeam)
