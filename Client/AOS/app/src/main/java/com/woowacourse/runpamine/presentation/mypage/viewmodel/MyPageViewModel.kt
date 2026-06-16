@@ -117,6 +117,12 @@ class MyPageViewModel(
         }
     }
 
+    fun onLoggedOutHandled() {
+        _uiState.update {
+            it.copy(isLoggedOut = false)
+        }
+    }
+
     class Factory(
         private val profileRepository: ProfileRepository,
         private val authRepository: AuthRepository,
