@@ -1,23 +1,36 @@
 import SwiftUI
 
+final class TeamDashboardCache: ObservableObject {
+    @Published var records: [RunningRecord] = []
+    @Published var teamMembers: [TeamMember]?
+    @Published var dailySummary: TeamDailySummary?
+    @Published var seasonStats: TeamSeasonStats?
+    @Published var hasResolvedDashboard = false
+    @Published var selectedDate = Calendar.current.startOfDay(for: Date())
+    @Published var isDateLoading = false
+
+    func clearDashboard() {
+        teamMembers = nil
+        dailySummary = nil
+        seasonStats = nil
+        hasResolvedDashboard = false
+        isDateLoading = false
+        selectedDate = Calendar.current.startOfDay(for: Date())
+    }
+}
+
 struct TeamDashboardView: View {
     let team: RunningTeam?
     let nickname: String
     let teamService: TeamServiceProtocol
     let accessToken: String?
     let currentUserID: String?
+    @ObservedObject var cache: TeamDashboardCache
     let onCreateTeam: () -> Void
     let onJoinTeam: () -> Void
     let onInvite: () -> Void
     let onLeaveTeam: () -> Void
     let onSelectMember: (TeamMemberSeasonDetail) -> Void
-    @State private var records: [RunningRecord] = RunningHistoryStore().load()
-    @State private var teamMembers: [TeamMember]?
-    @State private var dailySummary: TeamDailySummary?
-    @State private var seasonStats: TeamSeasonStats?
-    @State private var hasResolvedDashboard = false
-    @State private var selectedDate = Calendar.current.startOfDay(for: Date())
-    @State private var isDateLoading = false
     @State private var isShowingTeamMenu = false
     @State private var isShowingLeaveConfirmation = false
     @State private var isLeavingTeam = false
@@ -73,7 +86,7 @@ struct TeamDashboardView: View {
                         dateButton(
                             systemName: "chevron.left",
                             accessibilityLabel: "이전 날짜",
-                            isEnabled: !isDateLoading,
+                            isEnabled: !cache.isDateLoading,
                             action: moveToPreviousDate
                         )
 
@@ -85,7 +98,7 @@ struct TeamDashboardView: View {
                         dateButton(
                             systemName: "chevron.right",
                             accessibilityLabel: "다음 날짜",
-                            isEnabled: canMoveToNextDate && !isDateLoading,
+                            isEnabled: canMoveToNextDate && !cache.isDateLoading,
                             action: moveToNextDate
                         )
                     }
@@ -98,7 +111,7 @@ struct TeamDashboardView: View {
                     .padding(.horizontal, 24)
                     .padding(.top, 20)
 
-                    VStack(spacing: 28) {
+                    LazyVStack(spacing: 28) {
                         ForEach(memberCards, id: \.id) { member in
                             TeamMemberRunCard(member: member)
                                 .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
@@ -152,7 +165,9 @@ struct TeamDashboardView: View {
         }
         .background(Color.white)
         .onAppear {
-            records = RunningHistoryStore().load()
+            if !isRemoteDashboard {
+                cache.records = RunningHistoryStore().load()
+            }
         }
     }
 
@@ -234,8 +249,8 @@ struct TeamDashboardView: View {
     }
 
     private var memberCards: [TeamMemberCardModel] {
-        if let dailySummary {
-            let seasonMembersByID = seasonStats?.members.reduce(into: [String: TeamSeasonMember]()) { result, member in
+        if let dailySummary = cache.dailySummary {
+            let seasonMembersByID = cache.seasonStats?.members.reduce(into: [String: TeamSeasonMember]()) { result, member in
                 result[member.matchingID] = member
                 result[member.id] = member
             } ?? [:]
@@ -243,7 +258,7 @@ struct TeamDashboardView: View {
                 result[member.id] = member
             }
 
-            if let teamMembers {
+            if let teamMembers = cache.teamMembers {
                 return teamMembers.map { member in
                     TeamMemberCardModel(
                         teamMember: member,
@@ -271,7 +286,7 @@ struct TeamDashboardView: View {
             TeamMemberCardModel.runningMember(
                 id: "member-primary",
                 name: nickname,
-                records: records,
+                records: cache.records,
                 isCurrentUser: true
             ),
             TeamMemberCardModel.emptyBurger(index: 1)
@@ -279,7 +294,7 @@ struct TeamDashboardView: View {
     }
 
     private var teamDistanceText: String {
-        if let dailySummary {
+        if let dailySummary = cache.dailySummary {
             return TeamDashboardFormatter.distanceKilometers(dailySummary.teamTotalDistanceMeters)
         }
 
@@ -287,12 +302,12 @@ struct TeamDashboardView: View {
             return TeamDashboardFormatter.distanceKilometers(0)
         }
 
-        let totalDistance = records.reduce(0) { $0 + $1.distanceKilometers }
+        let totalDistance = cache.records.reduce(0) { $0 + $1.distanceKilometers }
         return "\(totalDistance.formatted(.number.precision(.fractionLength(1)))) km"
     }
 
     private var completedMemberCount: Int {
-        if let dailySummary {
+        if let dailySummary = cache.dailySummary {
             return dailySummary.completedMemberCount
         }
 
@@ -300,7 +315,7 @@ struct TeamDashboardView: View {
     }
 
     private var totalMemberCount: Int {
-        if let dailySummary {
+        if let dailySummary = cache.dailySummary {
             return dailySummary.totalMemberCount
         }
 
@@ -308,11 +323,11 @@ struct TeamDashboardView: View {
     }
 
     private var displayTeam: RunningTeam? {
-        dailySummary?.team ?? seasonStats?.runningTeam ?? team
+        cache.dailySummary?.team ?? cache.seasonStats?.runningTeam ?? team
     }
 
     private var shouldShowSkeleton: Bool {
-        team != nil && accessToken != nil && dailySummary == nil && !hasResolvedDashboard
+        team != nil && accessToken != nil && cache.dailySummary == nil && !cache.hasResolvedDashboard
     }
 
     private var isRemoteDashboard: Bool {
@@ -320,11 +335,11 @@ struct TeamDashboardView: View {
     }
 
     private var summaryDateText: String {
-        TeamDashboardFormatter.dateString(from: selectedDate)
+        TeamDashboardFormatter.dateString(from: cache.selectedDate)
     }
 
     private var canMoveToNextDate: Bool {
-        selectedDate < Calendar.current.startOfDay(for: Date())
+        cache.selectedDate < Calendar.current.startOfDay(for: Date())
     }
 
     private func moveToPreviousDate() {
@@ -337,12 +352,12 @@ struct TeamDashboardView: View {
     }
 
     private func moveDate(by value: Int) {
-        guard !isDateLoading else { return }
-        guard let date = Calendar.current.date(byAdding: .day, value: value, to: selectedDate) else { return }
+        guard !cache.isDateLoading else { return }
+        guard let date = Calendar.current.date(byAdding: .day, value: value, to: cache.selectedDate) else { return }
 
-        selectedDate = Calendar.current.startOfDay(for: date)
-        isDateLoading = true
-        let requestDate = selectedDate
+        cache.selectedDate = Calendar.current.startOfDay(for: date)
+        cache.isDateLoading = true
+        let requestDate = cache.selectedDate
         Task {
             await refreshDailySummary(for: requestDate)
         }
@@ -372,9 +387,7 @@ struct TeamDashboardView: View {
             withAnimation(.easeInOut(duration: 0.18)) {
                 isShowingLeaveConfirmation = false
             }
-            dailySummary = nil
-            seasonStats = nil
-            teamMembers = nil
+            cache.clearDashboard()
             onLeaveTeam()
         } catch {
             leaveTeamErrorMessage = error.localizedDescription
@@ -384,50 +397,56 @@ struct TeamDashboardView: View {
     @MainActor
     private func refreshDashboard() async {
         guard team != nil, let accessToken else { return }
-        selectedDate = Calendar.current.startOfDay(for: Date())
-        teamMembers = nil
-        dailySummary = nil
-        seasonStats = nil
-        hasResolvedDashboard = false
+        cache.selectedDate = Calendar.current.startOfDay(for: Date())
+        cache.hasResolvedDashboard = cache.dailySummary != nil
 
         do {
             async let nextTeamMembers = teamService.fetchMyTeamMembers(accessToken: accessToken)
-            async let nextDailySummary = teamService.fetchDailySummary(date: selectedDate, accessToken: accessToken)
+            async let nextDailySummary = teamService.fetchDailySummary(date: cache.selectedDate, accessToken: accessToken)
             async let nextSeasonStats = teamService.fetchMyTeamSeasonStats(seasonID: nil, accessToken: accessToken)
 
-            teamMembers = try? await nextTeamMembers
+            cache.teamMembers = try? await nextTeamMembers
             let fetchedDailySummary = try await nextDailySummary
             do {
                 let fetchedSeasonStats = try await nextSeasonStats
-                dailySummary = fetchedDailySummary
-                seasonStats = fetchedSeasonStats
+                if cache.dailySummary != fetchedDailySummary {
+                    cache.dailySummary = fetchedDailySummary
+                }
+                if cache.seasonStats != fetchedSeasonStats {
+                    cache.seasonStats = fetchedSeasonStats
+                }
             } catch {
-                dailySummary = fetchedDailySummary
-                seasonStats = nil
+                if cache.dailySummary != fetchedDailySummary {
+                    cache.dailySummary = fetchedDailySummary
+                }
+                cache.seasonStats = nil
             }
         } catch {
-            dailySummary = nil
-            seasonStats = nil
+            if cache.dailySummary == nil {
+                cache.seasonStats = nil
+            }
         }
 
-        hasResolvedDashboard = true
+        cache.hasResolvedDashboard = true
     }
 
     @MainActor
     private func refreshDailySummary(for date: Date) async {
         guard team != nil, let accessToken else {
-            isDateLoading = false
+            cache.isDateLoading = false
             return
         }
-        defer { isDateLoading = false }
+        defer { cache.isDateLoading = false }
 
         do {
             let summary = try await teamService.fetchDailySummary(date: date, accessToken: accessToken)
-            guard Calendar.current.isDate(date, inSameDayAs: selectedDate) else { return }
-            dailySummary = summary
+            guard Calendar.current.isDate(date, inSameDayAs: cache.selectedDate) else { return }
+            if cache.dailySummary != summary {
+                cache.dailySummary = summary
+            }
         } catch {
-            guard Calendar.current.isDate(date, inSameDayAs: selectedDate) else { return }
-            dailySummary = nil
+            guard Calendar.current.isDate(date, inSameDayAs: cache.selectedDate) else { return }
+            cache.dailySummary = nil
         }
     }
 }
@@ -940,6 +959,7 @@ private struct TeamMemberDetailTopRoundedShape: Shape {
 
 private struct TeamMemberRunCard: View {
     let member: TeamMemberCardModel
+    @State private var isLottieVisible = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
@@ -957,7 +977,7 @@ private struct TeamMemberRunCard: View {
             .padding(.leading, 10)
 
             HStack(spacing: 0) {
-                RunpamineLottieView(animation: member.animation)
+                RunpamineLottieView(animation: member.animation, isPlaying: isLottieVisible)
                     .frame(width: 80, height: 80)
                     .clipped()
                     .padding(.leading, 10)
@@ -981,6 +1001,12 @@ private struct TeamMemberRunCard: View {
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .shadow(color: .black.opacity(0.22), radius: 9, x: 0, y: 6)
+        .onAppear {
+            isLottieVisible = true
+        }
+        .onDisappear {
+            isLottieVisible = false
+        }
     }
 }
 
@@ -1250,6 +1276,7 @@ private enum TeamRunStreakCalculator {
         teamService: MockTeamService(),
         accessToken: "preview-token",
         currentUserID: "member-preview",
+        cache: TeamDashboardCache(),
         onCreateTeam: {},
         onJoinTeam: {},
         onInvite: {},

@@ -3,10 +3,11 @@ import SwiftUI
 
 struct RunpamineLottieView: View {
     let animation: RunpamineLottieAnimation
+    var isPlaying = true
     var loopMode: LottieLoopMode = .loop
 
     var body: some View {
-        if let lottieAnimation = animation.lottieAnimation {
+        if isPlaying, let lottieAnimation = animation.lottieAnimation {
             LottieView(animation: lottieAnimation)
                 .playing(loopMode: loopMode)
                 .animationSpeed(animation.speed)
@@ -18,7 +19,7 @@ struct RunpamineLottieView: View {
     }
 }
 
-enum RunpamineLottieAnimation: String, Equatable {
+enum RunpamineLottieAnimation: String, CaseIterable, Equatable {
     case hamburger = "hamburger10"
     case idle = "idle10"
     case running = "enchoRunning10"
@@ -35,11 +36,7 @@ enum RunpamineLottieAnimation: String, Equatable {
     }
 
     var lottieAnimation: LottieAnimation? {
-        guard let url = Bundle.main.url(forResource: rawValue, withExtension: "json", subdirectory: "lottie") else {
-            return nil
-        }
-
-        return LottieAnimation.filepath(url.path)
+        Self.lottieAnimations[rawValue]
     }
 
     var speed: Double {
@@ -74,4 +71,16 @@ enum RunpamineLottieAnimation: String, Equatable {
 
         return .hamburger
     }
+
+    private static let lottieAnimations: [String: LottieAnimation] = {
+        Dictionary(uniqueKeysWithValues: Self.allCases.compactMap { animation in
+            guard let url = Bundle.main.url(forResource: animation.rawValue, withExtension: "json", subdirectory: "lottie"),
+                  let lottieAnimation = LottieAnimation.filepath(url.path)
+            else {
+                return nil
+            }
+
+            return (animation.rawValue, lottieAnimation)
+        })
+    }()
 }
