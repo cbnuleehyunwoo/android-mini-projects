@@ -48,6 +48,10 @@
     <string name="no_team_create_team_button">새 팀을 만들고 팀원을 초대해요</string>
     <string name="no_team_join_team_button">초대 코드로 팀에 들어가요</string>
     <string name="team_loading">팀 정보를 불러오고 있어요...</string>
+    <string name="team_menu">팀 메뉴</string>
+    <string name="team_invite_member">팀원 초대</string>
+    <string name="team_leave">팀 탈퇴</string>
+    <string name="team_leave_confirmation">정말 팀을 탈퇴하시겠습니까?</string>
     <string name="record_title">기록</string>
     <string name="history_title">러닝 기록</string>
     <string name="record_period_week">주</string>

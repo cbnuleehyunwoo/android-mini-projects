@@ -35,10 +35,12 @@ fun TeamContent(
     totalMemberCount: Int,
     members: List<TeamMember>,
     onAddClick: () -> Unit,
+    onLeaveTeamClick: () -> Unit,
     onPreviousDateClick: () -> Unit,
     onNextDateClick: () -> Unit,
     canMoveToNextDate: Boolean,
     isDateLoading: Boolean,
+    isLeavingTeam: Boolean,
     onMemberClick: (TeamMember) -> Unit,
     modifier: Modifier = Modifier,
     memberErrorMessage: String? = null,
@@ -52,6 +54,8 @@ fun TeamContent(
             TeamHeader(
                 teamName = teamName,
                 onAddClick = onAddClick,
+                onLeaveTeamClick = onLeaveTeamClick,
+                isLeavingTeam = isLeavingTeam,
             )
         }
 
@@ -164,10 +168,12 @@ private fun TeamContentPreview() {
                     ),
                 ),
             onAddClick = {},
+            onLeaveTeamClick = {},
             onPreviousDateClick = {},
             onNextDateClick = {},
             canMoveToNextDate = true,
             isDateLoading = false,
+            isLeavingTeam = false,
             onMemberClick = {},
             modifier = Modifier.fillMaxSize(),
         )

@@ -122,6 +122,14 @@ fun NavHost(
                     navController.navigate(AppRoute.JoinTeam.route)
                 },
                 onMemberClick = onTeamMemberClick,
+                onLeaveTeamSuccess = {
+                    navController.navigate(AppRoute.Home.route) {
+                        popUpTo(AppRoute.Team.route) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+                },
             )
         }
 

@@ -75,6 +75,37 @@ class TeamViewModel(
         moveToDate(selectedDate.plusDays(1))
     }
 
+    fun leaveTeam() {
+        if (uiState.value.isLeavingTeam) return
+
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isLeavingTeam = true,
+                    memberErrorMessage = null,
+                )
+            }
+            runCatching {
+                teamRepository.leaveTeam()
+            }.onSuccess { result ->
+                _uiState.update {
+                    it.copy(
+                        isLeavingTeam = false,
+                        isTeamLeft = result.left,
+                        hasTeam = if (result.left) false else it.hasTeam,
+                    )
+                }
+            }.onFailure { throwable ->
+                _uiState.update {
+                    it.copy(
+                        isLeavingTeam = false,
+                        memberErrorMessage = throwable.message ?: "팀 탈퇴에 실패했어요.",
+                    )
+                }
+            }
+        }
+    }
+
     private fun moveToDate(date: LocalDate) {
         val team = currentTeam ?: return
         if (uiState.value.isDateLoading) return

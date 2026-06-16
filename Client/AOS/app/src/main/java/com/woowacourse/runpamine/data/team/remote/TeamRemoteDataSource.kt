@@ -1,5 +1,6 @@
 package com.woowacourse.runpamine.data.team.remote
 
+import com.woowacourse.runpamine.domain.team.LeaveTeamResult
 import com.woowacourse.runpamine.domain.team.Team
 import com.woowacourse.runpamine.domain.team.TeamDailySummary
 import com.woowacourse.runpamine.domain.team.TeamMemberSeasonStats
@@ -27,4 +28,6 @@ interface TeamRemoteDataSource {
         accessToken: String,
         date: LocalDate,
     ): TeamDailySummary
+
+    suspend fun leaveTeam(accessToken: String): LeaveTeamResult
 }

@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,6 +41,7 @@ fun TeamScreen(
     onJoinTeamClick: () -> Unit,
     onCreateTeamClick: () -> Unit,
     onMemberClick: (TeamMember) -> Unit,
+    onLeaveTeamSuccess: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val container = LocalContext.current.runpamineContainer
@@ -53,11 +55,16 @@ fun TeamScreen(
         )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    LaunchedEffect(uiState.isTeamLeft) {
+        if (uiState.isTeamLeft) onLeaveTeamSuccess()
+    }
+
     TeamScreenContent(
         uiState = uiState,
         onInviteClick = onInviteClick,
         onJoinTeamClick = onJoinTeamClick,
         onCreateTeamClick = onCreateTeamClick,
+        onLeaveTeamClick = viewModel::leaveTeam,
         onPreviousDateClick = viewModel::moveToPreviousDate,
         onNextDateClick = viewModel::moveToNextDate,
         onMemberClick = onMemberClick,
@@ -71,6 +78,7 @@ private fun TeamScreenContent(
     onInviteClick: (String) -> Unit,
     onJoinTeamClick: () -> Unit,
     onCreateTeamClick: () -> Unit,
+    onLeaveTeamClick: () -> Unit,
     onPreviousDateClick: () -> Unit,
     onNextDateClick: () -> Unit,
     onMemberClick: (TeamMember) -> Unit,
@@ -90,10 +98,12 @@ private fun TeamScreenContent(
                 totalMemberCount = uiState.totalMemberCount,
                 members = uiState.members,
                 onAddClick = { onInviteClick(uiState.joinCode) },
+                onLeaveTeamClick = onLeaveTeamClick,
                 onPreviousDateClick = onPreviousDateClick,
                 onNextDateClick = onNextDateClick,
                 canMoveToNextDate = uiState.canMoveToNextDate,
                 isDateLoading = uiState.isDateLoading,
+                isLeavingTeam = uiState.isLeavingTeam,
                 onMemberClick = onMemberClick,
                 modifier = modifier.fillMaxSize(),
                 memberErrorMessage = uiState.memberErrorMessage,
@@ -334,6 +344,7 @@ private fun TeamScreenPreview() {
             onInviteClick = {},
             onJoinTeamClick = {},
             onCreateTeamClick = {},
+            onLeaveTeamClick = {},
             onPreviousDateClick = {},
             onNextDateClick = {},
             onMemberClick = {},
