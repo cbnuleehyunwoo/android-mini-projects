@@ -30,8 +30,8 @@ enum AppTheme {
             }
         }
 
-        static let header1 = font(size: 30, weight: .bold)
-        static let header2 = font(size: 26, weight: .extraBold)
+        static let header1 = font(size: 28, weight: .semibold)
+        static let header2 = font(size: 24, weight: .semibold)
         static let title2 = font(size: 20, weight: .semibold)
         static let body1 = font(size: 16, weight: .medium)
         static let splashTitle = brandFont(size: 48)

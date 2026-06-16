@@ -26,7 +26,6 @@ struct NicknameSetupView: View {
                 Text("사용할 닉네임을\n입력해주세요")
                     .font(AppTheme.Typography.header1)
                     .lineSpacing(7)
-                    .foregroundStyle(.black)
                     .padding(.top, 22)
 
                 HStack(spacing: 12) {
