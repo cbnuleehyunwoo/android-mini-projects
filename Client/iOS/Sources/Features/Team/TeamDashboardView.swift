@@ -10,7 +10,9 @@ struct TeamDashboardView: View {
     let onJoinTeam: () -> Void
     let onInvite: () -> Void
     let onLeaveTeam: () -> Void
+    let onSelectMember: (TeamMemberSeasonDetail) -> Void
     @State private var records: [RunningRecord] = RunningHistoryStore().load()
+    @State private var teamMembers: [TeamMember]?
     @State private var dailySummary: TeamDailySummary?
     @State private var seasonStats: TeamSeasonStats?
     @State private var hasResolvedDashboard = false
@@ -99,6 +101,12 @@ struct TeamDashboardView: View {
                     VStack(spacing: 28) {
                         ForEach(memberCards, id: \.id) { member in
                             TeamMemberRunCard(member: member)
+                                .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                                .onTapGesture {
+                                    logTeamMemberTap(member)
+                                    guard let detail = member.detail else { return }
+                                    onSelectMember(detail)
+                                }
                         }
                     }
                     .padding(.horizontal, 28)
@@ -229,8 +237,23 @@ struct TeamDashboardView: View {
     private var memberCards: [TeamMemberCardModel] {
         if let dailySummary {
             let seasonMembersByID = seasonStats?.members.reduce(into: [String: TeamSeasonMember]()) { result, member in
+                result[member.matchingID] = member
                 result[member.id] = member
             } ?? [:]
+            let dailyMembersByID = dailySummary.members.reduce(into: [String: TeamDailyMember]()) { result, member in
+                result[member.id] = member
+            }
+
+            if let teamMembers {
+                return teamMembers.map { member in
+                    TeamMemberCardModel(
+                        teamMember: member,
+                        dailyMember: dailyMembersByID[member.id],
+                        seasonMember: seasonMembersByID[member.id],
+                        isCurrentUser: member.id == currentUserID
+                    )
+                }
+            }
 
             return dailySummary.members.map { member in
                 TeamMemberCardModel(
@@ -352,6 +375,7 @@ struct TeamDashboardView: View {
             }
             dailySummary = nil
             seasonStats = nil
+            teamMembers = nil
             onLeaveTeam()
         } catch {
             leaveTeamErrorMessage = error.localizedDescription
@@ -362,22 +386,62 @@ struct TeamDashboardView: View {
     private func refreshDashboard() async {
         guard team != nil, let accessToken else { return }
         selectedDate = Calendar.current.startOfDay(for: Date())
+        teamMembers = nil
         dailySummary = nil
         seasonStats = nil
         hasResolvedDashboard = false
 
         do {
+            async let nextTeamMembers = teamService.fetchMyTeamMembers(accessToken: accessToken)
             async let nextDailySummary = teamService.fetchDailySummary(date: selectedDate, accessToken: accessToken)
             async let nextSeasonStats = teamService.fetchMyTeamSeasonStats(seasonID: nil, accessToken: accessToken)
 
-            dailySummary = try await nextDailySummary
-            seasonStats = try? await nextSeasonStats
+            teamMembers = try? await nextTeamMembers
+            let fetchedDailySummary = try await nextDailySummary
+            do {
+                let fetchedSeasonStats = try await nextSeasonStats
+                logFetchedSeasonStats(fetchedSeasonStats)
+                dailySummary = fetchedDailySummary
+                seasonStats = fetchedSeasonStats
+            } catch {
+                dailySummary = fetchedDailySummary
+                seasonStats = nil
+                #if DEBUG
+                print("TeamDashboardView season stats failed: \(error)")
+                #endif
+            }
         } catch {
             dailySummary = nil
             seasonStats = nil
+            #if DEBUG
+            print("TeamDashboardView daily summary failed: \(error)")
+            #endif
         }
 
         hasResolvedDashboard = true
+    }
+
+    private func logFetchedSeasonStats(_ stats: TeamSeasonStats) {
+        #if DEBUG
+        print(
+            """
+            [TeamDashboard][season-stats] seasonID=\(stats.season.id) memberCount=\(stats.members.count)
+            \(stats.members.map { member in
+                "- id=\(member.id), matchingID=\(member.matchingID), name=\(member.nickname), distance=\(member.seasonDistanceMeters), duration=\(member.seasonDurationSeconds), runs=\(member.seasonRunCount), pace=\(member.averagePaceSecondsPerKilometer.map(String.init) ?? "nil"), joinedAt=\(member.teamJoinedAt)"
+            }.joined(separator: "\n"))
+            """
+        )
+        #endif
+    }
+
+    private func logTeamMemberTap(_ member: TeamMemberCardModel) {
+        #if DEBUG
+        print(
+            """
+            [TeamDashboard][member-tap] cardID=\(member.id), name=\(member.name), hasDetail=\(member.detail != nil), dailyID=\(member.debugDailyID ?? "nil"), dailyDistance=\(member.debugDailyDistanceMeters.map(String.init) ?? "nil"), dailyDuration=\(member.debugDailyDurationSeconds.map(String.init) ?? "nil"), dailyPace=\(member.debugDailyAveragePaceSecondsPerKilometer.map(String.init) ?? "nil"), dailyCompleted=\(member.debugDailyCompleted.map(String.init) ?? "nil"), seasonID=\(member.debugSeasonID ?? "nil"), seasonMatchingID=\(member.debugSeasonMatchingID ?? "nil"), seasonDistance=\(member.debugSeasonDistanceMeters.map(String.init) ?? "nil"), seasonDuration=\(member.debugSeasonDurationSeconds.map(String.init) ?? "nil"), seasonRuns=\(member.debugSeasonRunCount.map(String.init) ?? "nil"), seasonPace=\(member.debugSeasonAveragePaceSecondsPerKilometer.map(String.init) ?? "nil")
+            """
+        )
+        #endif
     }
 
     @MainActor
@@ -613,6 +677,19 @@ private enum TeamSkeletonStyle {
     static let fill = Color(red: 0.92, green: 0.94, blue: 0.97)
 }
 
+struct TeamMemberSeasonDetail: Identifiable, Equatable {
+    let id: String
+    let name: String
+    let joinedAt: String
+    let seasonDistance: String
+    let seasonRunCount: String
+    let seasonAveragePace: String
+
+    var joinedAtText: String {
+        TeamMemberSeasonDetailFormatter.joinedDateText(from: joinedAt)
+    }
+}
+
 private struct TeamMemberCardModel: Identifiable {
     let id: String
     let name: String
@@ -622,6 +699,18 @@ private struct TeamMemberCardModel: Identifiable {
     let paceText: String
     let hasRunRecord: Bool
     let isCurrentUser: Bool
+    let detail: TeamMemberSeasonDetail?
+    let debugDailyID: String?
+    let debugDailyDistanceMeters: Int?
+    let debugDailyDurationSeconds: Int?
+    let debugDailyAveragePaceSecondsPerKilometer: Int?
+    let debugDailyCompleted: Bool?
+    let debugSeasonID: String?
+    let debugSeasonMatchingID: String?
+    let debugSeasonDistanceMeters: Int?
+    let debugSeasonDurationSeconds: Int?
+    let debugSeasonRunCount: Int?
+    let debugSeasonAveragePaceSecondsPerKilometer: Int?
 
     init(
         id: String,
@@ -631,7 +720,19 @@ private struct TeamMemberCardModel: Identifiable {
         timeText: String,
         paceText: String,
         hasRunRecord: Bool,
-        isCurrentUser: Bool
+        isCurrentUser: Bool,
+        detail: TeamMemberSeasonDetail?,
+        debugDailyID: String? = nil,
+        debugDailyDistanceMeters: Int? = nil,
+        debugDailyDurationSeconds: Int? = nil,
+        debugDailyAveragePaceSecondsPerKilometer: Int? = nil,
+        debugDailyCompleted: Bool? = nil,
+        debugSeasonID: String? = nil,
+        debugSeasonMatchingID: String? = nil,
+        debugSeasonDistanceMeters: Int? = nil,
+        debugSeasonDurationSeconds: Int? = nil,
+        debugSeasonRunCount: Int? = nil,
+        debugSeasonAveragePaceSecondsPerKilometer: Int? = nil
     ) {
         self.id = id
         self.name = name
@@ -641,17 +742,121 @@ private struct TeamMemberCardModel: Identifiable {
         self.paceText = paceText
         self.hasRunRecord = hasRunRecord
         self.isCurrentUser = isCurrentUser
+        self.detail = detail
+        self.debugDailyID = debugDailyID
+        self.debugDailyDistanceMeters = debugDailyDistanceMeters
+        self.debugDailyDurationSeconds = debugDailyDurationSeconds
+        self.debugDailyAveragePaceSecondsPerKilometer = debugDailyAveragePaceSecondsPerKilometer
+        self.debugDailyCompleted = debugDailyCompleted
+        self.debugSeasonID = debugSeasonID
+        self.debugSeasonMatchingID = debugSeasonMatchingID
+        self.debugSeasonDistanceMeters = debugSeasonDistanceMeters
+        self.debugSeasonDurationSeconds = debugSeasonDurationSeconds
+        self.debugSeasonRunCount = debugSeasonRunCount
+        self.debugSeasonAveragePaceSecondsPerKilometer = debugSeasonAveragePaceSecondsPerKilometer
+    }
+
+    init(
+        teamMember: TeamMember,
+        dailyMember: TeamDailyMember?,
+        seasonMember: TeamSeasonMember?,
+        isCurrentUser: Bool
+    ) {
+        id = teamMember.id
+        name = dailyMember?.nickname ?? teamMember.nickname
+        animation = .teamMember(consecutiveRunDays: seasonMember?.consecutiveRunDays ?? (dailyMember?.completed == true ? 1 : nil))
+        distanceText = TeamDashboardFormatter.memberDistanceKilometers(dailyMember?.distanceMeters ?? 0)
+        timeText = if let durationSeconds = dailyMember?.durationSeconds, durationSeconds > 0 {
+            RunningMetricFormatter.duration(TimeInterval(durationSeconds))
+        } else {
+            "--:--"
+        }
+        paceText = "\(RunningMetricFormatter.pace(dailyMember?.averagePaceSecondsPerKilometer.map(TimeInterval.init)))/km"
+        hasRunRecord = dailyMember?.completed ?? false
+        self.isCurrentUser = isCurrentUser
+        debugDailyID = dailyMember?.id
+        debugDailyDistanceMeters = dailyMember?.distanceMeters
+        debugDailyDurationSeconds = dailyMember?.durationSeconds
+        debugDailyAveragePaceSecondsPerKilometer = dailyMember?.averagePaceSecondsPerKilometer
+        debugDailyCompleted = dailyMember?.completed
+        debugSeasonID = seasonMember?.id
+        debugSeasonMatchingID = seasonMember?.matchingID
+        debugSeasonDistanceMeters = seasonMember?.seasonDistanceMeters
+        debugSeasonDurationSeconds = seasonMember?.seasonDurationSeconds
+        debugSeasonRunCount = seasonMember?.seasonRunCount
+        debugSeasonAveragePaceSecondsPerKilometer = seasonMember?.averagePaceSecondsPerKilometer
+        detail = Self.seasonDetail(
+            id: teamMember.id,
+            name: name,
+            seasonMember: seasonMember,
+            dailyMember: dailyMember
+        )
     }
 
     init(member: TeamDailyMember, seasonMember: TeamSeasonMember?, isCurrentUser: Bool) {
+        let memberDistanceText = TeamDashboardFormatter.memberDistanceKilometers(member.distanceMeters)
+        let memberPaceText = "\(RunningMetricFormatter.pace(member.averagePaceSecondsPerKilometer.map(TimeInterval.init)))/km"
+
         id = member.id
         name = member.nickname
         animation = .teamMember(consecutiveRunDays: seasonMember?.consecutiveRunDays ?? (member.completed ? 1 : nil))
-        distanceText = TeamDashboardFormatter.memberDistanceKilometers(member.distanceMeters)
+        distanceText = memberDistanceText
         timeText = member.durationSeconds > 0 ? RunningMetricFormatter.duration(TimeInterval(member.durationSeconds)) : "--:--"
-        paceText = "\(RunningMetricFormatter.pace(member.averagePaceSecondsPerKilometer.map(TimeInterval.init)))/km"
+        paceText = memberPaceText
         hasRunRecord = member.completed
         self.isCurrentUser = isCurrentUser
+        debugDailyID = member.id
+        debugDailyDistanceMeters = member.distanceMeters
+        debugDailyDurationSeconds = member.durationSeconds
+        debugDailyAveragePaceSecondsPerKilometer = member.averagePaceSecondsPerKilometer
+        debugDailyCompleted = member.completed
+        debugSeasonID = seasonMember?.id
+        debugSeasonMatchingID = seasonMember?.matchingID
+        debugSeasonDistanceMeters = seasonMember?.seasonDistanceMeters
+        debugSeasonDurationSeconds = seasonMember?.seasonDurationSeconds
+        debugSeasonRunCount = seasonMember?.seasonRunCount
+        debugSeasonAveragePaceSecondsPerKilometer = seasonMember?.averagePaceSecondsPerKilometer
+        detail = Self.seasonDetail(
+            id: member.id,
+            name: member.nickname,
+            seasonMember: seasonMember,
+            dailyMember: member
+        )
+    }
+
+    private static func seasonDetail(
+        id: String,
+        name: String,
+        seasonMember: TeamSeasonMember?,
+        dailyMember: TeamDailyMember?
+    ) -> TeamMemberSeasonDetail? {
+        guard let seasonMember else {
+            guard let dailyMember else { return nil }
+            let hasTotalProfile = dailyMember.totalDistanceMeters != nil || dailyMember.totalRunCount != nil || dailyMember.totalAveragePaceSecondsPerKilometer != nil
+            guard hasTotalProfile || (dailyMember.completed && dailyMember.distanceMeters > 0) else { return nil }
+
+            return TeamMemberSeasonDetail(
+                id: id,
+                name: name,
+                joinedAt: dailyMember.teamJoinedAt,
+                seasonDistance: TeamDashboardFormatter.seasonDistanceKilometers(dailyMember.totalDistanceMeters ?? dailyMember.distanceMeters),
+                seasonRunCount: "\(dailyMember.totalRunCount ?? 1)",
+                seasonAveragePace: RunningMetricFormatter.pace((dailyMember.totalAveragePaceSecondsPerKilometer ?? dailyMember.averagePaceSecondsPerKilometer).map(TimeInterval.init))
+            )
+        }
+
+        let distanceMeters = dailyMember?.totalDistanceMeters ?? seasonMember.seasonDistanceMeters
+        let runCount = dailyMember?.totalRunCount ?? seasonMember.seasonRunCount
+        let averagePaceSecondsPerKilometer = dailyMember?.totalAveragePaceSecondsPerKilometer ?? seasonMember.averagePaceSecondsPerKilometer
+
+        return TeamMemberSeasonDetail(
+            id: seasonMember.id,
+            name: seasonMember.nickname,
+            joinedAt: dailyMember.flatMap { $0.teamJoinedAt.isEmpty ? nil : $0.teamJoinedAt } ?? seasonMember.teamJoinedAt,
+            seasonDistance: TeamDashboardFormatter.seasonDistanceKilometers(distanceMeters),
+            seasonRunCount: "\(runCount)",
+            seasonAveragePace: RunningMetricFormatter.pace(averagePaceSecondsPerKilometer.map(TimeInterval.init))
+        )
     }
 
     static func runningMember(
@@ -664,16 +869,25 @@ private struct TeamMemberCardModel: Identifiable {
         let totalElapsedTime = records.reduce(0) { $0 + $1.elapsedTime }
         let totalDistanceKilometers = totalDistanceMeters / 1_000
         let averagePace = totalDistanceKilometers > 0.01 ? totalElapsedTime / totalDistanceKilometers : nil
+        let distanceText = "\(totalDistanceKilometers.formatted(.number.precision(.fractionLength(1)))) km"
 
         return TeamMemberCardModel(
             id: id,
             name: name,
             animation: .teamMember(consecutiveRunDays: TeamRunStreakCalculator.consecutiveRunDays(from: records)),
-            distanceText: "\(totalDistanceKilometers.formatted(.number.precision(.fractionLength(1)))) km",
+            distanceText: distanceText,
             timeText: totalElapsedTime > 0 ? RunningMetricFormatter.duration(totalElapsedTime) : "--:--",
             paceText: "\(RunningMetricFormatter.pace(averagePace))/km",
             hasRunRecord: !records.isEmpty,
-            isCurrentUser: isCurrentUser
+            isCurrentUser: isCurrentUser,
+            detail: TeamMemberSeasonDetail(
+                id: id,
+                name: name,
+                joinedAt: "",
+                seasonDistance: totalDistanceKilometers.formatted(.number.precision(.fractionLength(1))),
+                seasonRunCount: "\(records.count)",
+                seasonAveragePace: RunningMetricFormatter.pace(averagePace)
+            )
         )
     }
 
@@ -686,8 +900,127 @@ private struct TeamMemberCardModel: Identifiable {
             timeText: "--:--",
             paceText: "0'00\"/km",
             hasRunRecord: false,
-            isCurrentUser: false
+            isCurrentUser: false,
+            detail: TeamMemberSeasonDetail(
+                id: "member-empty-\(index)",
+                name: "버거킹 스마일",
+                joinedAt: "",
+                seasonDistance: "0.0",
+                seasonRunCount: "0",
+                seasonAveragePace: "0'00\""
+            )
         )
+    }
+}
+
+struct TeamMemberSeasonDetailSheet: View {
+    let detail: TeamMemberSeasonDetail
+    let onDismiss: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(alignment: .center, spacing: 16) {
+                Text(detail.name)
+                    .font(AppTheme.Typography.font(size: 26, weight: .bold))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.65)
+
+                Spacer(minLength: 0)
+
+                Button(action: onDismiss) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("닫기")
+            }
+
+            HStack(spacing: 6) {
+                Image("icon_calender")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 13, height: 13)
+                Text("\(detail.joinedAtText) 합류")
+                    .font(AppTheme.Typography.font(size: 16, weight: .medium))
+                    .lineLimit(1)
+            }
+            .foregroundStyle(.white.opacity(0.72))
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 2)
+
+            HStack(alignment: .top, spacing: 10) {
+                detailMetric(label: "총 거리 (km)", value: detail.seasonDistance)
+                detailMetric(label: "총 러닝 횟수", value: detail.seasonRunCount)
+                detailMetric(label: "평균 페이스", value: detail.seasonAveragePace)
+            }
+            .padding(.top, 48)
+        }
+        .padding(.horizontal, 28)
+        .padding(.top, 28)
+        .padding(.bottom, 48)
+        .frame(maxWidth: .infinity)
+        .background {
+            LinearGradient(
+                colors: [Color(red: 0.23, green: 0.48, blue: 0.98), AppTheme.Colors.primary],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
+        .clipShape(TeamMemberDetailTopRoundedShape(radius: 28))
+        .frame(maxHeight: .infinity, alignment: .bottom)
+        .ignoresSafeArea(.container, edges: .bottom)
+        .accessibilityElement(children: .contain)
+    }
+
+    private func detailMetric(label: String, value: String) -> some View {
+        VStack(spacing: 8) {
+            Text(label)
+                .font(AppTheme.Typography.font(size: 13, weight: .medium))
+                .foregroundStyle(.white.opacity(0.72))
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
+
+            Text(value)
+                .font(AppTheme.Typography.font(size: 28, weight: .bold))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+private struct TeamMemberDetailTopRoundedShape: Shape {
+    let radius: CGFloat
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        let radius = min(radius, min(rect.width, rect.height) / 2)
+
+        path.move(to: CGPoint(x: rect.minX, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + radius))
+        path.addArc(
+            center: CGPoint(x: rect.minX + radius, y: rect.minY + radius),
+            radius: radius,
+            startAngle: .degrees(180),
+            endAngle: .degrees(270),
+            clockwise: false
+        )
+        path.addLine(to: CGPoint(x: rect.maxX - radius, y: rect.minY))
+        path.addArc(
+            center: CGPoint(x: rect.maxX - radius, y: rect.minY + radius),
+            radius: radius,
+            startAngle: .degrees(270),
+            endAngle: .degrees(0),
+            clockwise: false
+        )
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+        path.closeSubpath()
+        return path
     }
 }
 
@@ -915,6 +1248,46 @@ private enum TeamDashboardFormatter {
         let kilometers = Double(distanceMeters) / 1_000
         return "\(kilometers.formatted(.number.precision(.fractionLength(1)))) km"
     }
+
+    static func seasonDistanceKilometers(_ distanceMeters: Int) -> String {
+        let kilometers = Double(distanceMeters) / 1_000
+        return kilometers.formatted(.number.precision(.fractionLength(1)))
+    }
+}
+
+private enum TeamMemberSeasonDetailFormatter {
+    private static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
+
+    private static let displayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
+        formatter.dateFormat = "yyyy년 M월 d일"
+        return formatter
+    }()
+
+    static func joinedDateText(from value: String) -> String {
+        guard !value.isEmpty else { return "가입일 정보 없음" }
+
+        let dateText = String(value.prefix(10))
+        if let date = dateFormatter.date(from: dateText) {
+            return displayFormatter.string(from: date)
+        }
+
+        if let date = ISO8601DateFormatter().date(from: value) {
+            return displayFormatter.string(from: date)
+        }
+
+        return "가입일 정보 없음"
+    }
 }
 
 private enum TeamRunStreakCalculator {
@@ -966,7 +1339,8 @@ private enum TeamRunStreakCalculator {
         onCreateTeam: {},
         onJoinTeam: {},
         onInvite: {},
-        onLeaveTeam: {}
+        onLeaveTeam: {},
+        onSelectMember: { _ in }
     )
 }
 
@@ -980,7 +1354,15 @@ private enum TeamRunStreakCalculator {
             timeText: "10:00",
             paceText: "0'50\"/km",
             hasRunRecord: true,
-            isCurrentUser: true
+            isCurrentUser: true,
+            detail: TeamMemberSeasonDetail(
+                id: "member-preview",
+                name: "커비",
+                joinedAt: "2026-05-01",
+                seasonDistance: "87.3",
+                seasonRunCount: "12",
+                seasonAveragePace: "5'24\""
+            )
         )
     )
     .padding(20)

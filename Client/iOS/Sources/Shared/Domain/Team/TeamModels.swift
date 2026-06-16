@@ -34,11 +34,16 @@ struct TeamDailyMember: Identifiable, Equatable {
     let userID: String
     let nickname: String
     let avatarKey: String?
+    let teamJoinedAt: String
     let distanceMeters: Int
     let durationSeconds: Int
     let averagePaceSecondsPerKilometer: Int?
     let calories: Int
     let completed: Bool
+    let totalDistanceMeters: Int?
+    let totalDurationSeconds: Int?
+    let totalRunCount: Int?
+    let totalAveragePaceSecondsPerKilometer: Int?
 
     var id: String { userID }
 }
@@ -92,8 +97,10 @@ struct TeamSeasonTeam: Equatable {
 
 struct TeamSeasonMember: Identifiable, Equatable {
     let id: String
+    let matchingID: String
     let nickname: String
     let avatarKey: String?
+    let teamJoinedAt: String
     let seasonDistanceMeters: Int
     let seasonDurationSeconds: Int
     let seasonCalories: Int

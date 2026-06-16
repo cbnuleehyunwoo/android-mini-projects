@@ -11,6 +11,7 @@ struct MainTabView: View {
     @State private var isShowingMyPage = false
     @State private var isRunning = false
     @State private var isShowingInvite = false
+    @State private var selectedTeamMemberDetail: TeamMemberSeasonDetail?
     @State private var nickname: String
     @State private var currentUserID: String?
     private let teamService: TeamServiceProtocol
@@ -78,6 +79,11 @@ struct MainTabView: View {
                         },
                         onLeaveTeam: {
                             handleTeamLeft()
+                        },
+                        onSelectMember: { detail in
+                            withAnimation(.easeOut(duration: 0.22)) {
+                                selectedTeamMemberDetail = detail
+                            }
                         }
                     )
                 case .ranking:
@@ -95,6 +101,21 @@ struct MainTabView: View {
 
             AppTabBar(selectedTab: $selectedTab)
                 .ignoresSafeArea(.container, edges: .bottom)
+
+            if let selectedTeamMemberDetail {
+                Color.black.opacity(0.001)
+                    .ignoresSafeArea()
+                    .onTapGesture {
+                        dismissTeamMemberDetail()
+                    }
+                    .zIndex(1)
+
+                TeamMemberSeasonDetailSheet(detail: selectedTeamMemberDetail) {
+                    dismissTeamMemberDetail()
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .zIndex(2)
+            }
         }
         .ignoresSafeArea(.container, edges: .bottom)
         .runpamineFullScreenCover(item: $presentedAction) { action in
@@ -147,6 +168,13 @@ struct MainTabView: View {
         team = nil
         store.clearTeam()
         selectedTab = .team
+        selectedTeamMemberDetail = nil
+    }
+
+    private func dismissTeamMemberDetail() {
+        withAnimation(.easeInOut(duration: 0.18)) {
+            selectedTeamMemberDetail = nil
+        }
     }
 
     @MainActor
