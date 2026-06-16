@@ -6,6 +6,7 @@ struct MyPageView: View {
     @State private var isChangingNickname = false
     @State private var isDeletingAccount = false
     @State private var isLoggingOut = false
+    @State private var isShowingLogoutConfirmation = false
     @State private var isShowingDeleteAccountConfirmation = false
     @State private var deleteAccountErrorMessage: String?
     @State private var logoutErrorMessage: String?
@@ -35,108 +36,152 @@ struct MyPageView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            Text("마이페이지")
-                .font(AppTheme.Typography.font(size: 20, weight: .semibold))
-                .foregroundStyle(AppTheme.Colors.textPrimary)
-                .frame(maxWidth: .infinity)
-                .frame(height: 60)
-                .padding(.horizontal, 18)
-                .padding(.top, 50)
-
+        ZStack {
             VStack(spacing: 0) {
-                Circle()
-                    .fill(AppTheme.Colors.surface)
-                    .frame(width: 76, height: 76)
-                    .overlay {
-                        Image(systemName: "person")
-                            .font(.system(size: 34, weight: .medium))
-                            .foregroundStyle(AppTheme.Colors.textSecondary.opacity(0.7))
-                    }
-                    .overlay {
-                        Circle()
-                            .stroke(AppTheme.Colors.border, lineWidth: 1)
-                    }
-                    .padding(.top, 34)
-
-                Text(nickname)
-                    .font(AppTheme.Typography.font(size: 20, weight: .bold))
+                Text("마이페이지")
+                    .font(AppTheme.Typography.font(size: 20, weight: .semibold))
                     .foregroundStyle(AppTheme.Colors.textPrimary)
-                    .padding(.top, 16)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 60)
+                    .padding(.horizontal, 18)
+                    .padding(.top, 50)
 
-                VStack(alignment: .leading, spacing: 12) {
-                    sectionTitle("계정 설정")
-                    settingsRow(icon: "ic_write", title: "닉네임 변경", subtitle: "닉네임을 변경할 수 있습니다.") {
-                        isChangingNickname = true
+                VStack(spacing: 0) {
+                    Circle()
+                        .fill(AppTheme.Colors.surface)
+                        .frame(width: 76, height: 76)
+                        .overlay {
+                            Image(systemName: "person")
+                                .font(.system(size: 34, weight: .medium))
+                                .foregroundStyle(AppTheme.Colors.textSecondary.opacity(0.7))
+                        }
+                        .overlay {
+                            Circle()
+                                .stroke(AppTheme.Colors.border, lineWidth: 1)
+                        }
+                        .padding(.top, 34)
+
+                    Text(nickname)
+                        .font(AppTheme.Typography.font(size: 20, weight: .bold))
+                        .foregroundStyle(AppTheme.Colors.textPrimary)
+                        .padding(.top, 16)
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        sectionTitle("계정 설정")
+                        settingsRow(icon: "ic_write", title: "닉네임 변경", subtitle: "닉네임을 변경할 수 있습니다.") {
+                            isChangingNickname = true
+                        }
+                        .disabled(isBusy)
+
+                        settingsRow(icon: "ic_logout", title: "로그아웃", subtitle: "계정에서 로그아웃합니다", isDestructive: true) {
+                            isShowingLogoutConfirmation = true
+                        }
+                        .disabled(isBusy)
+
+                        if let logoutErrorMessage {
+                            Text(logoutErrorMessage)
+                                .font(AppTheme.Typography.caption1)
+                                .foregroundStyle(AppTheme.Colors.danger)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+
+                        settingsRow(icon: "ic_trash", title: "회원탈퇴", subtitle: "계정을 삭제합니다", isDestructive: true) {
+                            isShowingDeleteAccountConfirmation = true
+                        }
+                        .disabled(isBusy)
+
+                        if let deleteAccountErrorMessage {
+                            Text(deleteAccountErrorMessage)
+                                .font(AppTheme.Typography.caption1)
+                                .foregroundStyle(AppTheme.Colors.danger)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+
+                        sectionTitle("약관 및 정책")
+                            .padding(.top, 4)
+                        settingsRow(icon: "ic_shield", title: "개인정보처리방침", subtitle: "개인정보 수집 및 이용에 대한 안내") {
+                            openURL(TermsAgreementID.privacy.documentURL)
+                        }
+                        settingsRow(icon: "ic_page", title: "이용약관", subtitle: "서비스 이용에 관한 약관을 확인하세요") {
+                            openURL(TermsAgreementID.service.documentURL)
+                        }
+
+                        sectionTitle("기타")
+                            .padding(.top, 4)
+                        appInfoRow()
                     }
-                    .disabled(isBusy)
+                    .padding(.horizontal, AppTheme.Layout.horizontalPadding)
+                    .padding(.top, 48)
 
-                    settingsRow(icon: "ic_logout", title: "로그아웃", subtitle: "계정에서 로그아웃합니다", isDestructive: true) {
+                    Spacer()
+                }
+            }
+            .background(Color.white)
+            .runpamineBackSwipe {
+                dismiss()
+            }
+            .sheet(isPresented: $isChangingNickname) {
+                MyNicknameChangeView(store: store, profileService: profileService, accessToken: accessToken) { nextNickname in
+                    nickname = nextNickname
+                    onNicknameChanged(nextNickname)
+                    isChangingNickname = false
+                }
+                .networkErrorOverlay()
+            }
+
+            if isShowingLogoutConfirmation {
+                RunpamineConfirmationDialog(
+                    title: "로그아웃",
+                    message: "정말 로그아웃 하시겠습니까?",
+                    dismissText: "취소",
+                    confirmText: "로그아웃",
+                    confirmButtonColor: AppTheme.Colors.primary,
+                    dismissButtonColor: Color(red: 123/255, green: 123/255, blue: 123/255),
+                    dismissButtonTextColor: .white,
+                    titleColor: AppTheme.Colors.textPrimary,
+                    messageColor: AppTheme.Colors.textSecondary,
+                    confirmButtonWidthRatio: 0.6,
+                    verticalPadding: 24,
+                    messageTopPadding: 16,
+                    buttonTopPadding: 28,
+                    onDismiss: {
+                        isShowingLogoutConfirmation = false
+                    },
+                    onConfirm: {
+                        isShowingLogoutConfirmation = false
                         Task {
                             await logout()
                         }
                     }
-                    .disabled(isBusy)
-
-                    if let logoutErrorMessage {
-                        Text(logoutErrorMessage)
-                            .font(AppTheme.Typography.caption1)
-                            .foregroundStyle(AppTheme.Colors.danger)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-
-                    settingsRow(icon: "ic_trash", title: "회원탈퇴", subtitle: "계정을 삭제합니다", isDestructive: true) {
-                        isShowingDeleteAccountConfirmation = true
-                    }
-                    .disabled(isBusy)
-
-                    if let deleteAccountErrorMessage {
-                        Text(deleteAccountErrorMessage)
-                            .font(AppTheme.Typography.caption1)
-                            .foregroundStyle(AppTheme.Colors.danger)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-
-                    sectionTitle("약관 및 정책")
-                        .padding(.top, 4)
-                    settingsRow(icon: "ic_shield", title: "개인정보처리방침", subtitle: "개인정보 수집 및 이용에 대한 안내") {
-                        openURL(TermsAgreementID.privacy.documentURL)
-                    }
-                    settingsRow(icon: "ic_page", title: "이용약관", subtitle: "서비스 이용에 관한 약관을 확인하세요") {
-                        openURL(TermsAgreementID.service.documentURL)
-                    }
-
-                    sectionTitle("기타")
-                        .padding(.top, 4)
-                    appInfoRow()
-                }
-                .padding(.horizontal, AppTheme.Layout.horizontalPadding)
-                .padding(.top, 48)
-
-                Spacer()
+                )
             }
-        }
-        .background(Color.white)
-        .runpamineBackSwipe {
-            dismiss()
-        }
-        .alert("회원탈퇴", isPresented: $isShowingDeleteAccountConfirmation) {
-            Button("취소", role: .cancel) {}
-            Button("탈퇴", role: .destructive) {
-                Task {
-                    await deleteAccount()
-                }
+
+            if isShowingDeleteAccountConfirmation {
+                RunpamineConfirmationDialog(
+                    title: "회원탈퇴",
+                    message: "회원 탈퇴 시 모든 정보가 삭제됩니다.\n정말 탈퇴하시겠습니까?",
+                    dismissText: "취소",
+                    confirmText: "회원탈퇴",
+                    confirmButtonColor: AppTheme.Colors.danger,
+                    dismissButtonColor: Color(red: 123/255, green: 123/255, blue: 123/255),
+                    dismissButtonTextColor: .white,
+                    titleColor: AppTheme.Colors.textPrimary,
+                    messageColor: AppTheme.Colors.textSecondary,
+                    confirmButtonWidthRatio: 0.6,
+                    verticalPadding: 24,
+                    messageTopPadding: 16,
+                    buttonTopPadding: 28,
+                    onDismiss: {
+                        isShowingDeleteAccountConfirmation = false
+                    },
+                    onConfirm: {
+                        isShowingDeleteAccountConfirmation = false
+                        Task {
+                            await deleteAccount()
+                        }
+                    }
+                )
             }
-        } message: {
-            Text("계정을 탈퇴하시겠습니까? 탈퇴 후에는 복구할 수 없습니다.")
-        }
-        .sheet(isPresented: $isChangingNickname) {
-            MyNicknameChangeView(store: store, profileService: profileService, accessToken: accessToken) { nextNickname in
-                nickname = nextNickname
-                onNicknameChanged(nextNickname)
-                isChangingNickname = false
-            }
-            .networkErrorOverlay()
         }
     }
 
