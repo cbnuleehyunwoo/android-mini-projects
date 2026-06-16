@@ -1,8 +1,10 @@
 package com.woowacourse.runpamine.presentation.team.components.team
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,17 +20,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.woowacourse.runpamine.R
+import com.woowacourse.runpamine.presentation.team.model.RunningStatus
 import com.woowacourse.runpamine.presentation.team.model.TeamMember
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
 @Composable
 fun TeamMemberCard(
     member: TeamMember,
-    calories: String,
     distance: String,
     time: String,
     pace: String,
@@ -97,12 +101,29 @@ fun TeamMemberCard(
                 pace = pace,
                 modifier = Modifier.weight(1f),
             )
-            CalorieMetricCard(
-                calories = calories,
-            )
+            Box(
+                modifier = Modifier.size(64.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (member.hasTodayRunRecord) {
+                    StampImage()
+                }
+            }
         }
     }
 }
+
+@Composable
+private fun StampImage(modifier: Modifier = Modifier) {
+    Image(
+        painter = painterResource(R.drawable.stamp),
+        contentDescription = null,
+        modifier = modifier.size(64.dp),
+    )
+}
+
+private val TeamMember.hasTodayRunRecord: Boolean
+    get() = runningStatus != RunningStatus.Resting && runningStatus != RunningStatus.LongResting
 
 @Preview(showBackground = true, widthDp = 500)
 @Composable
@@ -117,12 +138,12 @@ private fun TeamMemberPreview() {
                     time = "28:35",
                     pace = "2'19\"",
                     calories = "344",
+                    runningStatus = RunningStatus.Running,
                     isMe = true,
                 ),
             distance = "12.3km",
             time = "22:32",
             pace = "5'30\"",
-            calories = "344",
             onClick = {},
         )
     }
