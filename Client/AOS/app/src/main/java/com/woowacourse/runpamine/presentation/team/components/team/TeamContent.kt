@@ -125,7 +125,6 @@ fun TeamContent(
         ) { member ->
             TeamMemberCard(
                 member = member,
-                calories = member.calories,
                 distance = member.distance,
                 time = member.time,
                 pace = member.pace,
