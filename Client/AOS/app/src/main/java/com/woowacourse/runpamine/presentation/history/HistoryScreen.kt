@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -74,7 +73,7 @@ fun HistoryScreen(
                 modifier =
                     Modifier
                         .background(Color.White)
-                        .padding(12.dp)
+                        .padding(12.dp),
             )
         },
         bottomBar = {
@@ -143,7 +142,6 @@ fun HistoryScreen(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 RunningMetricCard(
-                    iconResId = R.drawable.footprint,
                     title = stringResource(R.string.running_distance),
                     value = distance,
                     unit = stringResource(R.string.running_distance_unit),
@@ -151,7 +149,6 @@ fun HistoryScreen(
                     shadowElevation = 2.dp,
                 )
                 RunningMetricCard(
-                    iconResId = R.drawable.timer,
                     title = stringResource(R.string.running_time),
                     value = time,
                     unit = "",
@@ -164,7 +161,6 @@ fun HistoryScreen(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 RunningMetricCard(
-                    iconResId = R.drawable.pace,
                     title = stringResource(R.string.running_pace),
                     value = pace,
                     unit = "/km",
@@ -172,7 +168,6 @@ fun HistoryScreen(
                     shadowElevation = 2.dp,
                 )
                 RunningMetricCard(
-                    iconResId = R.drawable.ic_kcal,
                     title = stringResource(R.string.running_kcal),
                     value = calories,
                     unit = "kcal",

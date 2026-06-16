@@ -62,14 +62,12 @@ fun RunningCompleteScreen(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     RunningMetricCard(
-                        iconResId = R.drawable.footprint,
                         title = stringResource(R.string.running_distance),
                         value = distance,
                         unit = stringResource(R.string.running_distance_unit),
                         modifier = Modifier.weight(1f),
                     )
                     RunningMetricCard(
-                        iconResId = R.drawable.timer,
                         title = stringResource(R.string.running_time),
                         value = time,
                         unit = "",
@@ -81,14 +79,12 @@ fun RunningCompleteScreen(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     RunningMetricCard(
-                        iconResId = R.drawable.pace,
                         title = stringResource(R.string.running_pace),
                         value = pace,
                         unit = "/km",
                         modifier = Modifier.weight(1f),
                     )
                     RunningMetricCard(
-                        iconResId = R.drawable.ic_kcal,
                         title = stringResource(R.string.running_kcal),
                         value = calories,
                         unit = "kcal",
