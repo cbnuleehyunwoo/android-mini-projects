@@ -176,9 +176,11 @@ private fun NavHostController.navigateToBottomTab(tab: RunpamineBottomTab) {
         popBackStack(
             route = bottomTab.route,
             inclusive = true,
+            saveState = true,
         )
     }
     navigate(tab.route) {
         launchSingleTop = true
+        restoreState = true
     }
 }
