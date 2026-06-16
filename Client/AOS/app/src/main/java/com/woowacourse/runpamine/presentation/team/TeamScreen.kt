@@ -263,12 +263,7 @@ private fun TeamMetricSkeletonRow(modifier: Modifier = Modifier) {
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        TeamSkeletonBox(
-            modifier = Modifier.size(14.dp),
-            shape = RoundedCornerShape(5.dp),
-        )
         TeamSkeletonBox(
             modifier =
                 Modifier
@@ -276,6 +271,7 @@ private fun TeamMetricSkeletonRow(modifier: Modifier = Modifier) {
                     .height(13.dp),
             shape = RoundedCornerShape(6.dp),
         )
+        Spacer(modifier = Modifier.weight(1f))
         TeamSkeletonBox(
             modifier =
                 Modifier

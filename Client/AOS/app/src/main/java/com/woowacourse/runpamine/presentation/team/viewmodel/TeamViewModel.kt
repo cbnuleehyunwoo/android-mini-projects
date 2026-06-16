@@ -284,6 +284,9 @@ private fun TeamMemberSeasonStats.toEmptyTeamMember(runningStatus: RunningStatus
         seasonAveragePace = averagePaceSecondsPerKm.toSeasonPaceText(),
     )
 
+private val TeamRunSummary.hasRunRecord: Boolean
+    get() = completed && (distanceMeters > 0 || durationSeconds > 0)
+
 private fun Int?.toRunningStatus(): RunningStatus =
     when {
         this == null -> RunningStatus.LongResting
