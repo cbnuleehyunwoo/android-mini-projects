@@ -3,6 +3,7 @@ import SwiftUI
 import UIKit
 
 struct RootView: View {
+    @Environment(\.scenePhase) private var scenePhase
     @State private var route: OnboardingRoute = .splash
     @State private var acceptedTerms: [TermsAgreement] = []
     @State private var currentSession: AuthSession?
@@ -85,6 +86,12 @@ struct RootView: View {
             }
         }
         .tint(AppTheme.Colors.primary)
+        .onChange(of: scenePhase) { _, nextPhase in
+            guard nextPhase == .active else { return }
+            Task {
+                await refreshRestoredSession()
+            }
+        }
     }
 
     @MainActor
@@ -122,6 +129,21 @@ struct RootView: View {
         currentProfileID = nil
         acceptedTerms = []
         route = .login
+    }
+
+    @MainActor
+    private func refreshRestoredSession() async {
+        guard currentSession != nil else { return }
+
+        do {
+            if let session = try await authService.restoreSession() {
+                currentSession = session
+            } else {
+                handleLogoutCompleted()
+            }
+        } catch {
+            return
+        }
     }
 
     private func apply(_ homeState: HomeState) {

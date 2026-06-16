@@ -160,7 +160,7 @@ struct MainTabView: View {
             InviteMemberView(inviteCode: team?.inviteCode ?? "")
                 .networkErrorOverlay()
         }
-        .task {
+        .task(id: accessToken) {
             await refreshHomeState()
         }
     }
