@@ -226,10 +226,10 @@ final class MockTeamService: TeamServiceProtocol {
                     averagePaceSecondsPerKilometer: 50,
                     calories: 200,
                     completed: true,
-                    totalDistanceMeters: 42_800,
-                    totalDurationSeconds: 13_200,
-                    totalRunCount: 8,
-                    totalAveragePaceSecondsPerKilometer: 308
+                    totalDistanceMeters: nil,
+                    totalDurationSeconds: nil,
+                    totalRunCount: nil,
+                    totalAveragePaceSecondsPerKilometer: nil
                 ),
                 TeamDailyMember(
                     userID: "member-burger-1",
@@ -241,10 +241,10 @@ final class MockTeamService: TeamServiceProtocol {
                     averagePaceSecondsPerKilometer: nil,
                     calories: 0,
                     completed: false,
-                    totalDistanceMeters: 3_800,
-                    totalDurationSeconds: 1_400,
-                    totalRunCount: 2,
-                    totalAveragePaceSecondsPerKilometer: 368
+                    totalDistanceMeters: nil,
+                    totalDurationSeconds: nil,
+                    totalRunCount: nil,
+                    totalAveragePaceSecondsPerKilometer: nil
                 )
             ]
         )

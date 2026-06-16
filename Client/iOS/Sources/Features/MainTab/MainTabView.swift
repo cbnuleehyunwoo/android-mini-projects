@@ -12,6 +12,7 @@ struct MainTabView: View {
     @State private var isRunning = false
     @State private var isShowingInvite = false
     @State private var selectedTeamMemberDetail: TeamMemberSeasonDetail?
+    @State private var homeTeamProgress: HomeTeamProgress?
     @State private var nickname: String
     @State private var currentUserID: String?
     private let teamService: TeamServiceProtocol
@@ -52,10 +53,12 @@ struct MainTabView: View {
             Group {
                 switch selectedTab {
                 case .home:
-                    HomeView(nickname: nickname, team: team) {
+                    HomeView(nickname: nickname, team: team, teamProgress: homeTeamProgress) {
                         presentedAction = .createTeam
                     } onJoinTeam: {
                         presentedAction = .joinTeam
+                    } onOpenTeam: {
+                        selectedTab = .team
                     } onOpenMyPage: {
                         isShowingMyPage = true
                     } onStartRunning: {
@@ -160,12 +163,14 @@ struct MainTabView: View {
     private func handleTeamUpdated(_ updatedTeam: RunningTeam) {
         team = updatedTeam
         store.saveTeam(updatedTeam)
+        homeTeamProgress = nil
         selectedTab = .team
         presentedAction = nil
     }
 
     private func handleTeamLeft() {
         team = nil
+        homeTeamProgress = nil
         store.clearTeam()
         selectedTab = .team
         selectedTeamMemberDetail = nil
@@ -193,9 +198,30 @@ struct MainTabView: View {
             if let runningTeam = homeState.team?.runningTeam {
                 team = runningTeam
                 store.saveTeam(runningTeam)
+                await refreshHomeTeamProgress(for: runningTeam)
             }
         } catch {
             return
+        }
+    }
+
+    @MainActor
+    private func refreshHomeTeamProgress(for runningTeam: RunningTeam) async {
+        guard let accessToken else {
+            homeTeamProgress = nil
+            return
+        }
+
+        do {
+            let summary = try await teamService.fetchDailySummary(date: Date(), accessToken: accessToken)
+            guard team?.id == runningTeam.id else { return }
+            homeTeamProgress =
+                HomeTeamProgress(
+                    completedMemberCount: summary.completedMemberCount,
+                    totalMemberCount: summary.totalMemberCount
+                )
+        } catch {
+            homeTeamProgress = nil
         }
     }
 }
