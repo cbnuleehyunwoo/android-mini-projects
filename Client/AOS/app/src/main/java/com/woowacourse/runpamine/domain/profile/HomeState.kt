@@ -11,5 +11,6 @@ data class TeamSummary(
     val joinCode: String?,
     val ownerId: String?,
     val memberCount: Int,
+    val todayRunMemberCount: Int,
     val isOwner: Boolean,
 )

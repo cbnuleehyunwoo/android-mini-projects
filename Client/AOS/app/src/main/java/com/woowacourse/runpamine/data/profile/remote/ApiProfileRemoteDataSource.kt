@@ -143,6 +143,11 @@ private fun JSONObject.toTeamSummary(): TeamSummary =
         joinCode = optString("joinCode").takeIf { it.isNotBlank() },
         ownerId = optString("ownerId").takeIf { it.isNotBlank() },
         memberCount = optInt("memberCount", 0),
+        todayRunMemberCount =
+            optInt(
+                "todayRunMemberCount",
+                optInt("todayRunnerCount", optInt("runningMemberCount", 0)),
+            ),
         isOwner = optBoolean("isOwner", false),
     )
 
