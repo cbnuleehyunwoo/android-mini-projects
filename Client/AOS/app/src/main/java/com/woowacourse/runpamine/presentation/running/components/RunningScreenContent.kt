@@ -57,14 +57,12 @@ fun RunningScreenContent(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 RunningMetricCard(
-                    iconResId = R.drawable.ic_pace,
                     title = stringResource(R.string.running_pace),
                     value = session.paceText(),
                     unit = "/km",
                     modifier = Modifier.weight(1f),
                 )
                 RunningMetricCard(
-                    iconResId = R.drawable.ic_kcal,
                     title = stringResource(R.string.running_kcal),
                     value = (session?.calories ?: 0).toString(),
                     unit = "kcal",

@@ -10,5 +10,8 @@ data class RunningRecord(
     val duration: String,
     val pace: String,
     val calories: Int,
+    val dateText: String = "",
+    val startTime: String = "",
+    val endTime: String = "",
     val routePoints: List<RunPoint> = emptyList(),
 )

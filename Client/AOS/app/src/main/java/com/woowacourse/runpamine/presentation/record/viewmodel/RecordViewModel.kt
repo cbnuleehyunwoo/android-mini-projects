@@ -16,8 +16,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.YearMonth
 import java.time.ZoneId
+import java.time.format.TextStyle
 import java.util.Locale
 
 class RecordViewModel(
@@ -159,6 +161,14 @@ private fun RunSession.toRunningRecord(): RunningRecord =
     RunningRecord(
         id = id,
         date = localDate,
+        dateText = localDate.toDisplayText(),
+        startTime = startedAt.atZone(ZoneId.systemDefault()).toLocalTime().toTimeText(),
+        endTime =
+            endedAt
+                ?.atZone(ZoneId.systemDefault())
+                ?.toLocalTime()
+                ?.toTimeText()
+                .orEmpty(),
         distanceKm = distanceMeters / METERS_PER_KILOMETER,
         duration = durationSeconds.toDurationText(),
         pace = averagePaceSecondsPerKm.toPaceText(),
@@ -184,7 +194,20 @@ private fun Int.toPaceText(): String {
     return String.format(Locale.getDefault(), "%d'%02d\"/km", minutes, seconds)
 }
 
+private fun LocalDate.toDisplayText(): String {
+    val dayOfWeek = dayOfWeek.getDisplayName(TextStyle.FULL, Locale.KOREAN)
+    return String.format(Locale.getDefault(), "%d. %02d. %02d %s", year, monthValue, dayOfMonth, dayOfWeek)
+}
+
+private fun LocalTime.toTimeText(): String {
+    val period = if (hour < HOURS_PER_HALF_DAY) "오전" else "오후"
+    val displayHour = hour % HOURS_PER_HALF_DAY
+    val hourText = if (displayHour == 0) HOURS_PER_HALF_DAY else displayHour
+    return String.format(Locale.getDefault(), "%s %d:%02d", period, hourText, minute)
+}
+
 private const val METERS_PER_KILOMETER = 1_000.0
 private const val SECONDS_PER_MINUTE = 60
 private const val SECONDS_PER_HOUR = 3_600
+private const val HOURS_PER_HALF_DAY = 12
 private const val MIN_ROUTE_POINT_COUNT = 2
