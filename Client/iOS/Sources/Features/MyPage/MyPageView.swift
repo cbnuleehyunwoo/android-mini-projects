@@ -305,7 +305,7 @@ struct MyPageView: View {
                 Text("앱 정보")
                     .font(AppTheme.Typography.font(size: 15, weight: .bold))
                     .foregroundStyle(AppTheme.Colors.textPrimary)
-                Text("버전 1.2.3")
+                Text("버전 1.0.0")
                     .font(AppTheme.Typography.caption1)
                     .foregroundStyle(AppTheme.Colors.textSecondary)
             }
