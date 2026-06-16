@@ -249,6 +249,7 @@ private fun TeamRunSummary.toTeamMember(seasonStats: TeamMemberSeasonStats?): Te
         seasonDuration = totalDurationSeconds.toDurationText(),
         seasonRunCount = totalRunCount,
         seasonAveragePace = totalAveragePaceSecondsPerKm.toSeasonPaceText(),
+        hasTodayRunRecord = hasRunRecord,
     )
 
 private fun TeamMemberSummary.toEmptyTeamMember(seasonStats: TeamMemberSeasonStats? = null): TeamMember =

@@ -122,9 +122,6 @@ private fun StampImage(modifier: Modifier = Modifier) {
     )
 }
 
-private val TeamMember.hasTodayRunRecord: Boolean
-    get() = runningStatus != RunningStatus.Resting && runningStatus != RunningStatus.LongResting
-
 @Preview(showBackground = true, widthDp = 500)
 @Composable
 private fun TeamMemberPreview() {
@@ -140,6 +137,7 @@ private fun TeamMemberPreview() {
                     calories = "344",
                     runningStatus = RunningStatus.Running,
                     isMe = true,
+                    hasTodayRunRecord = true,
                 ),
             distance = "12.3km",
             time = "22:32",
