@@ -20,13 +20,13 @@ struct HomeView: View {
                 .padding(.trailing, 20)
 
             TeamStatusCard(team: team, onCreateTeam: onCreateTeam, onJoinTeam: onJoinTeam)
-                .padding(.horizontal, 20)
+                .padding(.horizontal, HomeLayout.contentHorizontalPadding)
 
             ZStack(alignment: .bottom) {
                 HomeMapView()
                     .frame(maxWidth: .infinity)
                     .frame(maxHeight: .infinity)
-                    .padding(.horizontal, 8)
+                    .padding(.horizontal, HomeLayout.contentHorizontalPadding)
 
                 Button {
                     runningPermissionRequester.requestStart {
@@ -40,10 +40,9 @@ struct HomeView: View {
                         .background(AppTheme.Colors.primary)
                         .clipShape(Circle())
                 }
-                .padding(.bottom, -32)
+                .padding(.bottom, 16)
             }
             .padding(.top, 8)
-            .padding(.bottom, 55)
             .frame(maxHeight: .infinity)
         }
         .background(Color.white)
@@ -81,6 +80,10 @@ struct HomeView: View {
         }
     }
 
+}
+
+private enum HomeLayout {
+    static let contentHorizontalPadding: CGFloat = 20
 }
 
 @MainActor
