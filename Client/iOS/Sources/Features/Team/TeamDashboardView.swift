@@ -554,12 +554,13 @@ private struct TeamMemberRunCardSkeleton: View {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .fill(TeamSkeletonStyle.fill)
                 .frame(width: 150, height: 28)
+                .padding(.leading, 10)
 
             HStack(spacing: 0) {
                 RoundedRectangle(cornerRadius: 0, style: .continuous)
                     .fill(TeamSkeletonStyle.fill)
                     .frame(width: 80, height: 80)
-                    .padding(.leading, 8)
+                    .padding(.leading, 10)
 
                 Spacer()
                     .frame(width: 12)
@@ -706,12 +707,13 @@ private struct TeamMemberRunCard: View {
                     TeamCurrentUserBadge()
                 }
             }
+            .padding(.leading, 10)
 
             HStack(spacing: 0) {
                 RunpamineLottieView(animation: member.animation)
                     .frame(width: 80, height: 80)
                     .clipped()
-                    .padding(.leading, 8)
+                    .padding(.leading, 10)
 
                 Spacer()
                     .frame(width: 14)
