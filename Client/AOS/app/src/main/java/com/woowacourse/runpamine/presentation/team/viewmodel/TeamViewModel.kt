@@ -213,10 +213,11 @@ private fun TeamRunSummary.toTeamMember(seasonStats: TeamMemberSeasonStats?): Te
         pace = averagePaceSecondsPerKm.toPaceText(),
         calories = calories.toString(),
         runningStatus = seasonStats?.consecutiveRunDays.toRunningStatus(hasRunRecord = hasRunRecord),
-        teamJoinedAt = seasonStats?.teamJoinedAt.orEmpty(),
-        seasonDistance = seasonStats?.seasonDistanceMeters.toSeasonKilometerText(),
-        seasonRunCount = seasonStats?.seasonRunCount ?: 0,
-        seasonAveragePace = seasonStats?.averagePaceSecondsPerKm.toSeasonPaceText(),
+        teamJoinedAt = teamJoinedAt.ifBlank { seasonStats?.teamJoinedAt.orEmpty() },
+        seasonDistance = totalDistanceMeters.toSeasonKilometerText(),
+        seasonDuration = totalDurationSeconds.toDurationText(),
+        seasonRunCount = totalRunCount,
+        seasonAveragePace = totalAveragePaceSecondsPerKm.toSeasonPaceText(),
     )
 
 private fun TeamMemberSummary.toEmptyTeamMember(
@@ -232,6 +233,7 @@ private fun TeamMemberSummary.toEmptyTeamMember(
         runningStatus = seasonStats?.consecutiveRunDays.toRunningStatus(),
         teamJoinedAt = seasonStats?.teamJoinedAt.orEmpty(),
         seasonDistance = seasonStats?.seasonDistanceMeters.toSeasonKilometerText(),
+        seasonDuration = seasonStats?.seasonDurationSeconds.toDurationText(),
         seasonRunCount = seasonStats?.seasonRunCount ?: 0,
         seasonAveragePace = seasonStats?.averagePaceSecondsPerKm.toSeasonPaceText(),
     )
@@ -247,6 +249,7 @@ private fun TeamMemberSeasonStats.toEmptyTeamMember(runningStatus: RunningStatus
         runningStatus = runningStatus,
         teamJoinedAt = teamJoinedAt,
         seasonDistance = seasonDistanceMeters.toSeasonKilometerText(),
+        seasonDuration = seasonDurationSeconds.toDurationText(),
         seasonRunCount = seasonRunCount,
         seasonAveragePace = averagePaceSecondsPerKm.toSeasonPaceText(),
     )
@@ -279,6 +282,8 @@ private fun LocalDate.toKoreanDisplayText(): String {
 private fun Int.toKilometerText(): String = "%.1f km".format(Locale.US, this / 1000.0)
 
 private fun Int?.toSeasonKilometerText(): String = "%.1f".format(Locale.US, (this ?: 0) / 1000.0)
+
+private fun Int?.toDurationText(): String = (this ?: 0).toDurationText()
 
 private fun Int.toDurationText(): String {
     val hours = this / 3600

@@ -106,13 +106,13 @@ fun TeamMemberSeasonBottomSheet(
                     modifier = Modifier.weight(1f),
                 )
                 SeasonMetric(
-                    label = "총 러닝 횟수",
-                    value = member.seasonRunCount.toString(),
+                    label = "총 시간",
+                    value = member.seasonDuration,
                     modifier = Modifier.weight(1f),
                 )
                 SeasonMetric(
-                    label = "평균 페이스",
-                    value = member.seasonAveragePace,
+                    label = "총 러닝 횟수",
+                    value = member.seasonRunCount.toString(),
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -151,7 +151,7 @@ private fun SeasonMetric(
 
 private fun String.toJoinedDateText(): String =
     runCatching {
-        val date = LocalDate.parse(this)
+        val date = LocalDate.parse(substringBefore("T"))
         "${date.year}년 ${date.monthValue}월 ${date.dayOfMonth}일"
     }.getOrDefault(ifBlank { "가입일 정보 없음" })
 
@@ -170,6 +170,7 @@ private fun TeamMemberSeasonBottomSheetPreview() {
                     calories = "0",
                     teamJoinedAt = "2026-05-01",
                     seasonDistance = "87.3",
+                    seasonDuration = "7:51:32",
                     seasonRunCount = 12,
                     seasonAveragePace = "5′24″",
                 ),

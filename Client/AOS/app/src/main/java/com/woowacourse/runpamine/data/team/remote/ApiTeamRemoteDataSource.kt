@@ -210,13 +210,23 @@ private fun JSONObject.toTeamDailySummary(): TeamDailySummary {
 
 private fun JSONObject.toTeamRunSummary(): TeamRunSummary =
     TeamRunSummary(
-        userId = getString("userId"),
+        userId = optString("userId").ifBlank { optString("id") },
         nickname = getString("nickname"),
+        teamJoinedAt = optString("teamJoinedAt"),
         distanceMeters = getInt("distanceMeters"),
         durationSeconds = getInt("durationSeconds"),
         averagePaceSecondsPerKm = getInt("averagePaceSecondsPerKm"),
         calories = getInt("calories"),
         completed = getBoolean("completed"),
+        totalDistanceMeters = optInt("totalDistanceMeters"),
+        totalDurationSeconds = optInt("totalDurationSeconds"),
+        totalRunCount = optInt("totalRunCount"),
+        totalAveragePaceSecondsPerKm =
+            if (has("totalAveragePaceSecondsPerKm") && !isNull("totalAveragePaceSecondsPerKm")) {
+                getInt("totalAveragePaceSecondsPerKm")
+            } else {
+                null
+            },
     )
 
 private fun String.toApiErrorMessage(responseCode: Int): String =
