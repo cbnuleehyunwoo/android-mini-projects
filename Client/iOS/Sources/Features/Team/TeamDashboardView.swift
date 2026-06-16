@@ -559,9 +559,10 @@ private struct TeamMemberRunCardSkeleton: View {
                 RoundedRectangle(cornerRadius: 0, style: .continuous)
                     .fill(TeamSkeletonStyle.fill)
                     .frame(width: 80, height: 80)
+                    .padding(.leading, 8)
 
                 Spacer()
-                    .frame(width: 8)
+                    .frame(width: 12)
 
                 VStack(alignment: .leading, spacing: 10) {
                     TeamMetricRowSkeleton()
@@ -710,9 +711,10 @@ private struct TeamMemberRunCard: View {
                 RunpamineLottieView(animation: member.animation)
                     .frame(width: 80, height: 80)
                     .clipped()
+                    .padding(.leading, 8)
 
                 Spacer()
-                    .frame(width: 8)
+                    .frame(width: 14)
 
                 TeamRunMetricsBlock(member: member)
 
