@@ -54,24 +54,24 @@ enum RunpamineLottieAnimation: String, Equatable {
     }
 
     static func teamMember(consecutiveRunDays: Int?) -> RunpamineLottieAnimation {
-        guard let consecutiveRunDays else { return .idle }
+        guard let consecutiveRunDays else { return .hamburger }
 
         if consecutiveRunDays >= 5 {
             return .cheetah
         }
 
-        if consecutiveRunDays >= 3 {
+        if consecutiveRunDays == 4 {
             return .reverse
         }
 
-        if consecutiveRunDays > 0 {
+        if consecutiveRunDays == 3 {
             return .running
         }
 
-        if consecutiveRunDays <= -5 {
-            return .hamburger
+        if consecutiveRunDays == 2 {
+            return .idle
         }
 
-        return .idle
+        return .hamburger
     }
 }
