@@ -7,8 +7,10 @@ import UIKit
 struct HomeView: View {
     let nickname: String
     let team: RunningTeam?
+    let teamProgress: HomeTeamProgress?
     let onCreateTeam: () -> Void
     let onJoinTeam: () -> Void
+    let onOpenTeam: () -> Void
     let onOpenMyPage: () -> Void
     let onStartRunning: () -> Void
     @StateObject private var runningPermissionRequester = RunningStartPermissionRequester()
@@ -19,7 +21,7 @@ struct HomeView: View {
             HomeHeaderView(nickname: nickname, onOpenMyPage: onOpenMyPage)
                 .padding(.trailing, 20)
 
-            TeamStatusCard(team: team, onCreateTeam: onCreateTeam, onJoinTeam: onJoinTeam)
+            TeamStatusCard(team: team, teamProgress: teamProgress, onCreateTeam: onCreateTeam, onJoinTeam: onJoinTeam, onOpenTeam: onOpenTeam)
                 .padding(.horizontal, HomeLayout.contentHorizontalPadding)
 
             ZStack(alignment: .bottom) {
@@ -80,6 +82,11 @@ struct HomeView: View {
         }
     }
 
+}
+
+struct HomeTeamProgress: Equatable {
+    let completedMemberCount: Int
+    let totalMemberCount: Int
 }
 
 private enum HomeLayout {
@@ -173,13 +180,15 @@ private struct HomeHeaderView: View {
                 .padding(.trailing, -12)
                 .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text("안녕하세요, \(nickname)님!")
-                    .font(AppTheme.Typography.font(size: 12, weight: .semibold))
-                    .foregroundStyle(AppTheme.Colors.textPrimary)
-                Text("오늘은 뛰기 좋은 날씨네요!")
-                    .font(AppTheme.Typography.caption1)
-                    .foregroundStyle(AppTheme.Colors.textPrimary)
+            VStack(alignment: .leading, spacing: 0) {
+                Text("안녕하세요")
+                    .font(AppTheme.Typography.font(size: 12, weight: .medium))
+                    .foregroundStyle(Color(red: 0.45, green: 0.48, blue: 0.56))
+                Text("\(nickname) 님")
+                    .font(AppTheme.Typography.font(size: 17, weight: .bold))
+                    .foregroundStyle(Color(red: 0.06, green: 0.09, blue: 0.16))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
             }
 
             Spacer()
@@ -197,40 +206,96 @@ private struct HomeHeaderView: View {
 
 private struct TeamStatusCard: View {
     let team: RunningTeam?
+    let teamProgress: HomeTeamProgress?
     let onCreateTeam: () -> Void
     let onJoinTeam: () -> Void
+    let onOpenTeam: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            if let team {
-                Text(team.name)
-                    .font(AppTheme.Typography.font(size: 14, weight: .bold))
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-            } else {
-                Text("참여한 팀이 없어요!")
-                    .font(AppTheme.Typography.font(size: 14, weight: .bold))
-                    .foregroundStyle(.white)
-                Text("팀에 참여하거나 팀을 만들어보세요.")
-                    .font(AppTheme.Typography.font(size: 12, weight: .semibold))
-                    .foregroundStyle(.white)
+        HStack(alignment: .center, spacing: 8) {
+            VStack(alignment: .leading, spacing: 0) {
+                if let team {
+                    Text(team.name)
+                        .font(AppTheme.Typography.font(size: 17, weight: .bold))
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+
+                    Text("오늘 달린 인원 \(teamProgressText(for: team))")
+                        .font(AppTheme.Typography.font(size: 13, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.72))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.82)
+                        .padding(.top, 6)
+
+                    Button(action: onOpenTeam) {
+                        Text("팀 정보보기")
+                            .font(AppTheme.Typography.font(size: 12, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(width: 88, height: 30)
+                            .overlay {
+                                Capsule()
+                                    .stroke(.white, lineWidth: 1.5)
+                            }
+                    }
+                    .padding(.top, 7)
+                } else {
+                    Text("참여한 팀이 없어요!")
+                        .font(AppTheme.Typography.font(size: 17, weight: .bold))
+                        .foregroundStyle(.white)
+                    Text("팀에 참여하면 함께 달릴 수 있어요")
+                        .font(AppTheme.Typography.font(size: 13, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.72))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.82)
+                        .padding(.top, 6)
+
+                    HStack(spacing: 8) {
+                        Button(action: onCreateTeam) {
+                            Text("팀 생성하기")
+                                .font(AppTheme.Typography.font(size: 12, weight: .bold))
+                                .foregroundStyle(AppTheme.Colors.primary)
+                                .frame(width: 86, height: 30)
+                                .background(.white)
+                                .clipShape(Capsule())
+                        }
+
+                        Button(action: onJoinTeam) {
+                            Text("팀 참가하기")
+                                .font(AppTheme.Typography.font(size: 12, weight: .bold))
+                                .foregroundStyle(.white)
+                                .frame(width: 86, height: 30)
+                                .overlay {
+                                    Capsule()
+                                        .stroke(.white, lineWidth: 1.5)
+                                }
+                        }
+                    }
+                    .padding(.top, 7)
+                }
             }
 
-            if team == nil {
-                HStack(spacing: 48) {
-                    Button("팀 생성하기 >", action: onCreateTeam)
-                    Button("팀 참가하기 >", action: onJoinTeam)
-                }
-                .font(AppTheme.Typography.font(size: 12, weight: .black))
-                .foregroundStyle(AppTheme.Colors.success)
-                .padding(.top, 6)
-            }
+            Spacer(minLength: 0)
+
+            Image("ic_team")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 32, height: 32)
+                .accessibilityHidden(true)
         }
-        .padding(.horizontal, 40)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(height: 88)
         .background(AppTheme.Colors.primary)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+    }
+
+    private func teamProgressText(for team: RunningTeam) -> String {
+        guard let teamProgress else {
+            return "- / -"
+        }
+
+        return "\(teamProgress.completedMemberCount) / \(teamProgress.totalMemberCount)"
     }
 }
 
@@ -238,8 +303,10 @@ private struct TeamStatusCard: View {
     HomeView(
         nickname: "러너",
         team: nil,
+        teamProgress: nil,
         onCreateTeam: {},
         onJoinTeam: {},
+        onOpenTeam: {},
         onOpenMyPage: {},
         onStartRunning: {}
     )
