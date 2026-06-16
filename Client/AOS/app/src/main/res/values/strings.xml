@@ -27,7 +27,8 @@
     <string name="running_stop_title">러닝 종료</string>
     <string name="running_stop_confirmation">러닝을 종료하시겠습니까?</string>
     <string name="map_my_location">내 위치</string>
-    <string name="map_permission_rationale">주변 지도를 보려면 위치 권한이 필요해요.</string>
+    <string name="map_permission_title">위치 권한이 필요해요</string>
+    <string name="map_permission_rationale">러닝 거리 측정과 경로 기록을 위해\n위치 접근 권한을 허용해 주세요.</string>
     <string name="map_permission_request">위치 권한 허용하기</string>
     <string name="create_team_bar">팀 생성</string>
     <string name="create_team_header">팀 이름을\n입력해주세요.</string>
