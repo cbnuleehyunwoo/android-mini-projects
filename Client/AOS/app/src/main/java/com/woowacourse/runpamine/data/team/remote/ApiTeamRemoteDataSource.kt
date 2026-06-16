@@ -1,5 +1,6 @@
 package com.woowacourse.runpamine.data.team.remote
 
+import com.woowacourse.runpamine.domain.team.LeaveTeamResult
 import com.woowacourse.runpamine.domain.team.Team
 import com.woowacourse.runpamine.domain.team.TeamDailySummary
 import com.woowacourse.runpamine.domain.team.TeamMemberSeasonStats
@@ -106,6 +107,17 @@ class ApiTeamRemoteDataSource(
             response.getJSONObject("data").toTeamDailySummary()
         }
 
+    override suspend fun leaveTeam(accessToken: String): LeaveTeamResult =
+        withContext(Dispatchers.IO) {
+            val response =
+                request(
+                    path = "/teams/me",
+                    method = "DELETE",
+                    accessToken = accessToken,
+                )
+            response.getJSONObject("data").toLeaveTeamResult()
+        }
+
     private fun request(
         path: String,
         method: String,
@@ -159,6 +171,13 @@ private fun JSONObject.toTeam(): Team =
         ownerId = optString("ownerId").orEmpty(),
         memberCount = optInt("memberCount", 0),
         isOwner = optBoolean("isOwner", false),
+    )
+
+private fun JSONObject.toLeaveTeamResult(): LeaveTeamResult =
+    LeaveTeamResult(
+        left = getBoolean("left"),
+        teamDeleted = getBoolean("teamDeleted"),
+        newOwnerId = optString("newOwnerId").takeIf { it.isNotBlank() },
     )
 
 private fun JSONObject.toTeamMemberSummary(): TeamMemberSummary =

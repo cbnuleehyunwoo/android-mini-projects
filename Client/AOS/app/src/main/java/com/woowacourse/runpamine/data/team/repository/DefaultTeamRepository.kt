@@ -46,6 +46,11 @@ class DefaultTeamRepository(
             date = date,
         )
 
+    override suspend fun leaveTeam() =
+        remoteDataSource.leaveTeam(
+            accessToken = requireAccessToken(),
+        )
+
     private suspend fun requireAccessToken(): String =
         requireNotNull(authRepository.getCurrentSession()?.accessToken) {
             "로그인이 필요해요."
