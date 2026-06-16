@@ -554,23 +554,26 @@ private struct TeamMemberRunCardSkeleton: View {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .fill(TeamSkeletonStyle.fill)
                 .frame(width: 150, height: 28)
+                .padding(.leading, 10)
 
             HStack(spacing: 0) {
                 RoundedRectangle(cornerRadius: 0, style: .continuous)
                     .fill(TeamSkeletonStyle.fill)
                     .frame(width: 80, height: 80)
+                    .padding(.leading, 10)
 
                 Spacer()
-                    .frame(width: 14)
+                    .frame(width: 12)
 
                 VStack(alignment: .leading, spacing: 10) {
                     TeamMetricRowSkeleton()
                     TeamMetricRowSkeleton()
                     TeamMetricRowSkeleton()
                 }
-                .frame(width: 136, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-                Spacer(minLength: 0)
+                Spacer()
+                    .frame(width: 10)
 
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .fill(TeamSkeletonStyle.fill)
@@ -593,20 +596,16 @@ private struct TeamMetricRowSkeleton: View {
         HStack(spacing: 0) {
             RoundedRectangle(cornerRadius: 4, style: .continuous)
                 .fill(TeamSkeletonStyle.fill)
-                .frame(width: 18, height: 18)
-                .frame(width: 24, height: 20, alignment: .leading)
-
-            RoundedRectangle(cornerRadius: 4, style: .continuous)
-                .fill(TeamSkeletonStyle.fill)
                 .frame(width: 34, height: 16)
                 .frame(width: 48, alignment: .leading)
+
+            Spacer(minLength: 0)
 
             RoundedRectangle(cornerRadius: 4, style: .continuous)
                 .fill(TeamSkeletonStyle.fill)
                 .frame(width: 58, height: 16)
-                .frame(width: 64, alignment: .leading)
         }
-        .frame(width: 136, height: 20, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: 20, maxHeight: 20, alignment: .leading)
     }
 }
 
@@ -708,18 +707,21 @@ private struct TeamMemberRunCard: View {
                     TeamCurrentUserBadge()
                 }
             }
+            .padding(.leading, 10)
 
             HStack(spacing: 0) {
                 RunpamineLottieView(animation: member.animation)
                     .frame(width: 80, height: 80)
                     .clipped()
+                    .padding(.leading, 10)
 
                 Spacer()
                     .frame(width: 14)
 
                 TeamRunMetricsBlock(member: member)
 
-                Spacer(minLength: 0)
+                Spacer()
+                    .frame(width: 10)
 
                 TeamCompletionStamp(isCompleted: member.hasRunRecord)
             }
@@ -756,7 +758,7 @@ private struct TeamRunMetricsBlock: View {
             TeamRunMetricRow(icon: "icon_metric_time", label: "시간", value: member.timeText)
             TeamRunMetricRow(icon: "icon_metric_pace", label: "페이스", value: member.paceText)
         }
-        .frame(width: 136, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -767,22 +769,21 @@ private struct TeamRunMetricRow: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            TeamRunMetricIcon(icon: icon)
-
             Text(label)
                 .font(AppTheme.Typography.font(size: 14, weight: .medium))
                 .foregroundStyle(Color(red: 0.58, green: 0.64, blue: 0.72))
                 .lineLimit(1)
                 .frame(width: 48, alignment: .leading)
 
+            Spacer(minLength: 0)
+
             Text(value)
-                .font(AppTheme.Typography.font(size: 14, weight: .black))
+                .font(AppTheme.Typography.font(size: 14, weight: .bold))
                 .foregroundStyle(AppTheme.Colors.textPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.72)
-                .frame(width: 64, alignment: .leading)
         }
-        .frame(width: 136, height: 20, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: 20, maxHeight: 20, alignment: .leading)
     }
 }
 
