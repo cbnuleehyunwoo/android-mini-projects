@@ -535,7 +535,7 @@ private extension UserRankingMetric {
     func value(from entry: TeamRankingEntry) -> String {
         switch self {
         case .distance:
-            return String(format: "%.1f km", Double(entry.distanceMeters) / 1_000)
+            return String(format: "%.2f km", Double(entry.distanceMeters) / 1_000)
         case .pace:
             return "\(formatPace(entry.averagePaceSecondsPerKilometer))/km"
         case .consistency:
@@ -546,7 +546,7 @@ private extension UserRankingMetric {
     func value(from entry: UserRankingEntry) -> String {
         switch self {
         case .distance:
-            return String(format: "%.1f km", Double(entry.distanceMeters) / 1_000)
+            return String(format: "%.2f km", Double(entry.distanceMeters) / 1_000)
         case .pace:
             return "\(formatPace(entry.averagePaceSecondsPerKilometer))/km"
         case .consistency:
@@ -557,7 +557,7 @@ private extension UserRankingMetric {
     func summaryValue(from summary: MyRankingSummary) -> String {
         switch self {
         case .distance:
-            return String(format: "%.1f km", Double(summary.distanceMeters) / 1_000)
+            return String(format: "%.2f km", Double(summary.distanceMeters) / 1_000)
         case .pace:
             return "\(formatPace(summary.averagePaceSecondsPerKilometer))/km"
         case .consistency:
