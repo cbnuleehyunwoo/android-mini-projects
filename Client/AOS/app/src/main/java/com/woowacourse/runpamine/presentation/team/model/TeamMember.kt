@@ -10,6 +10,7 @@ data class TeamMember(
     val runningStatus: RunningStatus = RunningStatus.Resting,
     val teamJoinedAt: String = "",
     val seasonDistance: String = "0.0",
+    val seasonDuration: String = "0:00",
     val seasonRunCount: Int = 0,
     val seasonAveragePace: String = "-",
     val isMe: Boolean = false,

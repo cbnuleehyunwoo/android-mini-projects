@@ -12,9 +12,14 @@ data class TeamDailySummary(
 data class TeamRunSummary(
     val userId: String,
     val nickname: String,
+    val teamJoinedAt: String,
     val distanceMeters: Int,
     val durationSeconds: Int,
     val averagePaceSecondsPerKm: Int,
     val calories: Int,
     val completed: Boolean,
+    val totalDistanceMeters: Int,
+    val totalDurationSeconds: Int,
+    val totalRunCount: Int,
+    val totalAveragePaceSecondsPerKm: Int?,
 )
