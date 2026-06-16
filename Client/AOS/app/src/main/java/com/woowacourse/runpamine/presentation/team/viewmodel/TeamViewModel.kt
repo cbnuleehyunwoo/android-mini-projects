@@ -243,7 +243,7 @@ private fun TeamRunSummary.toTeamMember(seasonStats: TeamMemberSeasonStats?): Te
         time = durationSeconds.toDurationText(),
         pace = averagePaceSecondsPerKm.toPaceText(),
         calories = calories.toString(),
-        runningStatus = seasonStats?.consecutiveRunDays.toRunningStatus(hasRunRecord = hasRunRecord),
+        runningStatus = seasonStats?.consecutiveRunDays.toRunningStatus(),
         teamJoinedAt = teamJoinedAt.ifBlank { seasonStats?.teamJoinedAt.orEmpty() },
         seasonDistance = totalDistanceMeters.toSeasonKilometerText(),
         seasonDuration = totalDurationSeconds.toDurationText(),
@@ -283,18 +283,14 @@ private fun TeamMemberSeasonStats.toEmptyTeamMember(runningStatus: RunningStatus
         seasonAveragePace = averagePaceSecondsPerKm.toSeasonPaceText(),
     )
 
-private val TeamRunSummary.hasRunRecord: Boolean
-    get() = completed && (distanceMeters > 0 || durationSeconds > 0)
-
-private fun Int?.toRunningStatus(hasRunRecord: Boolean = false): RunningStatus =
+private fun Int?.toRunningStatus(): RunningStatus =
     when {
-        this == null && hasRunRecord -> RunningStatus.Running
-        this == null -> RunningStatus.Resting
+        this == null -> RunningStatus.LongResting
         this >= 5 -> RunningStatus.FiveDayRunning
-        this >= 3 -> RunningStatus.ThreeDayRunning
-        this > 0 -> RunningStatus.Running
-        this <= -5 -> RunningStatus.LongResting
-        else -> RunningStatus.Resting
+        this == 4 -> RunningStatus.ThreeDayRunning
+        this == 3 -> RunningStatus.Running
+        this == 2 -> RunningStatus.Resting
+        else -> RunningStatus.LongResting
     }
 
 private fun String.toKoreanDisplayText(): String =
