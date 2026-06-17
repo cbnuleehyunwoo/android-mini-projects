@@ -138,7 +138,6 @@ extension RunningStartPermissionRequester: CLLocationManagerDelegate {
             case .notDetermined:
                 break
             @unknown default:
-                isShowingPermissionDialog = true
                 onAuthorized = nil
             }
         }
