@@ -88,11 +88,23 @@ class TeamViewModel(
             runCatching {
                 teamRepository.leaveTeam()
             }.onSuccess { result ->
+                if (result.left) {
+                    runCatching { profileRepository.getMyProfile() }
+                    currentTeam = null
+                    teamMembers = null
+                    seasonStats = null
+                }
                 _uiState.update {
                     it.copy(
                         isLeavingTeam = false,
                         isTeamLeft = result.left,
                         hasTeam = if (result.left) false else it.hasTeam,
+                        teamName = if (result.left) "" else it.teamName,
+                        joinCode = if (result.left) "" else it.joinCode,
+                        totalDistance = if (result.left) "" else it.totalDistance,
+                        completedMemberCount = if (result.left) 0 else it.completedMemberCount,
+                        totalMemberCount = if (result.left) 0 else it.totalMemberCount,
+                        members = if (result.left) emptyList() else it.members,
                     )
                 }
             }.onFailure { throwable ->
