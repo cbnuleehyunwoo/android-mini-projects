@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -127,7 +128,7 @@ private fun RankingContent(
             )
             Spacer(modifier = Modifier.height(24.dp))
             HorizontalDivider(
-                color = DividerDefaults.color.copy(alpha = 0.7f),
+                color = DividerDefaults.color.copy(alpha = 0.1f),
                 thickness = 1.dp,
             )
             Column(
@@ -174,7 +175,7 @@ private fun RankingMetricTabs(
                 modifier =
                     Modifier
                         .weight(1f)
-                        .height(50.dp)
+                        .height(42.dp)
                         .clip(tabShape)
                         .background(if (selected) Blue10 else Color(0xFFF2F3F6))
                         .border(if (selected) 2.dp else 0.dp, if (selected) Blue40 else Color.Transparent, tabShape)
@@ -185,7 +186,7 @@ private fun RankingMetricTabs(
                     text = metric.label(selectedScope),
                     color = if (selected) Blue40 else Color(0xFF6B7280),
                     fontSize = 13.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center,
                 )
             }
@@ -216,15 +217,21 @@ private fun MyRankingCard(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             color = Blue40,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
+            style =
+                MaterialTheme.typography.bodySmall.copy(
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                ),
             modifier = Modifier.weight(1f),
         )
         Text(
             text = item.highlightText,
             color = Blue40,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
+            style =
+                MaterialTheme.typography.bodySmall.copy(
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                ),
             textAlign = TextAlign.End,
         )
     }
