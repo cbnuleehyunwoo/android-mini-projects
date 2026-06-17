@@ -8,7 +8,7 @@ final class HistoryCache: ObservableObject {
     @Published var records: [RunningRecord] = RunningHistoryStore().load()
     @Published var daySummaries: [RunDaySummary] = []
     @Published var totalDistanceMeters: Int?
-    @Published var weeklySummaries: [Date: RunPeriodSummary] = [:]
+    @Published var summariesByIdentifier: [String: RunPeriodSummary] = [:]
     @Published var loadedRefreshIdentifier: String?
     @Published var thumbnailRecordsByID: [UUID: RunningRecord] = [:]
     @Published var thumbnailFetchIDs: Set<UUID> = []
@@ -145,16 +145,20 @@ struct HistoryView: View {
 
     private var visibleRecords: [RunningRecord] {
         guard accessToken != nil else { return cache.records }
-        return cache.loadedRefreshIdentifier == refreshIdentifier ? cache.records : []
+        if cache.loadedRefreshIdentifier == refreshIdentifier { return cache.records }
+        return cache.summariesByIdentifier[refreshIdentifier]?.runs ?? []
     }
 
     private var visibleDaySummaries: [RunDaySummary] {
         guard accessToken != nil else { return cache.daySummaries }
-        return cache.loadedRefreshIdentifier == refreshIdentifier ? cache.daySummaries : []
+        if cache.loadedRefreshIdentifier == refreshIdentifier { return cache.daySummaries }
+        return cache.summariesByIdentifier[refreshIdentifier]?.days ?? []
     }
 
     private var isWaitingForRemoteRecords: Bool {
-        accessToken != nil && cache.loadedRefreshIdentifier != refreshIdentifier && cache.records.isEmpty
+        accessToken != nil &&
+        cache.loadedRefreshIdentifier != refreshIdentifier &&
+        cache.summariesByIdentifier[refreshIdentifier] == nil
     }
 
     private func records(in records: [RunningRecord]) -> [RunningRecord] {
@@ -171,8 +175,16 @@ struct HistoryView: View {
     private var totalDistanceText: String {
         guard !isWaitingForRemoteRecords else { return "0.00" }
 
-        let total = cache.totalDistanceMeters.map { Double($0) / 1_000 } ?? visibleSelectedRecords.reduce(0) { $0 + $1.distanceKilometers }
-        return total.formatted(.number.precision(.fractionLength(2)))
+        if cache.loadedRefreshIdentifier == refreshIdentifier {
+            let total = cache.totalDistanceMeters.map { Double($0) / 1_000 } ?? visibleSelectedRecords.reduce(0) { $0 + $1.distanceKilometers }
+            return total.formatted(.number.precision(.fractionLength(2)))
+        }
+
+        if let summary = cache.summariesByIdentifier[refreshIdentifier] {
+            return (Double(summary.totalDistanceMeters) / 1_000).formatted(.number.precision(.fractionLength(2)))
+        }
+
+        return "0.00"
     }
 
     private var refreshIdentifier: String {
@@ -257,12 +269,13 @@ struct HistoryView: View {
         calendar.date(byAdding: .weekOfYear, value: 1, to: cache.displayedWeek) ?? cache.displayedWeek
     }
 
-    private func weekStart(for date: Date) -> Date {
-        calendar.dateInterval(of: .weekOfYear, for: date)?.start ?? calendar.startOfDay(for: date)
+    private func weekRefreshIdentifier(for date: Date) -> String {
+        let start = calendar.dateInterval(of: .weekOfYear, for: date)?.start ?? date
+        return "\(HistoryPeriod.week.rawValue)-\(Int(start.timeIntervalSince1970))"
     }
 
     private func weeklySummary(for date: Date) -> RunPeriodSummary {
-        if let summary = cache.weeklySummaries[weekStart(for: date)] {
+        if let summary = cache.summariesByIdentifier[weekRefreshIdentifier(for: date)] {
             return summary
         }
 
@@ -322,9 +335,7 @@ struct HistoryView: View {
             if cache.totalDistanceMeters != summary.totalDistanceMeters {
                 cache.totalDistanceMeters = summary.totalDistanceMeters
             }
-            if cache.selectedPeriod == .week {
-                cache.weeklySummaries[weekStart(for: cache.displayedWeek)] = summary
-            }
+            cache.summariesByIdentifier[requestIdentifier] = summary
             cache.loadedRefreshIdentifier = requestIdentifier
             pruneThumbnailCache(for: summary.runs)
 
@@ -353,11 +364,11 @@ struct HistoryView: View {
     @MainActor
     private func preloadPreviousWeek(accessToken: String) async {
         let date = previousWeek
-        let key = weekStart(for: date)
-        guard cache.weeklySummaries[key] == nil else { return }
+        let key = weekRefreshIdentifier(for: date)
+        guard cache.summariesByIdentifier[key] == nil else { return }
 
         if let summary = try? await runService.fetchWeeklyRuns(anchorDate: date, accessToken: accessToken) {
-            cache.weeklySummaries[key] = summary
+            cache.summariesByIdentifier[key] = summary
         }
     }
 

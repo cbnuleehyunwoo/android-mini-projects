@@ -172,6 +172,8 @@ private fun Context.openPlayStore() {
 private fun NavHostController.navigateToBottomTab(tab: RunpamineBottomTab) {
     if (currentDestination?.route == tab.route) return
 
+    if (popBackStack(route = tab.route, inclusive = false)) return
+
     RunpamineBottomTab.entries.forEach { bottomTab ->
         popBackStack(
             route = bottomTab.route,

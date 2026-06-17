@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -40,7 +41,11 @@ fun RankingScopeTab(
         Text(
             text = scope.label,
             color = if (selected) Blue40 else Gray40,
-            style = MaterialTheme.typography.titleSmall.copy(fontSize = 18.sp),
+            style =
+                MaterialTheme.typography.titleSmall.copy(
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                ),
             textAlign = TextAlign.Center,
         )
         if (selected) {

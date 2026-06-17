@@ -54,8 +54,7 @@ fun RankingRow(
         Text(
             text = item.valueText,
             color = if (item.isMine) Blue40 else Color(0xFFA2ACBA),
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
+            fontSize = 14.sp,
             textAlign = TextAlign.End,
         )
     }
@@ -105,5 +104,5 @@ private fun RankingRowPreview() {
     }
 }
 
-private val RANKING_NAME_MAX_FONT_SIZE = 16.sp
+private val RANKING_NAME_MAX_FONT_SIZE = 14.sp
 private val RANKING_NAME_MIN_FONT_SIZE = 10.sp
