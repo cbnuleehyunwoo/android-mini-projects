@@ -882,16 +882,10 @@ private extension View {
         item: Binding<Item?>,
         @ViewBuilder content: @escaping (Item) -> Content
     ) -> some View {
-        ZStack {
-            self
-            if let currentItem = item.wrappedValue {
-                content(currentItem)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color(uiColor: .systemBackground).ignoresSafeArea())
-                    .transition(.move(edge: .trailing))
-                    .zIndex(100)
-            }
-        }
-        .animation(.easeInOut(duration: 0.3), value: item.wrappedValue?.id)
+        #if os(iOS)
+        fullScreenCover(item: item, content: content)
+        #else
+        sheet(item: item, content: content)
+        #endif
     }
 }
