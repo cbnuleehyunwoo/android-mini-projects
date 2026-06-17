@@ -70,20 +70,6 @@ struct HomeView: View {
                 )
             }
 
-            if runningPermissionRequester.isShowingPermissionDialog {
-                RunpamineConfirmationDialog(
-                    title: "위치 권한 필요",
-                    message: "러닝을 시작하려면 위치 권한이 필요해요.",
-                    dismissText: "취소",
-                    confirmText: "설정",
-                    onDismiss: {
-                        runningPermissionRequester.dismissPermissionDialog()
-                    },
-                    onConfirm: {
-                        runningPermissionRequester.openAppSettings()
-                    }
-                )
-            }
         }
     }
 
@@ -100,7 +86,6 @@ private enum HomeLayout {
 
 @MainActor
 private final class RunningStartPermissionRequester: NSObject, ObservableObject {
-    @Published var isShowingPermissionDialog = false
     @Published private(set) var authorizationStatus: CLAuthorizationStatus = .notDetermined
 
     var isStartButtonVisible: Bool {
@@ -129,37 +114,13 @@ private final class RunningStartPermissionRequester: NSObject, ObservableObject 
         self.onAuthorized = onAuthorized
         authorizationStatus = manager.authorizationStatus
 
-        guard CLLocationManager.locationServicesEnabled() else {
-            isShowingPermissionDialog = true
-            return
-        }
-
         switch authorizationStatus {
-        case .notDetermined:
-            manager.requestWhenInUseAuthorization()
         case .authorizedWhenInUse, .authorizedAlways:
             onAuthorized()
             self.onAuthorized = nil
-        case .denied, .restricted:
-            isShowingPermissionDialog = true
-        @unknown default:
-            isShowingPermissionDialog = true
+        default:
+            self.onAuthorized = nil
         }
-    }
-
-    func dismissPermissionDialog() {
-        isShowingPermissionDialog = false
-        onAuthorized = nil
-    }
-
-    func openAppSettings() {
-        isShowingPermissionDialog = false
-        onAuthorized = nil
-
-        #if os(iOS)
-        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
-        UIApplication.shared.open(url)
-        #endif
     }
 }
 
@@ -173,7 +134,6 @@ extension RunningStartPermissionRequester: CLLocationManagerDelegate {
                 onAuthorized?()
                 onAuthorized = nil
             case .denied, .restricted:
-                isShowingPermissionDialog = true
                 onAuthorized = nil
             case .notDetermined:
                 break
