@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -28,6 +29,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.woowacourse.runpamine.BuildConfig
@@ -156,9 +158,14 @@ private fun MyPageContent(
             Text(
                 text = message,
                 color = Color(0xFFDC2626),
+                style =
+                    MaterialTheme.typography.bodyLarge.copy(
+                        fontSize = 20.sp,
+                    ),
                 modifier = Modifier.padding(top = 12.dp),
             )
         }
+        Spacer(modifier = Modifier.height(52.dp))
         MyPageSection(
             title = stringResource(R.string.my_page_account_settings),
         ) {
@@ -224,6 +231,7 @@ private fun MyPageContent(
                 showArrow = false,
             )
         }
+        Spacer(modifier = Modifier.height(24.dp))
     }
 
     if (showLogoutDialog) {
