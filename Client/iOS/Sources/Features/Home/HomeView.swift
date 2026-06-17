@@ -105,10 +105,10 @@ private final class RunningStartPermissionRequester: NSObject, ObservableObject 
 
     var isStartButtonVisible: Bool {
         switch authorizationStatus {
-        case .denied, .restricted:
-            return false
+        case .authorizedWhenInUse, .authorizedAlways:
+            return true
         default:
-            return CLLocationManager.locationServicesEnabled()
+            return false
         }
     }
 
