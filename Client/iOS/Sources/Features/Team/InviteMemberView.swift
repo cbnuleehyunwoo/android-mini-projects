@@ -2,13 +2,13 @@ import SwiftUI
 import UIKit
 
 struct InviteMemberView: View {
-    @Environment(\.dismiss) private var dismiss
     let inviteCode: String
+    let onDismiss: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
             TopNavigationBar(title: "팀 초대") {
-                dismiss()
+                onDismiss()
             }
             .padding(.horizontal, 18)
             .padding(.top, 8)
@@ -57,7 +57,7 @@ struct InviteMemberView: View {
         }
         .background(Color.white)
         .runpamineBackSwipe {
-            dismiss()
+            onDismiss()
         }
     }
 

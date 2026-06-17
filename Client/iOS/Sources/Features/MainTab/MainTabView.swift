@@ -125,12 +125,18 @@ struct MainTabView: View {
         .runpamineFullScreenCover(item: $presentedAction) { action in
             switch action {
             case .createTeam:
-                TeamCreateView(viewModel: TeamCreateViewModel(teamService: teamService, accessToken: accessToken)) { createdTeam in
+                TeamCreateView(
+                    viewModel: TeamCreateViewModel(teamService: teamService, accessToken: accessToken),
+                    onDismiss: { presentedAction = nil }
+                ) { createdTeam in
                     handleTeamUpdated(createdTeam)
                 }
                 .networkErrorOverlay()
             case .joinTeam:
-                TeamJoinView(viewModel: TeamJoinViewModel(teamService: teamService, accessToken: accessToken)) { joinedTeam in
+                TeamJoinView(
+                    viewModel: TeamJoinViewModel(teamService: teamService, accessToken: accessToken),
+                    onDismiss: { presentedAction = nil }
+                ) { joinedTeam in
                     handleTeamUpdated(joinedTeam)
                 }
                 .networkErrorOverlay()
@@ -150,10 +156,10 @@ struct MainTabView: View {
             .networkErrorOverlay()
         }
         .runpamineFullScreenCover(isPresented: $isRunning) {
-            RunningView(runService: runService, accessToken: accessToken)
+            RunningView(runService: runService, accessToken: accessToken, onDismiss: { isRunning = false })
         }
         .runpamineFullScreenCover(isPresented: $isShowingInvite) {
-            InviteMemberView(inviteCode: team?.inviteCode ?? "")
+            InviteMemberView(inviteCode: team?.inviteCode ?? "", onDismiss: { isShowingInvite = false })
                 .networkErrorOverlay()
         }
         .task(id: accessToken) {
@@ -252,11 +258,17 @@ private extension View {
         isPresented: Binding<Bool>,
         @ViewBuilder content: @escaping () -> Content
     ) -> some View {
-        #if os(iOS)
-        fullScreenCover(isPresented: isPresented, content: content)
-        #else
-        sheet(isPresented: isPresented, content: content)
-        #endif
+        ZStack {
+            self
+            if isPresented.wrappedValue {
+                content()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color(uiColor: .systemBackground).ignoresSafeArea())
+                    .transition(.move(edge: .trailing))
+                    .zIndex(100)
+            }
+        }
+        .animation(.easeInOut(duration: 0.3), value: isPresented.wrappedValue)
     }
 
     @ViewBuilder
@@ -264,11 +276,17 @@ private extension View {
         item: Binding<Item?>,
         @ViewBuilder content: @escaping (Item) -> Content
     ) -> some View {
-        #if os(iOS)
-        fullScreenCover(item: item, content: content)
-        #else
-        sheet(item: item, content: content)
-        #endif
+        ZStack {
+            self
+            if let currentItem = item.wrappedValue {
+                content(currentItem)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color(uiColor: .systemBackground).ignoresSafeArea())
+                    .transition(.move(edge: .trailing))
+                    .zIndex(100)
+            }
+        }
+        .animation(.easeInOut(duration: 0.3), value: item.wrappedValue?.id)
     }
 }
 

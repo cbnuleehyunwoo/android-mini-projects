@@ -1,20 +1,21 @@
 import SwiftUI
 
 struct TeamJoinView: View {
-    @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel: TeamJoinViewModel
     @FocusState private var isCodeFocused: Bool
+    let onDismiss: () -> Void
     let onJoined: (RunningTeam) -> Void
 
-    init(viewModel: TeamJoinViewModel, onJoined: @escaping (RunningTeam) -> Void) {
+    init(viewModel: TeamJoinViewModel, onDismiss: @escaping () -> Void, onJoined: @escaping (RunningTeam) -> Void) {
         _viewModel = StateObject(wrappedValue: viewModel)
+        self.onDismiss = onDismiss
         self.onJoined = onJoined
     }
 
     var body: some View {
         VStack(spacing: 0) {
             TopNavigationBar(title: "팀 참가") {
-                dismiss()
+                onDismiss()
             }
             .padding(.horizontal, 18)
             .padding(.top, 8)
@@ -63,7 +64,7 @@ struct TeamJoinView: View {
                         await viewModel.joinTeam()
                         if let team = viewModel.joinedTeam {
                             onJoined(team)
-                            dismiss()
+                            onDismiss()
                         }
                     }
                 }
@@ -73,7 +74,7 @@ struct TeamJoinView: View {
         }
         .background(Color.white)
         .runpamineBackSwipe {
-            dismiss()
+            onDismiss()
         }
         .onAppear {
             isCodeFocused = true

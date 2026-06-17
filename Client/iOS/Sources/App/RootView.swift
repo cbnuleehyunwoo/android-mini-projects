@@ -48,11 +48,12 @@ struct RootView: View {
                 }
             case .terms:
                 TermsAgreementView(viewModel: TermsAgreementViewModel()) {
-                    route = .login
+                    withAnimation(.easeInOut(duration: 0.3)) { route = .login }
                 } onComplete: { agreements in
                     acceptedTerms = agreements
-                    route = .nickname
+                    withAnimation(.easeInOut(duration: 0.3)) { route = .nickname }
                 }
+                .transition(.move(edge: .trailing))
             case .nickname:
                 NicknameSetupView(
                     viewModel: NicknameSetupViewModel(
@@ -62,15 +63,17 @@ struct RootView: View {
                         agreements: acceptedTerms
                     )
                 ) {
-                    route = .terms
+                    withAnimation(.easeInOut(duration: 0.3)) { route = .terms }
                 } onComplete: {
-                    routeToMainOrOnboarding()
+                    withAnimation(.easeInOut(duration: 0.3)) { routeToMainOrOnboarding() }
                 }
+                .transition(.move(edge: .trailing))
             case .onboarding:
                 OnboardingView {
                     store.markOnboardingCompleted()
-                    route = .main
+                    withAnimation(.easeInOut(duration: 0.3)) { route = .main }
                 }
+                .transition(.move(edge: .trailing))
             case .main:
                 MainTabView(
                     store: store,
@@ -117,9 +120,13 @@ struct RootView: View {
         do {
             let homeState = try await profileService.fetchHomeState(accessToken: session.accessToken)
             apply(homeState)
-            route = homeState.profile == nil ? .terms : mainOrOnboardingRoute()
+            withAnimation(.easeInOut(duration: 0.3)) {
+                route = homeState.profile == nil ? .terms : mainOrOnboardingRoute()
+            }
         } catch {
-            route = session.needsSignup ? .terms : mainOrOnboardingRoute()
+            withAnimation(.easeInOut(duration: 0.3)) {
+                route = session.needsSignup ? .terms : mainOrOnboardingRoute()
+            }
         }
     }
 

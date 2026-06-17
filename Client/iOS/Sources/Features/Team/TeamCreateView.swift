@@ -1,20 +1,21 @@
 import SwiftUI
 
 struct TeamCreateView: View {
-    @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel: TeamCreateViewModel
     @FocusState private var isNameFocused: Bool
+    let onDismiss: () -> Void
     let onCreated: (RunningTeam) -> Void
 
-    init(viewModel: TeamCreateViewModel, onCreated: @escaping (RunningTeam) -> Void) {
+    init(viewModel: TeamCreateViewModel, onDismiss: @escaping () -> Void, onCreated: @escaping (RunningTeam) -> Void) {
         _viewModel = StateObject(wrappedValue: viewModel)
+        self.onDismiss = onDismiss
         self.onCreated = onCreated
     }
 
     var body: some View {
         VStack(spacing: 0) {
             TopNavigationBar(title: "팀 생성") {
-                dismiss()
+                onDismiss()
             }
             .padding(.horizontal, 18)
             .padding(.top, 8)
@@ -68,7 +69,7 @@ struct TeamCreateView: View {
                         await viewModel.createTeam()
                         if let team = viewModel.createdTeam {
                             onCreated(team)
-                            dismiss()
+                            onDismiss()
                         }
                     }
                 }
@@ -78,7 +79,7 @@ struct TeamCreateView: View {
         }
         .background(Color.white)
         .runpamineBackSwipe {
-            dismiss()
+            onDismiss()
         }
         .onAppear {
             isNameFocused = true

@@ -1,23 +1,24 @@
 import SwiftUI
 
 struct RunningView: View {
-    @Environment(\.dismiss) private var dismiss
     @StateObject private var tracker = RunningTracker()
     @State private var finishedRecord: RunningRecord?
     @State private var isShowingStopDialog = false
     private let runService: RunServiceProtocol
     private let accessToken: String?
+    private let onDismiss: () -> Void
 
-    init(runService: RunServiceProtocol = MockRunService(), accessToken: String? = nil) {
+    init(runService: RunServiceProtocol = MockRunService(), accessToken: String? = nil, onDismiss: @escaping () -> Void = {}) {
         self.runService = runService
         self.accessToken = accessToken
+        self.onDismiss = onDismiss
     }
 
     var body: some View {
         Group {
             if let finishedRecord {
                 RunningSummaryView(record: finishedRecord) {
-                    dismiss()
+                    onDismiss()
                 }
             } else {
                 activeRunningView
