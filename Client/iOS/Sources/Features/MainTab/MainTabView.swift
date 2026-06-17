@@ -252,11 +252,17 @@ private extension View {
         isPresented: Binding<Bool>,
         @ViewBuilder content: @escaping () -> Content
     ) -> some View {
-        #if os(iOS)
-        fullScreenCover(isPresented: isPresented, content: content)
-        #else
-        sheet(isPresented: isPresented, content: content)
-        #endif
+        ZStack {
+            self
+            if isPresented.wrappedValue {
+                content()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .ignoresSafeArea()
+                    .transition(.move(edge: .trailing))
+                    .zIndex(100)
+            }
+        }
+        .animation(.easeInOut(duration: 0.3), value: isPresented.wrappedValue)
     }
 
     @ViewBuilder
@@ -264,11 +270,17 @@ private extension View {
         item: Binding<Item?>,
         @ViewBuilder content: @escaping (Item) -> Content
     ) -> some View {
-        #if os(iOS)
-        fullScreenCover(item: item, content: content)
-        #else
-        sheet(item: item, content: content)
-        #endif
+        ZStack {
+            self
+            if let currentItem = item.wrappedValue {
+                content(currentItem)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .ignoresSafeArea()
+                    .transition(.move(edge: .trailing))
+                    .zIndex(100)
+            }
+        }
+        .animation(.easeInOut(duration: 0.3), value: item.wrappedValue?.id)
     }
 }
 
