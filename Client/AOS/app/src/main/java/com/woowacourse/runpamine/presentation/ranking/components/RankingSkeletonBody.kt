@@ -68,7 +68,7 @@ fun RankingSkeletonBody(
         )
         Spacer(modifier = Modifier.height(24.dp))
         HorizontalDivider(
-            color = DividerDefaults.color.copy(alpha = 0.7f),
+            color = DividerDefaults.color.copy(alpha = 0.1f),
             thickness = 1.dp,
         )
         Column(

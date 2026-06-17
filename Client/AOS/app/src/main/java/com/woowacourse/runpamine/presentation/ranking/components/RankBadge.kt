@@ -34,7 +34,7 @@ fun RankBadge(
         Text(
             text = rank?.toString() ?: "-",
             color = Color.White,
-            fontSize = 18.sp,
+            fontSize = 14.sp,
             fontWeight = FontWeight.ExtraBold,
         )
     }
