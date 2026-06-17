@@ -127,6 +127,7 @@ struct MyPageView: View {
                     isChangingNickname = false
                 }
                 .networkErrorOverlay()
+                .presentationDetents([.large])
             }
 
             if isShowingLogoutConfirmation {
