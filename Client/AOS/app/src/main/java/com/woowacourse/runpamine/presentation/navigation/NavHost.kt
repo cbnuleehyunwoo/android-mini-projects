@@ -209,8 +209,8 @@ fun NavHost(
 
         composable(AppRoute.CreateTeam.route) {
             CreateTeamScreen(
-                onCreateSuccess = { code ->
-                    navController.navigate(AppRoute.InviteTeam.createRoute(code)) {
+                onCreateSuccess = {
+                    navController.navigate(AppRoute.Team.route) {
                         popUpTo(AppRoute.CreateTeam.route) {
                             inclusive = true
                         }
