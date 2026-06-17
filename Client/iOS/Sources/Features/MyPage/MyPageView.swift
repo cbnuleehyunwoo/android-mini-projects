@@ -60,74 +60,75 @@ struct MyPageView: View {
                 .padding(.horizontal, 18)
                 .padding(.top, 8)
 
-                VStack(spacing: 0) {
-                    Circle()
-                        .fill(AppTheme.Colors.surface)
-                        .frame(width: 76, height: 76)
-                        .overlay {
-                            Image(systemName: "person")
-                                .font(.system(size: 34, weight: .medium))
-                                .foregroundStyle(AppTheme.Colors.textSecondary.opacity(0.7))
-                        }
-                        .overlay {
-                            Circle()
-                                .stroke(AppTheme.Colors.border, lineWidth: 1)
-                        }
-                        .padding(.top, 34)
+                ScrollView {
+                    VStack(spacing: 0) {
+                        Circle()
+                            .fill(AppTheme.Colors.surface)
+                            .frame(width: 76, height: 76)
+                            .overlay {
+                                Image(systemName: "person")
+                                    .font(.system(size: 34, weight: .medium))
+                                    .foregroundStyle(AppTheme.Colors.textSecondary.opacity(0.7))
+                            }
+                            .overlay {
+                                Circle()
+                                    .stroke(AppTheme.Colors.border, lineWidth: 1)
+                            }
+                            .padding(.top, 34)
 
-                    Text(nickname)
-                        .font(AppTheme.Typography.font(size: 20, weight: .bold))
-                        .foregroundStyle(AppTheme.Colors.textPrimary)
-                        .padding(.top, 16)
+                        Text(nickname)
+                            .font(AppTheme.Typography.font(size: 20, weight: .bold))
+                            .foregroundStyle(AppTheme.Colors.textPrimary)
+                            .padding(.top, 16)
 
-                    VStack(alignment: .leading, spacing: 12) {
-                        sectionTitle("계정 설정")
-                        settingsRow(icon: "ic_write", title: "닉네임 변경", subtitle: "닉네임을 변경할 수 있습니다.") {
-                            isChangingNickname = true
-                        }
-                        .disabled(isBusy)
+                        VStack(alignment: .leading, spacing: 12) {
+                            sectionTitle("계정 설정")
+                            settingsRow(icon: "ic_write", title: "닉네임 변경", subtitle: "닉네임을 변경할 수 있습니다.") {
+                                isChangingNickname = true
+                            }
+                            .disabled(isBusy)
 
-                        settingsRow(icon: "ic_logout", title: "로그아웃", subtitle: "계정에서 로그아웃합니다", isDestructive: true) {
-                            isShowingLogoutConfirmation = true
-                        }
-                        .disabled(isBusy)
+                            settingsRow(icon: "ic_logout", title: "로그아웃", subtitle: "계정에서 로그아웃합니다", isDestructive: true) {
+                                isShowingLogoutConfirmation = true
+                            }
+                            .disabled(isBusy)
 
-                        if let logoutErrorMessage {
-                            Text(logoutErrorMessage)
-                                .font(AppTheme.Typography.caption1)
-                                .foregroundStyle(AppTheme.Colors.danger)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
+                            if let logoutErrorMessage {
+                                Text(logoutErrorMessage)
+                                    .font(AppTheme.Typography.caption1)
+                                    .foregroundStyle(AppTheme.Colors.danger)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
 
-                        settingsRow(icon: "ic_trash", title: "회원탈퇴", subtitle: "계정을 삭제합니다", isDestructive: true) {
-                            isShowingDeleteAccountConfirmation = true
-                        }
-                        .disabled(isBusy)
+                            settingsRow(icon: "ic_trash", title: "회원탈퇴", subtitle: "계정을 삭제합니다", isDestructive: true) {
+                                isShowingDeleteAccountConfirmation = true
+                            }
+                            .disabled(isBusy)
 
-                        if let deleteAccountErrorMessage {
-                            Text(deleteAccountErrorMessage)
-                                .font(AppTheme.Typography.caption1)
-                                .foregroundStyle(AppTheme.Colors.danger)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
+                            if let deleteAccountErrorMessage {
+                                Text(deleteAccountErrorMessage)
+                                    .font(AppTheme.Typography.caption1)
+                                    .foregroundStyle(AppTheme.Colors.danger)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
 
-                        sectionTitle("약관 및 정책")
-                            .padding(.top, 4)
-                        settingsRow(icon: "ic_shield", title: "개인정보처리방침", subtitle: "개인정보 수집 및 이용에 대한 안내") {
-                            openURL(TermsAgreementID.privacy.documentURL)
-                        }
-                        settingsRow(icon: "ic_page", title: "이용약관", subtitle: "서비스 이용에 관한 약관을 확인하세요") {
-                            openURL(TermsAgreementID.service.documentURL)
-                        }
+                            sectionTitle("약관 및 정책")
+                                .padding(.top, 4)
+                            settingsRow(icon: "ic_shield", title: "개인정보처리방침", subtitle: "개인정보 수집 및 이용에 대한 안내") {
+                                openURL(TermsAgreementID.privacy.documentURL)
+                            }
+                            settingsRow(icon: "ic_page", title: "이용약관", subtitle: "서비스 이용에 관한 약관을 확인하세요") {
+                                openURL(TermsAgreementID.service.documentURL)
+                            }
 
-                        sectionTitle("기타")
-                            .padding(.top, 4)
-                        appInfoRow()
+                            sectionTitle("기타")
+                                .padding(.top, 4)
+                            appInfoRow()
+                        }
+                        .padding(.horizontal, AppTheme.Layout.horizontalPadding)
+                        .padding(.top, 48)
+                        .padding(.bottom, 24)
                     }
-                    .padding(.horizontal, AppTheme.Layout.horizontalPadding)
-                    .padding(.top, 48)
-
-                    Spacer()
                 }
             }
             .background(Color.white)
