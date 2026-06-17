@@ -125,12 +125,18 @@ struct MainTabView: View {
         .runpamineFullScreenCover(item: $presentedAction) { action in
             switch action {
             case .createTeam:
-                TeamCreateView(viewModel: TeamCreateViewModel(teamService: teamService, accessToken: accessToken)) { createdTeam in
+                TeamCreateView(
+                    viewModel: TeamCreateViewModel(teamService: teamService, accessToken: accessToken),
+                    onDismiss: { presentedAction = nil }
+                ) { createdTeam in
                     handleTeamUpdated(createdTeam)
                 }
                 .networkErrorOverlay()
             case .joinTeam:
-                TeamJoinView(viewModel: TeamJoinViewModel(teamService: teamService, accessToken: accessToken)) { joinedTeam in
+                TeamJoinView(
+                    viewModel: TeamJoinViewModel(teamService: teamService, accessToken: accessToken),
+                    onDismiss: { presentedAction = nil }
+                ) { joinedTeam in
                     handleTeamUpdated(joinedTeam)
                 }
                 .networkErrorOverlay()
@@ -150,10 +156,10 @@ struct MainTabView: View {
             .networkErrorOverlay()
         }
         .runpamineFullScreenCover(isPresented: $isRunning) {
-            RunningView(runService: runService, accessToken: accessToken)
+            RunningView(runService: runService, accessToken: accessToken, onDismiss: { isRunning = false })
         }
         .runpamineFullScreenCover(isPresented: $isShowingInvite) {
-            InviteMemberView(inviteCode: team?.inviteCode ?? "")
+            InviteMemberView(inviteCode: team?.inviteCode ?? "", onDismiss: { isShowingInvite = false })
                 .networkErrorOverlay()
         }
         .task(id: accessToken) {
