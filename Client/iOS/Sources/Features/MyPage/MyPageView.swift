@@ -58,7 +58,7 @@ struct MyPageView: View {
                 .frame(maxWidth: .infinity)
                 .frame(height: 60)
                 .padding(.horizontal, 18)
-                .padding(.top, 50)
+                .padding(.top, 8)
 
                 VStack(spacing: 0) {
                     Circle()
