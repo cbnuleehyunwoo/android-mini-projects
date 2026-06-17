@@ -876,7 +876,7 @@ private extension View {
             if let currentItem = item.wrappedValue {
                 content(currentItem)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .ignoresSafeArea()
+                    .background(Color(uiColor: .systemBackground).ignoresSafeArea())
                     .transition(.move(edge: .trailing))
                     .zIndex(100)
             }
