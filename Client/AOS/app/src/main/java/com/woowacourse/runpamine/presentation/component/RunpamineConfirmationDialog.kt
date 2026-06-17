@@ -1,5 +1,6 @@
 package com.woowacourse.runpamine.presentation.component
 
+import android.view.WindowManager
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -52,11 +53,15 @@ fun RunpamineConfirmationDialog(
     Dialog(onDismissRequest = onDismiss) {
         val dialogWindow = (LocalView.current.parent as DialogWindowProvider).window
         SideEffect {
-            dialogWindow.setDimAmount(0.01f)
+            dialogWindow.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+            dialogWindow.setDimAmount(DIALOG_DIM_AMOUNT)
         }
 
         Surface(
-            modifier = modifier.fillMaxWidth(),
+            modifier =
+                modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
             shape = RoundedCornerShape(20.dp),
             color = Color.White,
             tonalElevation = 6.dp,
@@ -126,6 +131,8 @@ fun RunpamineConfirmationDialog(
         }
     }
 }
+
+private const val DIALOG_DIM_AMOUNT = 0.45f
 
 @Preview
 @Composable
