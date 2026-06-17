@@ -30,24 +30,29 @@ struct HomeView: View {
                     .frame(maxHeight: .infinity)
                     .padding(.horizontal, HomeLayout.contentHorizontalPadding)
 
-                Button {
-                    runningPermissionRequester.requestStart {
-                        isShowingStartDialog = true
+                if runningPermissionRequester.isStartButtonVisible {
+                    Button {
+                        runningPermissionRequester.requestStart {
+                            isShowingStartDialog = true
+                        }
+                    } label: {
+                        Text("시작")
+                            .font(AppTheme.Typography.font(size: 24, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(width: 100, height: 100)
+                            .background(AppTheme.Colors.primary)
+                            .clipShape(Circle())
                     }
-                } label: {
-                    Text("시작")
-                        .font(AppTheme.Typography.font(size: 24, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(width: 100, height: 100)
-                        .background(AppTheme.Colors.primary)
-                        .clipShape(Circle())
+                    .padding(.bottom, 16)
                 }
-                .padding(.bottom, 16)
             }
             .padding(.top, 8)
             .frame(maxHeight: .infinity)
         }
         .background(Color.white)
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+            runningPermissionRequester.refreshAuthorizationStatus()
+        }
         .overlay {
             if isShowingStartDialog {
                 RunpamineConfirmationDialog(
@@ -98,12 +103,25 @@ private final class RunningStartPermissionRequester: NSObject, ObservableObject 
     @Published var isShowingPermissionDialog = false
     @Published private(set) var authorizationStatus: CLAuthorizationStatus = .notDetermined
 
+    var isStartButtonVisible: Bool {
+        switch authorizationStatus {
+        case .denied, .restricted:
+            return false
+        default:
+            return CLLocationManager.locationServicesEnabled()
+        }
+    }
+
     private let manager = CLLocationManager()
     private var onAuthorized: (() -> Void)?
 
     override init() {
         super.init()
         manager.delegate = self
+        authorizationStatus = manager.authorizationStatus
+    }
+
+    func refreshAuthorizationStatus() {
         authorizationStatus = manager.authorizationStatus
     }
 
