@@ -34,7 +34,7 @@ struct MyNicknameChangeView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            TopNavigationBar(title: "닉네임 변경") {
+            TopNavigationBar(title: "닉네임 변경", buttonStyle: .close) {
                 dismiss()
             }
             .padding(.horizontal, 18)

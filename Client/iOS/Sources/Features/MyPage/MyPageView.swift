@@ -38,13 +38,27 @@ struct MyPageView: View {
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                Text("마이페이지")
-                    .font(AppTheme.Typography.font(size: 20, weight: .semibold))
-                    .foregroundStyle(AppTheme.Colors.textPrimary)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 60)
-                    .padding(.horizontal, 18)
-                    .padding(.top, 50)
+                ZStack {
+                    Text("마이페이지")
+                        .font(AppTheme.Typography.font(size: 20, weight: .semibold))
+                        .foregroundStyle(AppTheme.Colors.textPrimary)
+
+                    HStack {
+                        Spacer()
+                        Button(action: { dismiss() }) {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 17, weight: .semibold))
+                                .foregroundStyle(AppTheme.Colors.textPrimary)
+                                .frame(width: 44, height: 44)
+                                .contentShape(Rectangle())
+                        }
+                        .accessibilityLabel("닫기")
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 60)
+                .padding(.horizontal, 18)
+                .padding(.top, 8)
 
                 VStack(spacing: 0) {
                     Circle()
@@ -127,6 +141,7 @@ struct MyPageView: View {
                     isChangingNickname = false
                 }
                 .networkErrorOverlay()
+                .presentationDetents([.large])
             }
 
             if isShowingLogoutConfirmation {
