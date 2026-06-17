@@ -307,6 +307,7 @@ struct MyPageView: View {
                     .stroke(AppTheme.Colors.border.opacity(0.75), lineWidth: 1)
             }
         }
+        .buttonStyle(.plain)
     }
 
     private func appInfoRow() -> some View {
