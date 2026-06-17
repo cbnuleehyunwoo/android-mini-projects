@@ -26,7 +26,7 @@ fun RecordDistance(
         verticalAlignment = Alignment.Bottom,
     ) {
         Text(
-            text = String.format(Locale.getDefault(), "%.1f", distanceKm),
+            text = String.format(Locale.getDefault(), "%.2f", distanceKm),
             fontSize = 56.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary,

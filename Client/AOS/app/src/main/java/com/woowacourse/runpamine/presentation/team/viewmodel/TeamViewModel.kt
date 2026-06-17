@@ -308,9 +308,9 @@ private fun LocalDate.toKoreanDisplayText(): String {
     return "${year}년 ${monthValue}월 ${dayOfMonth}일 - $dayOfWeek"
 }
 
-private fun Int.toKilometerText(): String = "%.1f km".format(Locale.US, this / 1000.0)
+private fun Int.toKilometerText(): String = "%.2f km".format(Locale.US, this / 1000.0)
 
-private fun Int?.toSeasonKilometerText(): String = "%.1f".format(Locale.US, (this ?: 0) / 1000.0)
+private fun Int?.toSeasonKilometerText(): String = "%.2f".format(Locale.US, (this ?: 0) / 1000.0)
 
 private fun Int?.toDurationText(): String = (this ?: 0).toDurationText()
 
