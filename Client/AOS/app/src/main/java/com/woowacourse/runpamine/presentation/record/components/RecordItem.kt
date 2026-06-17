@@ -80,7 +80,7 @@ fun RecordItem(
                     color = Gray40,
                 )
                 Text(
-                    text = String.format(Locale.getDefault(), "%.1fKM", record.distanceKm),
+                    text = String.format(Locale.getDefault(), "%.2fKM", record.distanceKm),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,

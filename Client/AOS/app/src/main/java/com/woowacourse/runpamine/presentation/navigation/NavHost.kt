@@ -139,7 +139,7 @@ fun NavHost(
                     navController.navigate(
                         AppRoute.History.createRoute(
                             runId = record.id,
-                            distance = String.format(Locale.getDefault(), "%.1f", record.distanceKm),
+                            distance = String.format(Locale.getDefault(), "%.2f", record.distanceKm),
                             time = record.duration,
                             pace = record.pace.removeSuffix("/km"),
                             calories = record.calories.toString(),

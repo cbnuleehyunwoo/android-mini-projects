@@ -383,7 +383,7 @@ private fun RankingMetric.label(scope: RankingScope): String =
         RankingMetric.CONSISTENCY -> if (scope == RankingScope.TEAM) "평균 활동일" else "횟수"
     }
 
-private fun Int.toKilometerText(): String = String.format(Locale.getDefault(), "%.1f km", this / METERS_PER_KILOMETER)
+private fun Int.toKilometerText(): String = String.format(Locale.getDefault(), "%.2f km", this / METERS_PER_KILOMETER)
 
 private fun Int.toPaceText(): String {
     if (this <= 0) return "-'--\"/km"
