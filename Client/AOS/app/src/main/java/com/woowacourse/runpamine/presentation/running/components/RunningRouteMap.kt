@@ -40,6 +40,7 @@ fun RunningRouteMap(
     showMarkers: Boolean = false,
     isInteractive: Boolean = true,
     routePadding: Int = ROUTE_PADDING,
+    animateCamera: Boolean = true,
 ) {
     val route = remember(points) { points.sortedBy { it.sequence }.map { LatLng(it.latitude, it.longitude) } }
     val cameraPositionState =
@@ -51,13 +52,15 @@ fun RunningRouteMap(
         when (route.size) {
             0 -> Unit
             1 ->
-                cameraPositionState.animate(
-                    CameraUpdateFactory.newLatLngZoom(route.first(), SINGLE_POINT_ZOOM),
+                cameraPositionState.updateCamera(
+                    cameraUpdate = CameraUpdateFactory.newLatLngZoom(route.first(), SINGLE_POINT_ZOOM),
+                    animate = animateCamera,
                 )
 
             else ->
-                cameraPositionState.animate(
-                    CameraUpdateFactory.newLatLngBounds(route.toBounds(), routePadding),
+                cameraPositionState.updateCamera(
+                    cameraUpdate = CameraUpdateFactory.newLatLngBounds(route.toBounds(), routePadding),
+                    animate = animateCamera,
                 )
         }
     }
@@ -121,4 +124,15 @@ private fun List<LatLng>.toBounds(): LatLngBounds {
     val builder = LatLngBounds.builder()
     forEach(builder::include)
     return builder.build()
+}
+
+private suspend fun com.google.maps.android.compose.CameraPositionState.updateCamera(
+    cameraUpdate: com.google.android.gms.maps.CameraUpdate,
+    animate: Boolean,
+) {
+    if (animate) {
+        animate(cameraUpdate)
+    } else {
+        move(cameraUpdate)
+    }
 }
