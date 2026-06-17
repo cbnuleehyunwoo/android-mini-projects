@@ -63,6 +63,7 @@ fun RecordItem(
                         modifier = Modifier.fillMaxSize(),
                         isInteractive = false,
                         routePadding = MINI_MAP_ROUTE_PADDING,
+                        animateCamera = false,
                     )
                 }
             }
