@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
 @Composable
@@ -26,7 +27,10 @@ fun MyPageSection(
     Column(modifier = modifier.padding(contentPadding)) {
         Text(
             text = title,
-            style = MaterialTheme.typography.headlineMedium,
+            style =
+                MaterialTheme.typography.headlineMedium.copy(
+                    fontSize = 16.sp,
+                ),
             fontWeight = FontWeight.Black,
             color = Color(0xFF111827),
         )

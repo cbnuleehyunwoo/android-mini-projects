@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -46,14 +47,14 @@ fun MyPageMenuRow(
         modifier =
             modifier
                 .fillMaxWidth()
-                .height(84.dp)
+                .heightIn(min = 62.dp)
                 .clip(RoundedCornerShape(14.dp))
                 .border(
                     width = 1.dp,
                     color = Color(0xFFEDEFF3),
                     shape = RoundedCornerShape(14.dp),
                 ).clickable(onClick = onClick)
-                .padding(horizontal = 18.dp),
+                .padding(horizontal = 18.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Image(
@@ -66,14 +67,17 @@ fun MyPageMenuRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.headlineMedium,
+                style =
+                    MaterialTheme.typography.headlineMedium.copy(
+                        fontSize = 16.sp,
+                    ),
                 fontWeight = FontWeight.Bold,
                 color = titleColor,
             )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = description,
-                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 17.sp, lineHeight = 21.sp),
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp, lineHeight = 21.sp),
                 color = Color(0xFF9CA3AF),
             )
         }
