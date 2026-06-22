@@ -43,6 +43,8 @@ interface RunLocalDataSource {
         status: RunSyncStatus = RunSyncStatus.LOCAL_ONLY,
     )
 
+    suspend fun deleteActiveSession()
+
     suspend fun updateSyncStatus(
         sessionId: String,
         status: RunSyncStatus,

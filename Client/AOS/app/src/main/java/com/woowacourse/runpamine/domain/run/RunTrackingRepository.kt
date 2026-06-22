@@ -11,6 +11,8 @@ interface RunTrackingRepository {
 
     suspend fun stopRun(): RunSession?
 
+    suspend fun discardActiveRun()
+
     fun observeCurrentRun(): Flow<RunSession?>
 
     fun observeCurrentRoutePoints(): Flow<List<RunPoint>>

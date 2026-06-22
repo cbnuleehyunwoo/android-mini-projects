@@ -75,6 +75,10 @@ class RoomRunLocalDataSource(
         )
     }
 
+    override suspend fun deleteActiveSession() {
+        runDao.deleteActiveSessions()
+    }
+
     override suspend fun updateSyncStatus(
         sessionId: String,
         status: RunSyncStatus,

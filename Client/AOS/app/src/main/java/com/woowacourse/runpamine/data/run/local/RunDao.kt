@@ -59,6 +59,9 @@ interface RunDao {
         syncStatus: RunSyncStatus = RunSyncStatus.LOCAL_ONLY,
     )
 
+    @Query("DELETE FROM run_sessions WHERE endedAtEpochMillis IS NULL")
+    suspend fun deleteActiveSessions()
+
     @Query(
         """
         UPDATE run_sessions

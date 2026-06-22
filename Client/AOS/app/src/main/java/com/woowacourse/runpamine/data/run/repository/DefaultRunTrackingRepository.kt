@@ -128,6 +128,21 @@ class DefaultRunTrackingRepository(
             localDataSource.findSession(finishedSession.id)
         }
 
+    override suspend fun discardActiveRun() {
+        mutex.withLock {
+            trackingJob?.cancel()
+            trackingJob = null
+            inactivityJob?.cancel()
+            inactivityJob = null
+            localDataSource.deleteActiveSession()
+            activeSessionId = null
+            accumulatedDurationSeconds = 0
+            currentSegmentStartedAt = null
+            lastMovementAt = null
+            isPaused.value = false
+        }
+    }
+
     override fun observeCurrentRun(): Flow<RunSession?> = localDataSource.observeActiveSession()
 
     override fun observeCurrentRoutePoints(): Flow<List<RunPoint>> =

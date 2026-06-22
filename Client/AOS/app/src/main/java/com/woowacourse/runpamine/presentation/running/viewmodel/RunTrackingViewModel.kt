@@ -53,7 +53,7 @@ class RunTrackingViewModel(
         val context = getApplication<Application>()
         ContextCompat.startForegroundService(
             context,
-            RunTrackingService.startIntent(context),
+            RunTrackingService.startIntent(context, discardActiveRun = true),
         )
     }
 
