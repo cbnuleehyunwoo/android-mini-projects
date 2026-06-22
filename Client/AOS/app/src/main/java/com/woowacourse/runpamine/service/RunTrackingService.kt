@@ -33,7 +33,7 @@ class RunTrackingService : Service() {
     ): Int {
         when (intent?.action) {
             ACTION_STOP -> stopTracking()
-            else -> startTracking()
+            else -> startTracking(discardActiveRun = intent?.getBooleanExtra(EXTRA_DISCARD_ACTIVE_RUN, false) == true)
         }
         return START_STICKY
     }
@@ -42,15 +42,18 @@ class RunTrackingService : Service() {
 
     override fun onDestroy() {
         runBlocking {
-            runpamineContainer.runTrackingRepository.stopRun()
+            runpamineContainer.runTrackingRepository.discardActiveRun()
         }
         scope.cancel()
         super.onDestroy()
     }
 
-    private fun startTracking() {
+    private fun startTracking(discardActiveRun: Boolean) {
         startForeground(NOTIFICATION_ID, buildNotification())
         scope.launch {
+            if (discardActiveRun) {
+                runpamineContainer.runTrackingRepository.discardActiveRun()
+            }
             runpamineContainer.runTrackingRepository.startRun()
         }
     }
@@ -93,10 +96,15 @@ class RunTrackingService : Service() {
         private const val NOTIFICATION_ID = 1001
         private const val ACTION_START = "com.woowacourse.runpamine.action.START_RUN_TRACKING"
         private const val ACTION_STOP = "com.woowacourse.runpamine.action.STOP_RUN_TRACKING"
+        private const val EXTRA_DISCARD_ACTIVE_RUN = "discard_active_run"
 
-        fun startIntent(context: Context): Intent =
+        fun startIntent(
+            context: Context,
+            discardActiveRun: Boolean = false,
+        ): Intent =
             Intent(context, RunTrackingService::class.java).apply {
                 action = ACTION_START
+                putExtra(EXTRA_DISCARD_ACTIVE_RUN, discardActiveRun)
             }
 
         fun stopIntent(context: Context): Intent =

@@ -138,6 +138,8 @@ class DefaultRunSyncRepositoryTest {
             status: RunSyncStatus,
         ) = Unit
 
+        override suspend fun deleteActiveSession() = Unit
+
         override suspend fun findPendingSessions(): List<RunSession> = emptyList()
     }
 
