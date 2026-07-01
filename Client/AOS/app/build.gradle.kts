@@ -31,8 +31,8 @@ android {
         applicationId = "com.woowacourse.runpamine"
         minSdk = 30
         targetSdk = 36
-        versionCode = 7
-        versionName = "0.0.7"
+        versionCode = 100
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "BASE_URL", runpamineProperty("base_url").toBuildConfigString())
