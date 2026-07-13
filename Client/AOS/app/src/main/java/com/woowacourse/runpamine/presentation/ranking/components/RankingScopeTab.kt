@@ -43,8 +43,8 @@ fun RankingScopeTab(
             color = if (selected) Blue40 else Gray40,
             style =
                 MaterialTheme.typography.titleSmall.copy(
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
                 ),
             textAlign = TextAlign.Center,
         )

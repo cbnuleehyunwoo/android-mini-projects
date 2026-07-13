@@ -69,7 +69,7 @@ fun TeamHeader(
                     fontSize = 30.sp,
                     lineHeight = 36.sp,
                 ),
-            fontWeight = FontWeight.Black,
+            fontWeight = FontWeight.Bold,
             color = Blue40,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

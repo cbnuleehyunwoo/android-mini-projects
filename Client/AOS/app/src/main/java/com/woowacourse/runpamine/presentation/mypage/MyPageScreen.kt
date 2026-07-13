@@ -41,8 +41,10 @@ import com.woowacourse.runpamine.presentation.component.ScreenTopBar
 import com.woowacourse.runpamine.presentation.mypage.components.MyPageMenuRow
 import com.woowacourse.runpamine.presentation.mypage.components.MyPageProfile
 import com.woowacourse.runpamine.presentation.mypage.components.MyPageSection
+import com.woowacourse.runpamine.presentation.mypage.components.MyPageSkeletonContent
 import com.woowacourse.runpamine.presentation.mypage.viewmodel.MyPageUiState
 import com.woowacourse.runpamine.presentation.mypage.viewmodel.MyPageViewModel
+import com.woowacourse.runpamine.ui.theme.RunpamineLayout
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -138,7 +140,7 @@ private fun MyPageContent(
         modifier =
             modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = RunpamineLayout.ScreenHorizontalPadding)
                 .verticalScroll(rememberScrollState()),
     ) {
         ScreenTopBar(
@@ -148,88 +150,95 @@ private fun MyPageContent(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 16.dp),
+                    .padding(top = RunpamineLayout.NavigationTopPadding),
         )
-        MyPageProfile(
-            name = uiState.nickname,
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-        )
-        uiState.errorMessage?.let { message ->
-            Text(
-                text = message,
-                color = Color(0xFFDC2626),
-                style =
-                    MaterialTheme.typography.bodyLarge.copy(
-                        fontSize = 20.sp,
-                    ),
-                modifier = Modifier.padding(top = 12.dp),
+        if (uiState.isLoading) {
+            MyPageSkeletonContent(modifier = Modifier.padding(top = 34.dp))
+        } else {
+            MyPageProfile(
+                name = uiState.nickname,
+                modifier =
+                    Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(top = 34.dp),
             )
-        }
-        Spacer(modifier = Modifier.height(52.dp))
-        MyPageSection(
-            title = stringResource(R.string.my_page_account_settings),
-        ) {
-            MyPageMenuRow(
-                iconResId = R.drawable.ic_edit,
-                title = stringResource(R.string.my_page_change_nickname),
-                description = stringResource(R.string.my_page_change_nickname_description),
-                onClick = onChangeNicknameClick,
-            )
-            MyPageMenuRow(
-                iconResId = R.drawable.ic_logout,
-                title = stringResource(R.string.my_page_logout),
-                description =
-                    if (uiState.isLoggingOut) {
-                        stringResource(R.string.my_page_logging_out)
-                    } else {
-                        stringResource(R.string.my_page_logout_description)
+            uiState.errorMessage?.let { message ->
+                Text(
+                    text = message,
+                    color = Color(0xFFDC2626),
+                    style =
+                        MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = 20.sp,
+                        ),
+                    modifier = Modifier.padding(top = 12.dp),
+                )
+            }
+            Spacer(modifier = Modifier.height(48.dp))
+            MyPageSection(
+                title = stringResource(R.string.my_page_account_settings),
+            ) {
+                MyPageMenuRow(
+                    iconResId = R.drawable.ic_edit,
+                    title = stringResource(R.string.my_page_change_nickname),
+                    description = stringResource(R.string.my_page_change_nickname_description),
+                    onClick = onChangeNicknameClick,
+                )
+                MyPageMenuRow(
+                    iconResId = R.drawable.ic_logout,
+                    title = stringResource(R.string.my_page_logout),
+                    description =
+                        if (uiState.isLoggingOut) {
+                            stringResource(R.string.my_page_logging_out)
+                        } else {
+                            stringResource(R.string.my_page_logout_description)
+                        },
+                    titleColor = Color(0xFFDC2626),
+                    onClick = {
+                        if (!uiState.isLoggingOut) {
+                            showLogoutDialog = true
+                        }
                     },
-                titleColor = Color(0xFFDC2626),
-                onClick = {
-                    if (!uiState.isLoggingOut) {
-                        showLogoutDialog = true
-                    }
-                },
-            )
-            MyPageMenuRow(
-                iconResId = R.drawable.mdi_delete_outline,
-                title = stringResource(R.string.my_page_delete_account),
-                titleColor = Color(0xFFDC2626),
-                description = stringResource(R.string.my_page_delete_account_description),
-                onClick = {
-                    if (!uiState.isDeletingAccount) {
-                        showDeleteAccountDialog = true
-                    }
-                },
-            )
-        }
-        Spacer(modifier = Modifier.height(24.dp))
-        MyPageSection(
-            title = stringResource(R.string.my_page_terms_and_policy),
-        ) {
-            MyPageMenuRow(
-                iconResId = R.drawable.ic_shield,
-                title = stringResource(R.string.my_page_privacy_policy),
-                description = stringResource(R.string.my_page_privacy_policy_description),
-                onClick = { uriHandler.openUri(privacyPolicyUrl) },
-            )
-            MyPageMenuRow(
-                iconResId = R.drawable.ic_page,
-                title = stringResource(R.string.my_page_terms_of_service),
-                description = stringResource(R.string.my_page_terms_of_service_description),
-                onClick = { uriHandler.openUri(termsOfServiceUrl) },
-            )
-        }
-        Spacer(modifier = Modifier.height(24.dp))
-        MyPageSection(
-            title = stringResource(R.string.my_page_etc),
-        ) {
-            MyPageMenuRow(
-                iconResId = R.drawable.ic_infomation,
-                title = stringResource(R.string.my_page_app_info),
-                description = stringResource(R.string.my_page_app_version, BuildConfig.VERSION_NAME),
-                showArrow = false,
-            )
+                )
+                MyPageMenuRow(
+                    iconResId = R.drawable.mdi_delete_outline,
+                    title = stringResource(R.string.my_page_delete_account),
+                    titleColor = Color(0xFFDC2626),
+                    description = stringResource(R.string.my_page_delete_account_description),
+                    onClick = {
+                        if (!uiState.isDeletingAccount) {
+                            showDeleteAccountDialog = true
+                        }
+                    },
+                )
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            MyPageSection(
+                title = stringResource(R.string.my_page_terms_and_policy),
+            ) {
+                MyPageMenuRow(
+                    iconResId = R.drawable.ic_shield,
+                    title = stringResource(R.string.my_page_privacy_policy),
+                    description = stringResource(R.string.my_page_privacy_policy_description),
+                    onClick = { uriHandler.openUri(privacyPolicyUrl) },
+                )
+                MyPageMenuRow(
+                    iconResId = R.drawable.ic_page,
+                    title = stringResource(R.string.my_page_terms_of_service),
+                    description = stringResource(R.string.my_page_terms_of_service_description),
+                    onClick = { uriHandler.openUri(termsOfServiceUrl) },
+                )
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            MyPageSection(
+                title = stringResource(R.string.my_page_etc),
+            ) {
+                MyPageMenuRow(
+                    iconResId = R.drawable.ic_infomation,
+                    title = stringResource(R.string.my_page_app_info),
+                    description = stringResource(R.string.my_page_app_version, BuildConfig.VERSION_NAME),
+                    showArrow = false,
+                )
+            }
         }
         Spacer(modifier = Modifier.height(24.dp))
     }

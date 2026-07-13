@@ -36,12 +36,25 @@ import com.woowacourse.runpamine.domain.run.RunRecordRepository
 import com.woowacourse.runpamine.domain.run.RunSyncRepository
 import com.woowacourse.runpamine.domain.run.RunTrackingRepository
 import com.woowacourse.runpamine.domain.team.TeamRepository
+import com.woowacourse.runpamine.presentation.cache.RankingCache
+import com.woowacourse.runpamine.presentation.cache.RecordCache
+import com.woowacourse.runpamine.presentation.cache.TeamDashboardCache
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
 
 class RunpamineContainer(
     private val context: Context,
 ) {
+    val teamDashboardCache = TeamDashboardCache()
+    val rankingCache = RankingCache()
+    val recordCache = RecordCache()
+
+    fun clearMainTabCaches() {
+        teamDashboardCache.clear()
+        rankingCache.clear()
+        recordCache.clear()
+    }
+
     private val supabaseClient by lazy {
         createSupabaseClient(
             supabaseUrl = BuildConfig.BASE_URL,

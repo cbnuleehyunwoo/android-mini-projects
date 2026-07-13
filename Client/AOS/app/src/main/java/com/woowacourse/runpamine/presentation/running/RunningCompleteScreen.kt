@@ -43,7 +43,7 @@ fun RunningCompleteScreen(
                 Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 24.dp, vertical = 28.dp)
+                    .padding(top = 28.dp)
                     .padding(bottom = 96.dp),
         ) {
             RunningRouteMap(
@@ -53,42 +53,47 @@ fun RunningCompleteScreen(
                         .fillMaxWidth()
                         .height(330.dp),
             )
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.padding(horizontal = 22.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     RunningMetricCard(
                         title = stringResource(R.string.running_distance),
                         value = distance,
                         unit = stringResource(R.string.running_distance_unit),
                         modifier = Modifier.weight(1f),
+                        summaryStyle = true,
                     )
                     RunningMetricCard(
                         title = stringResource(R.string.running_time),
                         value = time,
                         unit = "",
                         modifier = Modifier.weight(1f),
+                        summaryStyle = true,
                     )
                 }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     RunningMetricCard(
                         title = stringResource(R.string.running_pace),
                         value = pace,
                         unit = "/km",
                         modifier = Modifier.weight(1f),
+                        summaryStyle = true,
                     )
                     RunningMetricCard(
                         title = stringResource(R.string.running_kcal),
                         value = calories,
                         unit = "kcal",
                         modifier = Modifier.weight(1f),
+                        summaryStyle = true,
                     )
                 }
             }
@@ -98,7 +103,7 @@ fun RunningCompleteScreen(
                 Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
+                    .padding(horizontal = 32.dp, vertical = 34.dp)
                     .navigationBarsPadding(),
         ) {
             BottomButton(

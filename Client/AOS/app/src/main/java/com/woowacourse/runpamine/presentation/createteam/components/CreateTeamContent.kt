@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -29,6 +30,7 @@ import com.woowacourse.runpamine.presentation.component.ScreenTopBar
 import com.woowacourse.runpamine.presentation.component.ValidatableTextField
 import com.woowacourse.runpamine.ui.theme.Green40
 import com.woowacourse.runpamine.ui.theme.Red40
+import com.woowacourse.runpamine.ui.theme.RunpamineLayout
 
 @Composable
 fun CreateTeamContent(
@@ -47,50 +49,68 @@ fun CreateTeamContent(
     Column(
         modifier =
             modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(15.dp),
+                .fillMaxSize(),
     ) {
         ScreenTopBar(
             title = stringResource(R.string.create_team_bar),
             onBackClick = onBackClick,
+            modifier =
+                Modifier.padding(
+                    start = RunpamineLayout.NavigationHorizontalPadding,
+                    top = RunpamineLayout.NavigationTopPadding,
+                    end = RunpamineLayout.NavigationHorizontalPadding,
+                ),
         )
-        Text(
-            text = stringResource(R.string.create_team_header),
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black,
-            lineHeight = 40.sp,
-        )
-        ValidatableTextField(
-            value = teamName,
-            onValueChange = onTeamNameChange,
-            placeholder = stringResource(R.string.create_team_name_placeholder),
-            validator = validator,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        ValidationConditions(
-            isLengthValid = isLengthValid,
-            hasAllowedCharacters = hasAllowedCharacters,
-            hasNoSpecialCharacters = hasNoSpecialCharacters,
-        )
-        errorMessage?.let { message ->
-            Text(
-                text = message,
-                color = Red40,
-                style = MaterialTheme.typography.bodySmall,
-            )
-        }
-        Spacer(modifier = Modifier.weight(1f))
-        BottomButton(
-            text = stringResource(R.string.create_team),
-            onClick = onCreateClick,
+        Column(
             modifier =
                 Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding(),
-            enabled = !isLoading,
-        )
+                    .fillMaxSize()
+                    .padding(horizontal = RunpamineLayout.ScreenHorizontalPadding),
+        ) {
+            Spacer(modifier = Modifier.height(28.dp))
+            Text(
+                text = stringResource(R.string.create_team_header),
+                fontSize = 24.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.Black,
+                lineHeight = 32.sp,
+            )
+            Spacer(modifier = Modifier.height(14.dp))
+            ValidatableTextField(
+                value = teamName,
+                onValueChange = onTeamNameChange,
+                placeholder = stringResource(R.string.create_team_name_placeholder),
+                validator = validator,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(modifier = Modifier.height(14.dp))
+            ValidationConditions(
+                isLengthValid = isLengthValid,
+                hasAllowedCharacters = hasAllowedCharacters,
+                hasNoSpecialCharacters = hasNoSpecialCharacters,
+                modifier = Modifier.padding(start = 8.dp),
+            )
+            errorMessage?.let { message ->
+                Spacer(modifier = Modifier.height(9.dp))
+                Text(
+                    text = message,
+                    color = Red40,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(start = 8.dp),
+                )
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            BottomButton(
+                text = stringResource(R.string.create_team),
+                onClick = onCreateClick,
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .navigationBarsPadding()
+                        .padding(bottom = RunpamineLayout.BottomContentPadding),
+                enabled = !isLoading,
+            )
+        }
     }
 }
 
@@ -103,7 +123,7 @@ private fun ValidationConditions(
 ) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(9.dp),
     ) {
         ValidationConditionRow(
             isValid = isLengthValid,
@@ -130,7 +150,7 @@ private fun ValidationConditionRow(
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Icon(
             imageVector = if (isValid) Icons.Default.Check else Icons.Default.Close,

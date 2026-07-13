@@ -27,14 +27,14 @@ fun RecordDistance(
     ) {
         Text(
             text = String.format(Locale.getDefault(), "%.2f", distanceKm),
-            fontSize = 56.sp,
+            fontSize = 55.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary,
         )
         Text(
             text = stringResource(R.string.record_distance_unit),
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(start = 4.dp, bottom = 12.dp),
         )

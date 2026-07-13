@@ -2,6 +2,7 @@ package com.woowacourse.runpamine.presentation.home.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -51,15 +53,15 @@ fun HomeTeamSection(
                     interactionSource = interactionSource,
                     indication = null,
                     onClick = onClick,
-                ).clip(RoundedCornerShape(26.dp))
+                ).clip(RoundedCornerShape(24.dp))
                 .background(Blue40)
-                .padding(horizontal = 22.dp, vertical = 22.dp),
+                .padding(horizontal = 20.dp, vertical = 18.dp),
     ) {
         Column(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(end = 72.dp),
+                    .padding(end = 48.dp),
         ) {
             Text(
                 text = teamName,
@@ -67,12 +69,12 @@ fun HomeTeamSection(
                 overflow = TextOverflow.Ellipsis,
                 style =
                     MaterialTheme.typography.headlineSmall.copy(
-                        fontSize = 18.sp,
+                        fontSize = 17.sp,
                     ),
                 color = Color.White,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text =
                     stringResource(
@@ -82,12 +84,27 @@ fun HomeTeamSection(
                     ),
                 style =
                     MaterialTheme.typography.bodyLarge.copy(
-                        fontSize = 14.sp,
-                        lineHeight = 22.sp,
+                        fontSize = 13.sp,
                     ),
                 color = Color.White.copy(alpha = 0.78f),
                 fontWeight = FontWeight.Medium,
             )
+            Spacer(modifier = Modifier.height(7.dp))
+            Box(
+                modifier =
+                    Modifier
+                        .width(88.dp)
+                        .height(30.dp)
+                        .border(1.5.dp, Color.White, RoundedCornerShape(15.dp)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "팀 정보보기",
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
         }
         Image(
             painter = painterResource(R.drawable.include_users),
@@ -96,7 +113,7 @@ fun HomeTeamSection(
             modifier =
                 Modifier
                     .align(Alignment.CenterEnd)
-                    .size(54.dp)
+                    .size(32.dp)
                     .alpha(0.9f),
         )
     }

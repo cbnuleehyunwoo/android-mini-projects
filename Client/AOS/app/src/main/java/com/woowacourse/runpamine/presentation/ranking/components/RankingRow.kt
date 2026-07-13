@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -36,11 +37,12 @@ fun RankingRow(
         modifier =
             modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(14.dp))
                 .background(if (item.isMine) Blue10 else Color(0xFFF8F8F8))
-                .padding(horizontal = 14.dp, vertical = 12.dp),
+                .height(52.dp)
+                .padding(horizontal = 18.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         RankBadge(
             rank = item.rank,
@@ -55,6 +57,7 @@ fun RankingRow(
             text = item.valueText,
             color = if (item.isMine) Blue40 else Color(0xFFA2ACBA),
             fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.End,
         )
     }

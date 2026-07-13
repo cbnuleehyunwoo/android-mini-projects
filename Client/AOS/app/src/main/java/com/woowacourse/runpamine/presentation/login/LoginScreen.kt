@@ -29,6 +29,7 @@ import com.woowacourse.runpamine.presentation.component.RunpamineLogo
 import com.woowacourse.runpamine.presentation.login.viewmodel.LoginDestination
 import com.woowacourse.runpamine.presentation.login.viewmodel.LoginUiState
 import com.woowacourse.runpamine.presentation.login.viewmodel.LoginViewModel
+import com.woowacourse.runpamine.ui.theme.RunpamineLayout
 
 @Composable
 fun LoginScreen(
@@ -78,8 +79,8 @@ private fun LoginContent(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding((42.5).dp),
-            verticalArrangement = Arrangement.spacedBy(40.dp),
+                    .padding(horizontal = RunpamineLayout.ScreenHorizontalPadding),
+            verticalArrangement = Arrangement.spacedBy(50.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             RunpamineLogo()

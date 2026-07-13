@@ -26,8 +26,8 @@ fun RankBadge(
     Box(
         modifier =
             modifier
-                .size(34.dp)
-                .clip(RoundedCornerShape(10.dp))
+                .size(28.dp)
+                .clip(RoundedCornerShape(12.dp))
                 .background(if (selected) Blue40 else Color(0xFFA1AAB8)),
         contentAlignment = Alignment.Center,
     ) {
@@ -35,7 +35,7 @@ fun RankBadge(
             text = rank?.toString() ?: "-",
             color = Color.White,
             fontSize = 14.sp,
-            fontWeight = FontWeight.ExtraBold,
+            fontWeight = FontWeight.Black,
         )
     }
 }

@@ -47,8 +47,8 @@ fun TeamContent(
 ) {
     LazyColumn(
         modifier = modifier,
-        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(start = 24.dp, top = 32.dp, end = 24.dp, bottom = 98.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         item {
             TeamHeader(
@@ -96,7 +96,7 @@ fun TeamContent(
 
         item {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 TeamSummaryCard(
                     value = totalDistance,

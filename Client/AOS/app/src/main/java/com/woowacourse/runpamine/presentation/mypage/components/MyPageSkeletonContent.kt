@@ -24,18 +24,18 @@ fun MyPageSkeletonContent(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         SkeletonBox(
-            modifier = Modifier.size(86.dp),
+            modifier = Modifier.size(76.dp),
             shape = CircleShape,
         )
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         SkeletonBox(
             modifier =
                 Modifier
                     .width(92.dp)
-                    .height(28.dp),
+                    .height(24.dp),
             shape = RoundedCornerShape(10.dp),
         )
-        Spacer(modifier = Modifier.height(34.dp))
+        Spacer(modifier = Modifier.height(48.dp))
 
         MyPageSectionSkeleton(rowCount = 3)
         Spacer(modifier = Modifier.height(24.dp))
@@ -55,7 +55,7 @@ private fun MyPageSectionSkeleton(rowCount: Int) {
                     .height(24.dp),
         )
         Spacer(modifier = Modifier.height(14.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             repeat(rowCount) {
                 MyPageMenuRowSkeleton()
             }
@@ -69,13 +69,13 @@ private fun MyPageMenuRowSkeleton() {
         modifier =
             Modifier
                 .fillMaxWidth()
-                .height(68.dp)
-                .padding(horizontal = 12.dp),
+                .height(56.dp)
+                .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         SkeletonBox(
-            modifier = Modifier.size(28.dp),
+            modifier = Modifier.size(24.dp),
             shape = RoundedCornerShape(8.dp),
         )
         Column(
@@ -96,7 +96,7 @@ private fun MyPageMenuRowSkeleton() {
             )
         }
         SkeletonBox(
-            modifier = Modifier.size(18.dp),
+            modifier = Modifier.size(16.dp),
             shape = CircleShape,
         )
     }

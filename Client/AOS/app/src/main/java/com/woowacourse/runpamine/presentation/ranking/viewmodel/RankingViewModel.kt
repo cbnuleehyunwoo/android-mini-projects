@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.woowacourse.runpamine.domain.profile.ProfileRepository
 import com.woowacourse.runpamine.domain.ranking.RankingMetric
 import com.woowacourse.runpamine.domain.ranking.RankingRepository
+import com.woowacourse.runpamine.presentation.cache.RankingCache
 import com.woowacourse.runpamine.presentation.ranking.model.RankingScope
 import com.woowacourse.runpamine.presentation.ranking.model.RankingUiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,8 +18,19 @@ import kotlinx.coroutines.launch
 class RankingViewModel(
     private val rankingRepository: RankingRepository,
     private val profileRepository: ProfileRepository,
+    private val cache: RankingCache,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(RankingUiState(isLoading = true))
+    private val _uiState =
+        MutableStateFlow(
+            RankingUiState(
+                selectedScope = cache.selectedScope,
+                selectedMetric = cache.selectedMetric,
+                userRankings = cache.userRankingsByMetric[cache.selectedMetric].orEmpty(),
+                teamRankings = cache.teamRankingsByMetric[cache.selectedMetric].orEmpty(),
+                myRankingSummary = cache.mySummary,
+                isLoading = true,
+            ),
+        )
     val uiState: StateFlow<RankingUiState> = _uiState.asStateFlow()
 
     init {
@@ -27,13 +39,21 @@ class RankingViewModel(
 
     fun selectScope(scope: RankingScope) {
         if (_uiState.value.selectedScope == scope) return
+        cache.selectedScope = scope
         _uiState.update { it.copy(selectedScope = scope) }
         loadRankings()
     }
 
     fun selectMetric(metric: RankingMetric) {
         if (_uiState.value.selectedMetric == metric) return
-        _uiState.update { it.copy(selectedMetric = metric) }
+        cache.selectedMetric = metric
+        _uiState.update {
+            it.copy(
+                selectedMetric = metric,
+                userRankings = cache.userRankingsByMetric[metric].orEmpty(),
+                teamRankings = cache.teamRankingsByMetric[metric].orEmpty(),
+            )
+        }
         loadRankings()
     }
 
@@ -44,6 +64,7 @@ class RankingViewModel(
     private fun loadRankings() {
         val scope = _uiState.value.selectedScope
         val metric = _uiState.value.selectedMetric
+        val requestId = ++cache.requestId
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
@@ -66,6 +87,10 @@ class RankingViewModel(
                         )
                 }
             }.onSuccess { result ->
+                if (!isCurrentRequest(requestId, scope, metric)) return@onSuccess
+                result.userRankings?.let { cache.userRankingsByMetric[metric] = it }
+                result.teamRankings?.let { cache.teamRankingsByMetric[metric] = it }
+                cache.mySummary = result.mySummary
                 _uiState.update {
                     it.copy(
                         homeState = result.homeState,
@@ -76,6 +101,7 @@ class RankingViewModel(
                     )
                 }
             }.onFailure { throwable ->
+                if (!isCurrentRequest(requestId, scope, metric)) return@onFailure
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -86,9 +112,19 @@ class RankingViewModel(
         }
     }
 
+    private fun isCurrentRequest(
+        requestId: Long,
+        scope: RankingScope,
+        metric: RankingMetric,
+    ): Boolean =
+        cache.requestId == requestId &&
+            _uiState.value.selectedScope == scope &&
+            _uiState.value.selectedMetric == metric
+
     class Factory(
         private val rankingRepository: RankingRepository,
         private val profileRepository: ProfileRepository,
+        private val cache: RankingCache,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -96,6 +132,7 @@ class RankingViewModel(
             return RankingViewModel(
                 rankingRepository = rankingRepository,
                 profileRepository = profileRepository,
+                cache = cache,
             ) as T
         }
     }

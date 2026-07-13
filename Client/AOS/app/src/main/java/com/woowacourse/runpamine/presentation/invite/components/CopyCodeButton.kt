@@ -20,6 +20,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.woowacourse.runpamine.R
 import com.woowacourse.runpamine.ui.theme.Blue10
 import com.woowacourse.runpamine.ui.theme.Blue40
@@ -35,8 +36,8 @@ fun CopyCodeButton(
         modifier =
             modifier
                 .fillMaxWidth()
-                .height(64.dp),
-        shape = RoundedCornerShape(18.dp),
+                .height(49.dp),
+        shape = RoundedCornerShape(15.dp),
         colors =
             ButtonDefaults.buttonColors(
                 containerColor = Blue10,
@@ -45,19 +46,20 @@ fun CopyCodeButton(
         contentPadding = ButtonDefaults.ContentPadding,
     ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_copy),
                 contentDescription = null,
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(18.dp),
             )
             Text(
                 text = stringResource(R.string.invite_copy_code),
                 style =
                     MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Medium,
                     ),
                 color = Blue40,
                 modifier = Modifier.padding(vertical = 8.dp),

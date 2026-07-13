@@ -24,12 +24,12 @@ fun TeamSummaryCard(
     label: String,
     modifier: Modifier = Modifier,
 ) {
-    val cardShape = RoundedCornerShape(14.dp)
+    val cardShape = RoundedCornerShape(12.dp)
 
     Column(
         modifier =
             modifier
-                .height(72.dp)
+                .height(90.dp)
                 .shadow(
                     elevation = 8.dp,
                     shape = cardShape,

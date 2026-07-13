@@ -30,10 +30,9 @@ fun HomeHeader(
 ) {
     Row(
         modifier =
-            modifier
-                .padding(24.dp),
+            modifier.padding(end = 20.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(1.dp),
     ) {
         DefaultProfileImage()
         GreetMessage(
@@ -45,8 +44,9 @@ fun HomeHeader(
             contentDescription = "마이페이지 이동",
             modifier =
                 Modifier
-                    .size(24.dp)
-                    .clickable { onMyPageClick() },
+                    .clickable { onMyPageClick() }
+                    .padding(8.dp)
+                    .size(24.dp),
         )
     }
 }
@@ -62,11 +62,11 @@ private fun GreetMessage(
     ) {
         Text(
             text = stringResource(R.string.home_greeting),
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp, fontWeight = FontWeight.Medium),
         )
         Text(
             text = stringResource(R.string.home_greeting_nickname, name),
-            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 18.sp, fontWeight = FontWeight.Bold),
+            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 17.sp, fontWeight = FontWeight.Bold),
         )
     }
 }
@@ -76,7 +76,10 @@ private fun DefaultProfileImage(modifier: Modifier = Modifier) {
     Image(
         painter = painterResource(R.drawable.img_face_logo),
         contentDescription = "런파민 로고",
-        modifier = modifier.size(40.dp),
+        modifier =
+            modifier
+                .size(50.dp)
+                .padding(end = 12.dp),
     )
 }
 

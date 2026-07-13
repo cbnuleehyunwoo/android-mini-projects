@@ -9,10 +9,12 @@ import com.woowacourse.runpamine.domain.team.TeamMemberSeasonStats
 import com.woowacourse.runpamine.domain.team.TeamMemberSummary
 import com.woowacourse.runpamine.domain.team.TeamRepository
 import com.woowacourse.runpamine.domain.team.TeamRunSummary
+import com.woowacourse.runpamine.presentation.cache.TeamDashboardCache
 import com.woowacourse.runpamine.presentation.team.model.RunningStatus
 import com.woowacourse.runpamine.presentation.team.model.TeamMember
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -22,24 +24,32 @@ import java.util.Locale
 class TeamViewModel(
     private val teamRepository: TeamRepository,
     private val profileRepository: ProfileRepository,
+    private val cache: TeamDashboardCache,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(TeamUiState())
+    private val hadCachedState = cache.state != null
+    private val _uiState = MutableStateFlow(cache.state ?: TeamUiState())
     val uiState = _uiState.asStateFlow()
-    private var selectedDate: LocalDate = LocalDate.now()
+    private var selectedDate: LocalDate = cache.selectedDate
     private var currentTeam: Team? = null
     private var teamMembers: List<TeamMemberSummary>? = null
     private var seasonStats: List<TeamMemberSeasonStats>? = null
     private var currentUserId: String? = null
 
     init {
+        viewModelScope.launch {
+            uiState.collectLatest { state ->
+                cache.state = state
+                cache.selectedDate = selectedDate
+            }
+        }
         loadTeam()
     }
 
     fun loadTeam() {
         viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    isLoading = true,
+            _uiState.update { state ->
+                state.copy(
+                    isLoading = !hadCachedState,
                     errorMessage = null,
                     memberErrorMessage = null,
                 )
@@ -93,6 +103,7 @@ class TeamViewModel(
                     currentTeam = null
                     teamMembers = null
                     seasonStats = null
+                    cache.clear()
                 }
                 _uiState.update {
                     it.copy(
@@ -194,11 +205,12 @@ class TeamViewModel(
     class Factory(
         private val teamRepository: TeamRepository,
         private val profileRepository: ProfileRepository,
+        private val cache: TeamDashboardCache,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             require(modelClass.isAssignableFrom(TeamViewModel::class.java))
-            return TeamViewModel(teamRepository, profileRepository) as T
+            return TeamViewModel(teamRepository, profileRepository, cache) as T
         }
     }
 }
