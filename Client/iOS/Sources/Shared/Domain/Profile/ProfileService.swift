@@ -9,28 +9,29 @@ protocol ProfileServiceProtocol {
 
 final class ProfileAPIService: ProfileServiceProtocol {
     private let baseURL: URL
-    private let session: URLSession
+    private let httpClient: AuthenticatedHTTPClient
     private let decoder: JSONDecoder
     private let encoder: JSONEncoder
 
     init(
         baseURL: URL,
         session: URLSession = .shared,
+        httpClient: AuthenticatedHTTPClient? = nil,
         decoder: JSONDecoder = JSONDecoder(),
         encoder: JSONEncoder = JSONEncoder()
     ) {
         self.baseURL = baseURL
-        self.session = session
+        self.httpClient = httpClient ?? AuthenticatedHTTPClient(session: session)
         self.decoder = decoder
         self.encoder = encoder
     }
 
-    convenience init(bundle: Bundle = .main) throws {
+    convenience init(bundle: Bundle = .main, httpClient: AuthenticatedHTTPClient? = nil) throws {
         guard let baseURL = bundle.profileAPIBaseURL else {
             throw ProfileAPIError.missingBaseURL
         }
 
-        self.init(baseURL: baseURL)
+        self.init(baseURL: baseURL, httpClient: httpClient)
     }
 
     func fetchHomeState(accessToken: String) async throws -> HomeState {
@@ -100,7 +101,7 @@ final class ProfileAPIService: ProfileServiceProtocol {
     }
 
     private func send<Response: Decodable>(request: URLRequest) async throws -> Response {
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await httpClient.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
             throw ProfileAPIError.invalidResponse
         }

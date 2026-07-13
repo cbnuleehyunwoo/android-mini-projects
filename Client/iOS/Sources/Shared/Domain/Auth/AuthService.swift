@@ -13,25 +13,95 @@ protocol AuthServiceProtocol {
     func deleteAccount(accessToken: String) async throws
 }
 
+actor AuthenticatedHTTPClient {
+    private let session: URLSession
+    private let supabase: SupabaseClient?
+    private var refreshTask: Task<String, Error>?
+
+    init(session: URLSession = .shared, supabase: SupabaseClient? = nil) {
+        self.session = session
+        self.supabase = supabase
+    }
+
+    func data(for request: URLRequest) async throws -> (Data, URLResponse) {
+        let fallbackToken = request.bearerAccessToken
+        let accessToken = await currentAccessToken() ?? fallbackToken
+        let authorizedRequest = request.authorized(with: accessToken)
+        let firstResult = try await session.data(for: authorizedRequest)
+
+        guard (firstResult.1 as? HTTPURLResponse)?.statusCode == 401,
+              supabase != nil else {
+            return firstResult
+        }
+
+        if let latestToken = await currentAccessToken(), latestToken != accessToken {
+            return try await session.data(for: request.authorized(with: latestToken))
+        }
+
+        let refreshedToken = try await refreshAccessToken()
+        return try await session.data(for: request.authorized(with: refreshedToken))
+    }
+
+    private func currentAccessToken() async -> String? {
+        guard let supabase else { return nil }
+        return try? await supabase.auth.session.accessToken
+    }
+
+    private func refreshAccessToken() async throws -> String {
+        if let refreshTask {
+            return try await refreshTask.value
+        }
+
+        guard let supabase else {
+            throw AuthError.unavailable
+        }
+
+        let task = Task {
+            try await supabase.auth.refreshSession().accessToken
+        }
+        refreshTask = task
+        defer { refreshTask = nil }
+        return try await task.value
+    }
+}
+
+private extension URLRequest {
+    var bearerAccessToken: String? {
+        guard let authorization = value(forHTTPHeaderField: "Authorization"),
+              authorization.hasPrefix("Bearer ") else {
+            return nil
+        }
+        return String(authorization.dropFirst("Bearer ".count))
+    }
+
+    func authorized(with accessToken: String?) -> URLRequest {
+        guard let accessToken else { return self }
+        var request = self
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        return request
+    }
+}
+
 @MainActor
 final class SupabaseAuthService: AuthServiceProtocol {
     private let store: LocalAppStateStore
     private let supabase: SupabaseClient?
     private let apiBaseURL: URL?
-    private let session: URLSession
+    private let httpClient: AuthenticatedHTTPClient
     private let decoder: JSONDecoder
 
     init(
         store: LocalAppStateStore = LocalAppStateStore(),
         bundle: Bundle = .main,
         session: URLSession = .shared,
-        decoder: JSONDecoder = JSONDecoder()
+        decoder: JSONDecoder = JSONDecoder(),
+        supabase: SupabaseClient? = nil,
+        httpClient: AuthenticatedHTTPClient? = nil
     ) {
         self.store = store
-        self.session = session
         self.decoder = decoder
         apiBaseURL = bundle.authAPIBaseURL
-        supabase = bundle.supabaseConfiguration.map {
+        self.supabase = supabase ?? bundle.supabaseConfiguration.map {
             SupabaseClient(
                 supabaseURL: $0.url,
                 supabaseKey: $0.anonKey,
@@ -43,6 +113,7 @@ final class SupabaseAuthService: AuthServiceProtocol {
                 )
             )
         }
+        self.httpClient = httpClient ?? AuthenticatedHTTPClient(session: session, supabase: self.supabase)
     }
 
     func restoreSession() async throws -> AuthSession? {
@@ -154,7 +225,7 @@ final class SupabaseAuthService: AuthServiceProtocol {
         request.setValue("Bearer \(logoutAccessToken)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await httpClient.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
             throw AuthError.logoutFailed
         }
@@ -189,7 +260,7 @@ final class SupabaseAuthService: AuthServiceProtocol {
         request.setValue("Bearer \(deletionAccessToken)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await httpClient.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
             throw AuthError.accountDeletionFailed
         }

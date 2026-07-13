@@ -99,25 +99,26 @@ struct MyRankingSummary: Equatable {
 
 final class RankingAPIService: RankingServiceProtocol {
     private let baseURL: URL
-    private let session: URLSession
+    private let httpClient: AuthenticatedHTTPClient
     private let decoder: JSONDecoder
 
     init(
         baseURL: URL,
         session: URLSession = .shared,
+        httpClient: AuthenticatedHTTPClient? = nil,
         decoder: JSONDecoder = JSONDecoder()
     ) {
         self.baseURL = baseURL
-        self.session = session
+        self.httpClient = httpClient ?? AuthenticatedHTTPClient(session: session)
         self.decoder = decoder
     }
 
-    convenience init(bundle: Bundle = .main) throws {
+    convenience init(bundle: Bundle = .main, httpClient: AuthenticatedHTTPClient? = nil) throws {
         guard let baseURL = bundle.rankingAPIBaseURL else {
             throw RankingAPIError.missingBaseURL
         }
 
-        self.init(baseURL: baseURL)
+        self.init(baseURL: baseURL, httpClient: httpClient)
     }
 
     func fetchCurrentSeason(date: Date? = nil, accessToken: String) async throws -> RankingSeason {
@@ -178,7 +179,7 @@ final class RankingAPIService: RankingServiceProtocol {
     }
 
     private func send<Response: Decodable>(request: URLRequest) async throws -> Response {
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await httpClient.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
             throw RankingAPIError.invalidResponse
         }

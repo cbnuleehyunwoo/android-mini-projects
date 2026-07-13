@@ -1,4 +1,5 @@
 import GoogleSignIn
+import Supabase
 import SwiftUI
 
 @main
@@ -9,18 +10,34 @@ struct RunpamineApp: App {
     private let runService: RunServiceProtocol
     private let teamService: TeamServiceProtocol
     private let rankingService: RankingServiceProtocol
+    private let authService: AuthServiceProtocol
 
     init() {
-        profileService = (try? ProfileAPIService()) ?? MockProfileService()
-        runService = (try? RunAPIService()) ?? MockRunService()
-        teamService = (try? TeamAPIService()) ?? MockTeamService(store: store)
-        rankingService = (try? RankingAPIService()) ?? MockRankingService()
+        let supabase = Bundle.main.supabaseConfiguration.map {
+            SupabaseClient(
+                supabaseURL: $0.url,
+                supabaseKey: $0.anonKey,
+                options: .init(
+                    auth: .init(
+                        redirectToURL: SupabaseConfiguration.redirectURL,
+                        emitLocalSessionAsInitialSession: true
+                    )
+                )
+            )
+        }
+        let httpClient = AuthenticatedHTTPClient(supabase: supabase)
+
+        authService = SupabaseAuthService(store: store, supabase: supabase, httpClient: httpClient)
+        profileService = (try? ProfileAPIService(httpClient: httpClient)) ?? MockProfileService()
+        runService = (try? RunAPIService(httpClient: httpClient)) ?? MockRunService()
+        teamService = (try? TeamAPIService(httpClient: httpClient)) ?? MockTeamService(store: store)
+        rankingService = (try? RankingAPIService(httpClient: httpClient)) ?? MockRankingService()
     }
 
     var body: some Scene {
         WindowGroup {
             RootView(
-                authService: SupabaseAuthService(store: store),
+                authService: authService,
                 profileService: profileService,
                 runService: runService,
                 teamService: teamService,
