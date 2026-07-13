@@ -2,6 +2,7 @@ package com.woowacourse.runpamine.presentation.component
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
@@ -13,9 +14,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.woowacourse.runpamine.ui.theme.Red40
+import com.woowacourse.runpamine.ui.theme.RunpamineLayout
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
+import com.woowacourse.runpamine.ui.theme.RunpamineTypography
 
 @Composable
 fun ValidatableTextField(
@@ -33,11 +35,20 @@ fun ValidatableTextField(
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text(text = placeholder) },
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(RunpamineLayout.FieldHeight),
+            textStyle = RunpamineTypography.Header3,
+            placeholder = {
+                Text(
+                    text = placeholder,
+                    style = RunpamineTypography.Header3,
+                )
+            },
             isError = isError,
             singleLine = singleLine,
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(RunpamineLayout.CornerRadius),
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
             colors =
                 OutlinedTextFieldDefaults.colors(

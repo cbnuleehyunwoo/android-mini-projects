@@ -49,12 +49,12 @@ fun RunningScreenContent(
                 distance = session.distanceText(),
                 modifier = Modifier.fillMaxWidth(),
             )
-            Spacer(modifier = Modifier.height(22.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             RunningTime(time = elapsedSeconds.elapsedTimeText())
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(24.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 RunningMetricCard(
                     title = stringResource(R.string.running_pace),
@@ -69,14 +69,14 @@ fun RunningScreenContent(
                     modifier = Modifier.weight(1f),
                 )
             }
-            Spacer(modifier = Modifier.height(80.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             RunningControls(
                 isPaused = isPaused,
                 onPauseClick = onPauseClick,
                 onStopClick = onStopClick,
                 modifier = Modifier.fillMaxWidth(),
             )
-            Spacer(modifier = Modifier.weight(1.15f))
+            Spacer(modifier = Modifier.height(42.dp))
         }
     }
 }

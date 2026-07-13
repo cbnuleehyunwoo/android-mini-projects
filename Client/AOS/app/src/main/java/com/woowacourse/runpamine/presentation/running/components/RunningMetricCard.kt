@@ -1,10 +1,10 @@
 package com.woowacourse.runpamine.presentation.running.components
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -28,15 +28,17 @@ fun RunningMetricCard(
     unit: String,
     modifier: Modifier = Modifier,
     shadowElevation: Dp = 16.dp,
+    summaryStyle: Boolean = false,
 ) {
     Surface(
-        modifier = modifier.heightIn(min = 129.dp),
-        shape = RoundedCornerShape(10.dp),
+        modifier = modifier.height(110.dp),
+        shape = RoundedCornerShape(if (summaryStyle) 10.dp else 12.dp),
         color = Color.White,
         shadowElevation = shadowElevation,
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 18.dp, vertical = 24.dp),
+            modifier = Modifier.padding(horizontal = if (summaryStyle) 24.dp else 22.dp),
+            verticalArrangement = Arrangement.Center,
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -45,12 +47,12 @@ fun RunningMetricCard(
                     text = title,
                     maxLines = 1,
                     softWrap = false,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 18.sp, lineHeight = 23.sp),
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = if (summaryStyle) 13.sp else 14.sp),
+                    fontWeight = FontWeight.Medium,
                     color = Color(0xFF4C4546),
                 )
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Row(
                 verticalAlignment = Alignment.Bottom,
             ) {
@@ -58,17 +60,17 @@ fun RunningMetricCard(
                     text = value,
                     maxLines = 1,
                     softWrap = false,
-                    style = MaterialTheme.typography.headlineLarge.copy(fontSize = 34.sp, lineHeight = 42.sp),
-                    fontWeight = FontWeight.Black,
+                    style = MaterialTheme.typography.headlineLarge.copy(fontSize = if (summaryStyle) 27.sp else 28.sp),
+                    fontWeight = if (summaryStyle) FontWeight.Black else FontWeight.Bold,
                     color = Color.Black,
                 )
                 Text(
                     text = unit,
-                    modifier = Modifier.padding(start = 3.dp, bottom = 5.dp),
+                    modifier = Modifier.padding(start = 3.dp, bottom = 3.dp),
                     maxLines = 1,
                     softWrap = false,
-                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, lineHeight = 20.sp),
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 12.sp),
+                    fontWeight = if (summaryStyle) FontWeight.Black else FontWeight.Medium,
                     color = Color(0xFF5F5A5B),
                 )
             }

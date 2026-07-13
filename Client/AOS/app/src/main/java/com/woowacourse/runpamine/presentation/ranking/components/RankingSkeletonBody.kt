@@ -66,7 +66,7 @@ fun RankingSkeletonBody(
                     .fillMaxWidth()
                     .padding(horizontal = 22.dp),
         )
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(10.dp))
         HorizontalDivider(
             color = DividerDefaults.color.copy(alpha = 0.1f),
             thickness = 1.dp,
@@ -95,16 +95,17 @@ private fun MyRankingSkeletonCard(modifier: Modifier = Modifier) {
             modifier
                 .clip(RoundedCornerShape(12.dp))
                 .background(Blue10)
-                .padding(horizontal = 16.dp, vertical = 28.dp),
+                .height(65.dp)
+                .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(18.dp),
     ) {
         RankingSkeletonBox(
             modifier =
                 Modifier
-                    .size(34.dp),
+                    .size(28.dp),
             color = RankingSkeletonDarkColor,
-            shape = RoundedCornerShape(10.dp),
+            shape = RoundedCornerShape(12.dp),
         )
         RankingSkeletonBox(
             modifier =
@@ -132,25 +133,23 @@ private fun RankingListSkeletonCard(
         modifier = modifier.padding(horizontal = 20.dp, vertical = 22.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        if (selectedScope == RankingScope.TEAM) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = selectedScope.skeletonTitle,
-                    color = Color(0xFF111827),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f),
-                )
-                Text(
-                    text = selectedMetric.standardLabel(selectedScope),
-                    color = Color(0xFFA6AFBD),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Bottom,
+        ) {
+            Text(
+                text = selectedScope.skeletonTitle,
+                color = Color(0xFF111827),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f),
+            )
+            Text(
+                text = selectedMetric.standardLabel(selectedScope),
+                color = Color(0xFFA6AFBD),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Normal,
+            )
         }
         repeat(RANKING_SKELETON_ROW_COUNT) { index ->
             RankingRowSkeleton(selected = index == 1)
@@ -178,18 +177,19 @@ private fun RankingRowSkeleton(selected: Boolean) {
         modifier =
             Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(14.dp))
                 .background(if (selected) Blue10 else Color(0xFFF8F8F8))
-                .padding(horizontal = 14.dp, vertical = 12.dp),
+                .height(52.dp)
+                .padding(horizontal = 18.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         RankingSkeletonBox(
             modifier =
                 Modifier
-                    .size(34.dp),
+                    .size(28.dp),
             color = RankingSkeletonDarkColor,
-            shape = RoundedCornerShape(10.dp),
+            shape = RoundedCornerShape(12.dp),
         )
         RankingSkeletonBox(
             modifier =

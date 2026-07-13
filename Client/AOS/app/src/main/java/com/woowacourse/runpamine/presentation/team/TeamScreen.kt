@@ -55,6 +55,7 @@ fun TeamScreen(
                 TeamViewModel.Factory(
                     teamRepository = container.teamRepository,
                     profileRepository = container.profileRepository,
+                    cache = container.teamDashboardCache,
                 ),
         )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -142,8 +143,8 @@ private fun TeamScreenContent(
 private fun TeamSkeletonContent(modifier: Modifier = Modifier) {
     LazyColumn(
         modifier = modifier,
-        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(start = 24.dp, top = 32.dp, end = 24.dp, bottom = 98.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         item {
             TeamHeaderSkeleton()
@@ -153,7 +154,7 @@ private fun TeamSkeletonContent(modifier: Modifier = Modifier) {
         }
         item {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 TeamSummarySkeletonCard(modifier = Modifier.weight(1f))
                 TeamSummarySkeletonCard(modifier = Modifier.weight(1f))
@@ -178,7 +179,6 @@ private fun TeamHeaderSkeleton(modifier: Modifier = Modifier) {
                     .weight(1f),
             shape = RoundedCornerShape(12.dp),
         )
-        Spacer(modifier = Modifier.width(48.dp))
         TeamSkeletonBox(
             modifier = Modifier.size(48.dp),
             shape = RoundedCornerShape(14.dp),
@@ -207,8 +207,8 @@ private fun TeamSummarySkeletonCard(modifier: Modifier = Modifier) {
     Column(
         modifier =
             modifier
-                .height(72.dp)
-                .teamSkeletonCard(shape = RoundedCornerShape(14.dp)),
+                .height(90.dp)
+                .teamSkeletonCard(shape = RoundedCornerShape(12.dp)),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -236,9 +236,8 @@ private fun TeamMemberSkeletonCard(modifier: Modifier = Modifier) {
         modifier =
             modifier
                 .fillMaxWidth()
-                .height(168.dp)
-                .teamSkeletonCard(shape = RoundedCornerShape(18.dp))
-                .padding(25.dp),
+                .teamSkeletonCard(shape = RoundedCornerShape(22.dp))
+                .padding(start = 16.dp, top = 26.dp, end = 25.dp, bottom = 32.dp),
     ) {
         TeamSkeletonBox(
             modifier =
@@ -266,10 +265,7 @@ private fun TeamMemberSkeletonCard(modifier: Modifier = Modifier) {
                 }
             }
             TeamSkeletonBox(
-                modifier =
-                    Modifier
-                        .width(58.dp)
-                        .height(76.dp),
+                modifier = Modifier.size(64.dp),
                 shape = RoundedCornerShape(12.dp),
             )
         }

@@ -37,24 +37,21 @@ fun InviteTeamScreen(
             title = stringResource(R.string.invite_team_bar),
             onBackClick = onBackClick,
         )
-        Spacer(
-            modifier = Modifier.height(15.dp),
-        )
         InviteTeamHeader(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(top = 20.dp),
+                    .padding(top = 44.dp),
         )
         Spacer(
-            modifier = Modifier.height(24.dp),
+            modifier = Modifier.height(48.dp),
         )
         InviteCode(
             code = code,
             modifier = Modifier.align(Alignment.CenterHorizontally),
         )
         Spacer(
-            modifier = Modifier.height(16.dp),
+            modifier = Modifier.height(30.dp),
         )
         CopyCodeButton(
             onClick = {

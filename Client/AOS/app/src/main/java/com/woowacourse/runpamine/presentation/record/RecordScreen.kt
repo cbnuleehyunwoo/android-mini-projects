@@ -48,6 +48,7 @@ fun RecordScreen(
             factory =
                 RecordViewModel.Factory(
                     runRecordRepository = container.runRecordRepository,
+                    cache = container.recordCache,
                 ),
         )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -75,9 +76,9 @@ private fun RecordContent(
         modifier =
             modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(horizontal = 30.dp),
+        contentPadding = PaddingValues(top = 20.dp, bottom = 92.dp),
+        verticalArrangement = Arrangement.spacedBy(22.dp),
     ) {
         item {
             RecordHeader(

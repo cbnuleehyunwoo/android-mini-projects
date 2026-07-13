@@ -28,7 +28,8 @@ fun RunningDistance(
     ) {
         Text(
             text = stringResource(R.string.running_distance),
-            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 19.sp, lineHeight = 24.sp),
+            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 14.sp),
+            fontWeight = FontWeight.Medium,
             color = Color(0xFF4C4546),
         )
         Row(
@@ -36,14 +37,14 @@ fun RunningDistance(
         ) {
             Text(
                 text = distance,
-                style = MaterialTheme.typography.headlineLarge.copy(fontSize = 72.sp, lineHeight = 82.sp),
-                fontWeight = FontWeight.Black,
+                style = MaterialTheme.typography.headlineLarge.copy(fontSize = 80.sp),
+                fontWeight = FontWeight.ExtraBold,
                 color = Color.Black,
             )
             Text(
                 text = stringResource(R.string.running_distance_unit),
-                modifier = Modifier.padding(start = 8.dp, bottom = 12.dp),
-                style = MaterialTheme.typography.headlineLarge.copy(fontSize = 32.sp, lineHeight = 38.sp),
+                modifier = Modifier.padding(start = 7.dp, bottom = 12.dp),
+                style = MaterialTheme.typography.headlineLarge.copy(fontSize = 28.sp),
                 fontWeight = FontWeight.Black,
                 color = Color(0xFF5F5A5B),
             )

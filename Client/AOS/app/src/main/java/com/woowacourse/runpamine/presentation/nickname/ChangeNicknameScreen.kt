@@ -45,6 +45,7 @@ import com.woowacourse.runpamine.presentation.nickname.viewmodel.NicknameViewMod
 import com.woowacourse.runpamine.ui.theme.Blue40
 import com.woowacourse.runpamine.ui.theme.Green40
 import com.woowacourse.runpamine.ui.theme.Red40
+import com.woowacourse.runpamine.ui.theme.RunpamineLayout
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
 @Composable
@@ -129,39 +130,38 @@ private fun ChangeNicknameContent(
         modifier =
             modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = RunpamineLayout.ScreenHorizontalPadding),
     ) {
         ScreenTopBar(
             title = topBarTitle,
             onBackClick = onBackClick,
             modifier =
                 Modifier
-                    .fillMaxWidth()
-                    .height(64.dp),
+                    .fillMaxWidth(),
         )
-        Spacer(modifier = Modifier.height(15.dp))
+        Spacer(modifier = Modifier.height(28.dp))
         Text(
             text = stringResource(R.string.change_nickname_description),
             style =
                 MaterialTheme.typography.headlineLarge.copy(
-                    fontSize = 36.sp,
-                    lineHeight = 50.sp,
+                    fontSize = 29.sp,
+                    lineHeight = 36.sp,
                 ),
             fontWeight = FontWeight.Black,
             color = Color.Black,
         )
-        Spacer(modifier = Modifier.height(28.dp))
+        Spacer(modifier = Modifier.height(18.dp))
         NicknameTextField(
             value = uiState.nickname,
             onValueChange = onNicknameChange,
             modifier = Modifier.fillMaxWidth(),
         )
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(18.dp))
         NicknameCondition(
             text = stringResource(R.string.change_nickname_condition_length),
             valid = uiState.nickname.length in NICKNAME_MIN_LENGTH..NICKNAME_MAX_LENGTH,
         )
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(10.dp))
         NicknameCondition(
             text = stringResource(R.string.change_nickname_condition_characters),
             valid = uiState.nickname.isNotEmpty() && NICKNAME_REGEX.matches(uiState.nickname),
@@ -187,7 +187,7 @@ private fun ChangeNicknameContent(
                 Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
-                    .padding(bottom = 24.dp),
+                    .padding(bottom = RunpamineLayout.BottomContentPadding),
         )
     }
 }
@@ -201,11 +201,11 @@ private fun NicknameTextField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = modifier.height(58.dp),
+        modifier = modifier.height(RunpamineLayout.FieldHeight),
         placeholder = {
             Text(
                 text = stringResource(R.string.change_nickname_placeholder),
-                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 22.sp),
+                style = MaterialTheme.typography.headlineMedium,
                 color = Color(0xFF6B7280),
             )
         },
@@ -218,7 +218,7 @@ private fun NicknameTextField(
             )
         },
         singleLine = true,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(RunpamineLayout.CornerRadius),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
         colors =
             OutlinedTextFieldDefaults.colors(
@@ -246,13 +246,14 @@ private fun NicknameCondition(
     ) {
         Text(
             text = mark,
-            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 24.sp, lineHeight = 24.sp),
+            style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp),
+            fontWeight = FontWeight.Bold,
             color = conditionColor,
         )
         Spacer(modifier = Modifier.width(14.dp))
         Text(
             text = text,
-            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 21.sp, lineHeight = 26.sp),
+            style = MaterialTheme.typography.bodyLarge,
             color = conditionColor,
         )
     }

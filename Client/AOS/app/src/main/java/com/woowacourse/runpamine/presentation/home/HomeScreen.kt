@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -15,6 +16,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -101,6 +103,7 @@ private fun HomeContent(
         HomeHeader(
             name = uiState.nickname.ifBlank { "러너" },
             onMyPageClick = onMyPageClick,
+            modifier = Modifier.padding(start = 20.dp, end = 10.dp, top = 20.dp, bottom = 20.dp),
         )
         uiState.teamName?.let { teamName ->
             HomeTeamSection(
@@ -108,30 +111,36 @@ private fun HomeContent(
                 todayRunMemberCount = uiState.todayRunMemberCount,
                 teamMemberCount = uiState.teamMemberCount,
                 onClick = onTeamClick,
-                modifier = Modifier.padding(horizontal = 24.dp),
+                modifier = Modifier.padding(horizontal = 25.dp, vertical = 5.dp),
             )
         } ?: HomeNoTeamSection(
             onCreate = onCreateTeamClick,
             onJoin = onJoinTeamClick,
-            modifier = Modifier.padding(horizontal = 24.dp),
+            modifier = Modifier.padding(horizontal = 20.dp),
         )
         uiState.errorMessage?.let { message ->
             Text(
                 text = message,
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
             )
         }
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         Box(
             modifier = Modifier.weight(1f),
         ) {
-            HomeMapSection(modifier = Modifier.fillMaxSize())
+            HomeMapSection(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 20.dp, vertical = 5.dp)
+                        .clip(RoundedCornerShape(10.dp)),
+            )
             StartButton(
                 onClick = { showStartDialog = true },
                 modifier =
                     Modifier
                         .align(Alignment.BottomCenter)
-                        .padding(bottom = 24.dp),
+                        .padding(bottom = 16.dp),
             )
         }
     }

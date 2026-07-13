@@ -28,6 +28,7 @@ import com.woowacourse.runpamine.presentation.component.BottomButton
 import com.woowacourse.runpamine.presentation.component.ScreenTopBar
 import com.woowacourse.runpamine.presentation.component.ValidatableTextField
 import com.woowacourse.runpamine.ui.theme.Red40
+import com.woowacourse.runpamine.ui.theme.RunpamineLayout
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
 @Composable
@@ -67,51 +68,61 @@ private fun JoinContent(
     Column(
         modifier =
             modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp, vertical = 14.dp),
+                .fillMaxSize(),
     ) {
         ScreenTopBar(
             title = stringResource(R.string.join_team_bar),
             onBackClick = onBackClick,
+            modifier =
+                Modifier.padding(
+                    start = RunpamineLayout.NavigationHorizontalPadding,
+                    top = RunpamineLayout.NavigationTopPadding,
+                    end = RunpamineLayout.NavigationHorizontalPadding,
+                ),
         )
-        Spacer(
-            modifier = Modifier.height(15.dp),
-        )
-        Text(
-            text = stringResource(R.string.join_team_description),
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black,
-            lineHeight = 40.sp,
-        )
-        Spacer(
-            modifier = Modifier.height(15.dp),
-        )
-        ValidatableTextField(
-            value = uiState.code,
-            onValueChange = onCodeChange,
-            placeholder = stringResource(R.string.join_code_placeholder),
-            keyboardType = KeyboardType.Ascii,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        uiState.errorMessage?.let { message ->
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = message,
-                color = Red40,
-                fontSize = 13.sp,
-            )
-        }
-        Spacer(modifier = Modifier.weight(1f))
-        BottomButton(
-            text = stringResource(R.string.join_team),
-            onClick = onJoinClick,
+        Column(
             modifier =
                 Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding(),
-            enabled = !uiState.isLoading && uiState.code.length == JOIN_CODE_MAX_LENGTH,
-        )
+                    .fillMaxSize()
+                    .padding(horizontal = RunpamineLayout.ScreenHorizontalPadding),
+        ) {
+            Spacer(modifier = Modifier.height(28.dp))
+            Text(
+                text = stringResource(R.string.join_team_description),
+                fontSize = 29.sp,
+                fontWeight = FontWeight.Black,
+                color = Color.Black,
+                lineHeight = 36.sp,
+            )
+            Spacer(modifier = Modifier.height(18.dp))
+            ValidatableTextField(
+                value = uiState.code,
+                onValueChange = onCodeChange,
+                placeholder = stringResource(R.string.join_code_placeholder),
+                keyboardType = KeyboardType.Ascii,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            uiState.errorMessage?.let { message ->
+                Spacer(modifier = Modifier.height(18.dp))
+                Text(
+                    text = message,
+                    color = Red40,
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(start = 8.dp),
+                )
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            BottomButton(
+                text = stringResource(R.string.join_team),
+                onClick = onJoinClick,
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .navigationBarsPadding()
+                        .padding(bottom = RunpamineLayout.BottomContentPadding),
+                enabled = !uiState.isLoading && uiState.code.length == JOIN_CODE_MAX_LENGTH,
+            )
+        }
     }
 }
 

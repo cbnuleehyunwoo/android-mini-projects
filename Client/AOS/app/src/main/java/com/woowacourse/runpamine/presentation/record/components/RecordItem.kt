@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,6 +27,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.woowacourse.runpamine.presentation.record.model.RunningRecord
 import com.woowacourse.runpamine.presentation.running.components.RunningRouteMap
 import com.woowacourse.runpamine.ui.theme.Gray40
@@ -42,20 +44,23 @@ fun RecordItem(
 ) {
     Card(
         onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(126.dp),
+        shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
                 modifier =
                     Modifier
-                        .size(80.dp)
-                        .clip(RoundedCornerShape(12.dp)),
+                        .size(96.dp)
+                        .clip(RoundedCornerShape(8.dp)),
             ) {
                 if (record.routePoints.isNotEmpty()) {
                     RunningRouteMap(
@@ -70,9 +75,9 @@ fun RecordItem(
             Column(
                 modifier =
                     Modifier
-                        .padding(start = 16.dp)
+                        .padding(start = 18.dp)
                         .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Text(
                     text = record.date.toDisplayString(),
@@ -81,7 +86,7 @@ fun RecordItem(
                 )
                 Text(
                     text = String.format(Locale.getDefault(), "%.2fKM", record.distanceKm),
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.headlineSmall.copy(fontSize = 22.sp),
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
                 )
@@ -116,7 +121,8 @@ private fun IconLabel(
         )
         Text(
             text = text,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 15.sp),
+            fontWeight = FontWeight.SemiBold,
             color = Gray40,
         )
     }

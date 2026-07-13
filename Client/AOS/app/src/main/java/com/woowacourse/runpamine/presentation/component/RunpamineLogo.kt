@@ -22,7 +22,7 @@ fun RunpamineLogo(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(34.dp),
     ) {
         Icon(
             painter = painterResource(R.drawable.img_splash),

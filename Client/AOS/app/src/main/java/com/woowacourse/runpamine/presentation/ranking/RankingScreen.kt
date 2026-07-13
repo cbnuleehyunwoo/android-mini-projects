@@ -68,6 +68,7 @@ fun RankingScreen(modifier: Modifier = Modifier) {
                 RankingViewModel.Factory(
                     rankingRepository = container.rankingRepository,
                     profileRepository = container.profileRepository,
+                    cache = container.rankingCache,
                 ),
         )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -95,13 +96,13 @@ private fun RankingContent(
     Column(
         modifier = modifier.fillMaxSize(),
     ) {
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(18.dp))
         RankingScopeTabs(
             selectedScope = uiState.selectedScope,
             onScopeSelect = onScopeSelect,
             modifier = Modifier.fillMaxWidth(),
         )
-        Spacer(modifier = Modifier.height(26.dp))
+        Spacer(modifier = Modifier.height(15.dp))
         RankingMetricTabs(
             selectedScope = uiState.selectedScope,
             selectedMetric = uiState.selectedMetric,
@@ -137,7 +138,7 @@ private fun RankingContent(
                         .weight(1f)
                         .verticalScroll(rememberScrollState()),
             ) {
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(10.dp))
                 RankingListCard(
                     selectedScope = uiState.selectedScope,
                     selectedMetric = uiState.selectedMetric,
@@ -175,7 +176,7 @@ private fun RankingMetricTabs(
                 modifier =
                     Modifier
                         .weight(1f)
-                        .height(42.dp)
+                        .height(38.dp)
                         .clip(tabShape)
                         .background(if (selected) Blue10 else Color(0xFFF2F3F6))
                         .border(if (selected) 2.dp else 0.dp, if (selected) Blue40 else Color.Transparent, tabShape)
@@ -186,7 +187,7 @@ private fun RankingMetricTabs(
                     text = metric.label(selectedScope),
                     color = if (selected) Blue40 else Color(0xFF6B7280),
                     fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
                 )
             }
@@ -202,11 +203,12 @@ private fun MyRankingCard(
     Row(
         modifier =
             modifier
-                .clip(RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(14.dp))
                 .background(Blue10)
-                .padding(horizontal = 16.dp, vertical = 28.dp),
+                .height(65.dp)
+                .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(18.dp),
     ) {
         RankBadge(
             rank = item.rank,
@@ -219,7 +221,7 @@ private fun MyRankingCard(
             color = Blue40,
             style =
                 MaterialTheme.typography.bodySmall.copy(
-                    fontSize = 16.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                 ),
             modifier = Modifier.weight(1f),
@@ -229,8 +231,8 @@ private fun MyRankingCard(
             color = Blue40,
             style =
                 MaterialTheme.typography.bodySmall.copy(
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
                 ),
             textAlign = TextAlign.End,
         )
@@ -245,34 +247,45 @@ private fun RankingListCard(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier.padding(horizontal = 20.dp, vertical = 22.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = modifier.padding(horizontal = 22.dp, vertical = 22.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        if (selectedScope == RankingScope.TEAM) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "전체 팀 순위",
-                    color = Color(0xFF111827),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f),
-                )
-                Text(
-                    text = selectedMetric.teamStandardLabel,
-                    color = Color(0xFFA6AFBD),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Bottom,
+        ) {
+            Text(
+                text = if (selectedScope == RankingScope.TEAM) "전체 팀 순위" else "전체 개인 순위",
+                color = Color(0xFF111827),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f),
+            )
+            Text(
+                text = selectedMetric.standardLabel(selectedScope),
+                color = Color(0xFF949FAF),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Normal,
+            )
         }
-        items.forEach { item ->
-            RankingRow(item = item)
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            items.forEach { item ->
+                RankingRow(item = item)
+            }
         }
     }
 }
+
+private fun RankingMetric.standardLabel(scope: RankingScope): String =
+    when (scope) {
+        RankingScope.TEAM -> teamStandardLabel
+        RankingScope.PERSONAL ->
+            when (this) {
+                RankingMetric.DISTANCE -> "누적 거리 기준"
+                RankingMetric.PACE -> "평균 페이스 기준"
+                RankingMetric.CONSISTENCY -> "활동일 기준"
+            }
+    }
 
 private fun RankingUiState.toRankingItems(): List<RankingItem> =
     when (selectedScope) {

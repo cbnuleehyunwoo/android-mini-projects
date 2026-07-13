@@ -4,11 +4,13 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.woowacourse.runpamine.di.runpamineContainer
 import com.woowacourse.runpamine.presentation.createteam.CreateTeamScreen
 import com.woowacourse.runpamine.presentation.history.HistoryScreen
 import com.woowacourse.runpamine.presentation.home.HomeScreen
@@ -36,6 +38,7 @@ fun NavHost(
     onTeamMemberClick: (TeamMember) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val container = LocalContext.current.runpamineContainer
     NavHost(
         navController = navController,
         startDestination = AppRoute.Splash.route,
@@ -210,6 +213,7 @@ fun NavHost(
         composable(AppRoute.CreateTeam.route) {
             CreateTeamScreen(
                 onCreateSuccess = {
+                    container.teamDashboardCache.clear()
                     navController.navigate(AppRoute.Team.route) {
                         popUpTo(AppRoute.CreateTeam.route) {
                             inclusive = true
@@ -224,6 +228,7 @@ fun NavHost(
             JoinScreen(
                 onBackClick = navController::popBackStack,
                 onJoinSuccess = {
+                    container.teamDashboardCache.clear()
                     val removedExistingTeam =
                         navController.popBackStack(
                             route = AppRoute.Team.route,

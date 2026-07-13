@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -47,34 +46,34 @@ fun MyPageMenuRow(
         modifier =
             modifier
                 .fillMaxWidth()
-                .heightIn(min = 62.dp)
-                .clip(RoundedCornerShape(14.dp))
+                .height(56.dp)
+                .clip(RoundedCornerShape(8.dp))
                 .border(
                     width = 1.dp,
                     color = Color(0xFFEDEFF3),
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(8.dp),
                 ).clickable(onClick = onClick)
-                .padding(horizontal = 18.dp, vertical = 12.dp),
+                .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Image(
             painter = painterResource(id = iconResId),
             contentDescription = title,
-            modifier = Modifier.size(32.dp),
+            modifier = Modifier.size(24.dp),
             colorFilter = if (titleColor == Color(0xFFDC2626)) null else ColorFilter.tint(Blue40),
         )
-        Spacer(modifier = Modifier.width(20.dp))
+        Spacer(modifier = Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
                 style =
                     MaterialTheme.typography.headlineMedium.copy(
-                        fontSize = 16.sp,
+                        fontSize = 15.sp,
                     ),
                 fontWeight = FontWeight.Bold,
                 color = titleColor,
             )
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(3.dp))
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp, lineHeight = 21.sp),
@@ -85,7 +84,7 @@ fun MyPageMenuRow(
             Image(
                 painter = painterResource(id = R.drawable.ic_right_arrow),
                 contentDescription = "이동",
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(16.dp),
             )
         }
     }

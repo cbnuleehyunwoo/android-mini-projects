@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -43,50 +44,48 @@ fun HomeNoTeamSection(
         modifier =
             modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(26.dp))
+                .clip(RoundedCornerShape(24.dp))
                 .background(Blue40)
-                .padding(horizontal = 22.dp, vertical = 22.dp),
+                .padding(horizontal = 20.dp, vertical = 18.dp),
     ) {
         Column(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(end = 74.dp),
+                    .padding(end = 40.dp),
         ) {
             Text(
                 text = stringResource(R.string.home_no_team_title),
                 style =
                     MaterialTheme.typography.headlineSmall.copy(
-                        fontSize = 18.sp,
+                        fontSize = 17.sp,
                     ),
                 color = Color.White,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = stringResource(R.string.home_no_team_description),
                 style =
                     MaterialTheme.typography.bodyLarge.copy(
-                        fontSize = 14.sp,
+                        fontSize = 13.sp,
                     ),
                 color = Color.White.copy(alpha = 0.75f),
                 fontWeight = FontWeight.Medium,
             )
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(7.dp))
             Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 NoTeamButton(
                     text = stringResource(R.string.create_team),
                     filled = true,
                     onClick = onCreate,
-                    modifier = Modifier.weight(1f),
                 )
                 NoTeamButton(
                     text = stringResource(R.string.join_team),
                     filled = false,
                     onClick = onJoin,
-                    modifier = Modifier.weight(1f),
                 )
             }
         }
@@ -97,7 +96,7 @@ fun HomeNoTeamSection(
             modifier =
                 Modifier
                     .align(Alignment.CenterEnd)
-                    .size(62.dp)
+                    .size(32.dp)
                     .alpha(0.9f),
         )
     }
@@ -117,11 +116,12 @@ private fun NoTeamButton(
     Box(
         modifier =
             modifier
-                .height(46.dp)
+                .width(86.dp)
+                .height(30.dp)
                 .clip(shape)
                 .background(backgroundColor)
                 .border(
-                    width = 2.dp,
+                    width = 1.5.dp,
                     color = Color.White,
                     shape = shape,
                 ).clickable(onClick = onClick),
@@ -130,9 +130,8 @@ private fun NoTeamButton(
         Text(
             text = text,
             color = contentColor,
-            fontSize = 14.sp,
-            lineHeight = 22.sp,
-            fontWeight = FontWeight.ExtraBold,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
         )
     }
 }

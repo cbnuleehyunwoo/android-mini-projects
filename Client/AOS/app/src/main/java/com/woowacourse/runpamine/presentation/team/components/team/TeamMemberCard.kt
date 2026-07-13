@@ -39,13 +39,12 @@ fun TeamMemberCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val cardShape = RoundedCornerShape(18.dp)
+    val cardShape = RoundedCornerShape(22.dp)
 
     Column(
         modifier =
             modifier
                 .fillMaxWidth()
-                .height(168.dp)
                 .shadow(
                     elevation = 8.dp,
                     shape = cardShape,
@@ -55,7 +54,7 @@ fun TeamMemberCard(
                     color = Color.White,
                     shape = cardShape,
                 ).clickable(onClick = onClick)
-                .padding(25.dp),
+                .padding(start = 16.dp, top = 26.dp, end = 25.dp, bottom = 32.dp),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

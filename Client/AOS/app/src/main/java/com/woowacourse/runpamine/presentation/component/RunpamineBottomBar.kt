@@ -22,11 +22,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.woowacourse.runpamine.R
 import com.woowacourse.runpamine.presentation.navigation.AppRoute
 import com.woowacourse.runpamine.ui.theme.Blue40
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
+import com.woowacourse.runpamine.ui.theme.RunpamineTypography
 
 enum class RunpamineBottomTab(
     val label: String,
@@ -104,7 +104,7 @@ private fun RunpamineBottomBarItem(
         Spacer(modifier = Modifier.height(10.dp))
         Text(
             text = tab.label,
-            fontSize = 12.sp,
+            style = RunpamineTypography.TabLabel,
             color = color,
         )
     }

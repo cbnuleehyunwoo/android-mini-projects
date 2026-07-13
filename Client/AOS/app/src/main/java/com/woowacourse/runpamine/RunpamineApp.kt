@@ -26,6 +26,7 @@ import androidx.navigation.compose.rememberNavController
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.install.model.UpdateAvailability
 import com.woowacourse.runpamine.data.network.NetworkConnectivityObserver
+import com.woowacourse.runpamine.di.runpamineContainer
 import com.woowacourse.runpamine.presentation.component.RunpamineBottomBar
 import com.woowacourse.runpamine.presentation.component.RunpamineBottomTab
 import com.woowacourse.runpamine.presentation.component.RunpamineConfirmationDialog
@@ -108,6 +109,7 @@ fun RunpamineApp(
                     navController.navigate(AppRoute.ChangeNickname.route)
                 },
                 onLogoutCompleted = {
+                    context.runpamineContainer.clearMainTabCaches()
                     isShowingMyPage = false
                     navController.navigate(AppRoute.Login.route) {
                         popUpTo(navController.graph.id) {

@@ -3,8 +3,11 @@ package com.woowacourse.runpamine.presentation.record.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.woowacourse.runpamine.domain.run.RunPeriodSummary
 import com.woowacourse.runpamine.domain.run.RunRecordRepository
 import com.woowacourse.runpamine.domain.run.RunSession
+import com.woowacourse.runpamine.presentation.cache.RecordCache
+import com.woowacourse.runpamine.presentation.cache.RecordCacheKey
 import com.woowacourse.runpamine.presentation.record.model.RecordPeriod
 import com.woowacourse.runpamine.presentation.record.model.RunningRecord
 import kotlinx.coroutines.CancellationException
@@ -24,8 +27,16 @@ import java.util.Locale
 
 class RecordViewModel(
     private val runRecordRepository: RunRecordRepository,
+    private val cache: RecordCache,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(RecordUiState(isLoading = true))
+    private val _uiState =
+        MutableStateFlow(
+            RecordUiState(
+                period = cache.selectedPeriod,
+                anchorDate = cache.anchorDate,
+                isLoading = true,
+            ),
+        )
     val uiState: StateFlow<RecordUiState> = _uiState.asStateFlow()
     private var loadJob: Job? = null
 
@@ -35,6 +46,7 @@ class RecordViewModel(
 
     fun selectPeriod(period: RecordPeriod) {
         if (_uiState.value.period == period) return
+        cache.selectedPeriod = period
         _uiState.update { state ->
             state.copy(period = period)
         }
@@ -43,6 +55,7 @@ class RecordViewModel(
 
     fun moveTo(anchorDate: LocalDate) {
         if (_uiState.value.anchorDate == anchorDate) return
+        cache.anchorDate = anchorDate
         _uiState.update { state ->
             state.copy(anchorDate = anchorDate)
         }
@@ -56,41 +69,28 @@ class RecordViewModel(
     private fun loadRecords() {
         val period = _uiState.value.period
         val anchorDate = _uiState.value.anchorDate
+        val cacheKey = period.cacheKey(anchorDate)
+        val cachedSummary = cache.summaries[cacheKey]
 
         loadJob?.cancel()
         loadJob =
             viewModelScope.launch {
-                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+                cachedSummary?.let { applySummary(it, period, anchorDate) }
+                _uiState.update { it.copy(isLoading = cachedSummary == null, errorMessage = null) }
                 runCatching {
                     when (period) {
                         RecordPeriod.WEEK -> runRecordRepository.getWeeklyRuns(anchorDate)
                         RecordPeriod.MONTH -> runRecordRepository.getMonthlyRuns(YearMonth.from(anchorDate))
                     }
                 }.onSuccess { summary ->
-                    val visibleDays = summary.days.filter { day -> day.date in period.dateRange(anchorDate) }
-                    val visibleRuns = summary.runs.filter { run -> run.localDate in period.dateRange(anchorDate) }
-                    val totalDistanceMeters =
-                        visibleDays
-                            .takeIf { it.isNotEmpty() }
-                            ?.sumOf { day -> day.distanceMeters }
-                            ?: visibleRuns.sumOf { run -> run.distanceMeters }
+                    cache.summaries[cacheKey] = summary
+                    applySummary(summary, period, anchorDate)
 
-                    _uiState.update {
-                        it.copy(
-                            records = visibleRuns.map { run -> run.toRunningRecord() },
-                            recordedDates =
-                                visibleDays
-                                    .filter { day -> day.hasRun }
-                                    .map { day -> day.date }
-                                    .toSet() + visibleRuns.map { run -> run.localDate },
-                            totalDistanceKm = totalDistanceMeters / METERS_PER_KILOMETER,
-                            isLoading = false,
-                        )
-                    }
-
-                    visibleRuns
+                    summary.runs
+                        .filter { run -> run.localDate in period.dateRange(anchorDate) }
                         .filter { run -> run.routePoints.size < MIN_ROUTE_POINT_COUNT }
                         .forEach { run -> loadRoutePoints(run.id) }
+                    if (period == RecordPeriod.WEEK) preloadPreviousWeek(anchorDate)
                 }.onFailure { throwable ->
                     if (throwable is CancellationException) throw throwable
 
@@ -104,7 +104,46 @@ class RecordViewModel(
             }
     }
 
+    private fun applySummary(
+        summary: RunPeriodSummary,
+        period: RecordPeriod,
+        anchorDate: LocalDate,
+    ) {
+        val visibleDays = summary.days.filter { day -> day.date in period.dateRange(anchorDate) }
+        val visibleRuns = summary.runs.filter { run -> run.localDate in period.dateRange(anchorDate) }
+        val totalDistanceMeters =
+            visibleDays
+                .takeIf { it.isNotEmpty() }
+                ?.sumOf { day -> day.distanceMeters }
+                ?: visibleRuns.sumOf { run -> run.distanceMeters }
+        _uiState.update {
+            it.copy(
+                records =
+                    visibleRuns.map { run ->
+                        (cache.detailsByRunId[run.id] ?: run).toRunningRecord()
+                    },
+                recordedDates =
+                    visibleDays.filter { day -> day.hasRun }.map { day -> day.date }.toSet() +
+                        visibleRuns.map { run -> run.localDate },
+                totalDistanceKm = totalDistanceMeters / METERS_PER_KILOMETER,
+                isLoading = false,
+            )
+        }
+    }
+
+    private suspend fun preloadPreviousWeek(anchorDate: LocalDate) {
+        val previousDate = anchorDate.minusWeeks(1)
+        val key = RecordCacheKey.Week(previousDate.startOfWeek())
+        if (cache.summaries[key] != null) return
+        runCatching { runRecordRepository.getWeeklyRuns(previousDate) }
+            .onSuccess { cache.summaries[key] = it }
+    }
+
     private suspend fun loadRoutePoints(runId: String) {
+        cache.detailsByRunId[runId]?.let { detail ->
+            applyRouteDetail(detail)
+            return
+        }
         val detail =
             try {
                 runRecordRepository.getRunDetail(runId)
@@ -114,11 +153,16 @@ class RecordViewModel(
             }
         if (detail.routePoints.size < MIN_ROUTE_POINT_COUNT) return
 
+        cache.detailsByRunId[runId] = detail
+        applyRouteDetail(detail)
+    }
+
+    private fun applyRouteDetail(detail: RunSession) {
         _uiState.update { state ->
             state.copy(
                 records =
                     state.records.map { record ->
-                        if (record.id == runId) {
+                        if (record.id == detail.id) {
                             record.copy(routePoints = detail.routePoints)
                         } else {
                             record
@@ -130,14 +174,21 @@ class RecordViewModel(
 
     class Factory(
         private val runRecordRepository: RunRecordRepository,
+        private val cache: RecordCache,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             require(modelClass.isAssignableFrom(RecordViewModel::class.java))
-            return RecordViewModel(runRecordRepository) as T
+            return RecordViewModel(runRecordRepository, cache) as T
         }
     }
 }
+
+private fun RecordPeriod.cacheKey(anchorDate: LocalDate): RecordCacheKey =
+    when (this) {
+        RecordPeriod.WEEK -> RecordCacheKey.Week(anchorDate.startOfWeek())
+        RecordPeriod.MONTH -> RecordCacheKey.Month(YearMonth.from(anchorDate))
+    }
 
 private fun RecordPeriod.dateRange(anchorDate: LocalDate): ClosedRange<LocalDate> =
     when (this) {

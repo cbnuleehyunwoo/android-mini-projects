@@ -26,37 +26,37 @@ object RunpamineTypography {
     val Header1 =
         TextStyle(
             fontFamily = Pretendard,
-            fontSize = 24.sp,
-            lineHeight = 28.8.sp,
+            fontSize = 28.sp,
+            lineHeight = 34.sp,
             letterSpacing = (-0.02).em,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.SemiBold,
         )
 
     val Header2 =
         TextStyle(
             fontFamily = Pretendard,
-            fontSize = 22.sp,
-            lineHeight = 40.32.sp,
+            fontSize = 24.sp,
+            lineHeight = 32.sp,
             letterSpacing = (-0.02).em,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.SemiBold,
         )
 
     val Header3 =
         TextStyle(
             fontFamily = Pretendard,
             fontSize = 20.sp,
-            lineHeight = 24.sp,
+            lineHeight = 25.sp,
             letterSpacing = (-0.01).em,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.SemiBold,
         )
 
     val Header4 =
         TextStyle(
             fontFamily = Pretendard,
             fontSize = 20.sp,
-            lineHeight = 33.4.sp,
+            lineHeight = 25.sp,
             letterSpacing = (-0.01).em,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.SemiBold,
         )
 
     val Header5 =
@@ -71,8 +71,8 @@ object RunpamineTypography {
     val Body1 =
         TextStyle(
             fontFamily = Pretendard,
-            fontSize = 18.sp,
-            lineHeight = 20.8.sp,
+            fontSize = 16.sp,
+            lineHeight = 22.sp,
             letterSpacing = (-0.03).em,
             fontWeight = FontWeight.Medium,
         )
@@ -80,9 +80,36 @@ object RunpamineTypography {
     val Body2 =
         TextStyle(
             fontFamily = Pretendard,
-            fontSize = 16.sp,
-            lineHeight = 25.6.sp,
+            fontSize = 14.sp,
+            lineHeight = 20.sp,
             letterSpacing = (-0.03).em,
+            fontWeight = FontWeight.Medium,
+        )
+
+    val Button =
+        TextStyle(
+            fontFamily = Pretendard,
+            fontSize = 17.sp,
+            lineHeight = 22.sp,
+            letterSpacing = (-0.02).em,
+            fontWeight = FontWeight.Bold,
+        )
+
+    val NavigationTitle =
+        TextStyle(
+            fontFamily = Pretendard,
+            fontSize = 19.sp,
+            lineHeight = 24.sp,
+            letterSpacing = (-0.02).em,
+            fontWeight = FontWeight.Bold,
+        )
+
+    val TabLabel =
+        TextStyle(
+            fontFamily = Pretendard,
+            fontSize = 16.sp,
+            lineHeight = 20.sp,
+            letterSpacing = (-0.02).em,
             fontWeight = FontWeight.Medium,
         )
 
@@ -101,7 +128,7 @@ object RunpamineTypography {
             fontSize = 12.sp,
             lineHeight = 15.6.sp,
             letterSpacing = (-0.03).em,
-            fontWeight = FontWeight.Medium,
+            fontWeight = FontWeight.Normal,
         )
 
     val Caption2 =

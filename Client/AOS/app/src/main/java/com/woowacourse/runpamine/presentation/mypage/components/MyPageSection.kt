@@ -29,14 +29,14 @@ fun MyPageSection(
             text = title,
             style =
                 MaterialTheme.typography.headlineMedium.copy(
-                    fontSize = 16.sp,
+                    fontSize = 15.sp,
                 ),
             fontWeight = FontWeight.Black,
             color = Color(0xFF111827),
         )
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(12.dp))
         Column(
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             content()
         }
