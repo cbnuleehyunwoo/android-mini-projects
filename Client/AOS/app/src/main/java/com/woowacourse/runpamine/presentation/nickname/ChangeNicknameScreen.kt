@@ -129,66 +129,77 @@ private fun ChangeNicknameContent(
     Column(
         modifier =
             modifier
-                .fillMaxSize()
-                .padding(horizontal = RunpamineLayout.ScreenHorizontalPadding),
+                .fillMaxSize(),
     ) {
         ScreenTopBar(
             title = topBarTitle,
             onBackClick = onBackClick,
             modifier =
                 Modifier
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .padding(
+                        start = RunpamineLayout.NavigationHorizontalPadding,
+                        top = RunpamineLayout.NavigationTopPadding,
+                        end = RunpamineLayout.NavigationHorizontalPadding,
+                    ),
         )
-        Spacer(modifier = Modifier.height(28.dp))
-        Text(
-            text = stringResource(R.string.change_nickname_description),
-            style =
-                MaterialTheme.typography.headlineLarge.copy(
-                    fontSize = 29.sp,
-                    lineHeight = 36.sp,
-                ),
-            fontWeight = FontWeight.Black,
-            color = Color.Black,
-        )
-        Spacer(modifier = Modifier.height(18.dp))
-        NicknameTextField(
-            value = uiState.nickname,
-            onValueChange = onNicknameChange,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Spacer(modifier = Modifier.height(18.dp))
-        NicknameCondition(
-            text = stringResource(R.string.change_nickname_condition_length),
-            valid = uiState.nickname.length in NICKNAME_MIN_LENGTH..NICKNAME_MAX_LENGTH,
-        )
-        Spacer(modifier = Modifier.height(10.dp))
-        NicknameCondition(
-            text = stringResource(R.string.change_nickname_condition_characters),
-            valid = uiState.nickname.isNotEmpty() && NICKNAME_REGEX.matches(uiState.nickname),
-        )
-        uiState.errorMessage?.let { message ->
-            Spacer(modifier = Modifier.height(14.dp))
-            Text(
-                text = message,
-                style = MaterialTheme.typography.bodyMedium,
-                color = Red40,
-            )
-        }
-        Spacer(modifier = Modifier.weight(1f))
-        BottomButton(
-            text =
-                if (uiState.isLoading) {
-                    loadingButtonText
-                } else {
-                    submitButtonText
-                },
-            onClick = onSubmitClick,
+        Column(
             modifier =
                 Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
-                    .padding(bottom = RunpamineLayout.BottomContentPadding),
-        )
+                    .fillMaxSize()
+                    .padding(horizontal = RunpamineLayout.ScreenHorizontalPadding),
+        ) {
+            Spacer(modifier = Modifier.height(28.dp))
+            Text(
+                text = stringResource(R.string.change_nickname_description),
+                style =
+                    MaterialTheme.typography.headlineLarge.copy(
+                        fontSize = 29.sp,
+                        lineHeight = 36.sp,
+                    ),
+                fontWeight = FontWeight.Black,
+                color = Color.Black,
+            )
+            Spacer(modifier = Modifier.height(18.dp))
+            NicknameTextField(
+                value = uiState.nickname,
+                onValueChange = onNicknameChange,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(modifier = Modifier.height(18.dp))
+            NicknameCondition(
+                text = stringResource(R.string.change_nickname_condition_length),
+                valid = uiState.nickname.length in NICKNAME_MIN_LENGTH..NICKNAME_MAX_LENGTH,
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            NicknameCondition(
+                text = stringResource(R.string.change_nickname_condition_characters),
+                valid = uiState.nickname.isNotEmpty() && NICKNAME_REGEX.matches(uiState.nickname),
+            )
+            uiState.errorMessage?.let { message ->
+                Spacer(modifier = Modifier.height(14.dp))
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Red40,
+                )
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            BottomButton(
+                text =
+                    if (uiState.isLoading) {
+                        loadingButtonText
+                    } else {
+                        submitButtonText
+                    },
+                onClick = onSubmitClick,
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .navigationBarsPadding()
+                        .padding(bottom = RunpamineLayout.BottomContentPadding),
+            )
+        }
     }
 }
 
