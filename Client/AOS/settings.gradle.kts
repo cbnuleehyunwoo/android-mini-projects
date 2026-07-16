@@ -24,3 +24,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "runpamine"
 include(":app")
+include(":shared")
