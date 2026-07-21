@@ -50,6 +50,7 @@ fun RunningScreen(
     var completedSession by remember { mutableStateOf<RunSession?>(null) }
     var completedRoutePoints by remember { mutableStateOf(emptyList<RunPoint>()) }
     var showStopDialog by rememberSaveable { mutableStateOf(false) }
+    var hasStoppedRun by rememberSaveable { mutableStateOf(false) }
     val locationPermissionLauncher =
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.RequestMultiplePermissions(),
@@ -60,7 +61,9 @@ fun RunningScreen(
         }
 
     LaunchedEffect(Unit) {
-        if (context.hasLocationPermission()) {
+        if (hasStoppedRun) {
+            onStopCompleted()
+        } else if (context.hasLocationPermission()) {
             viewModel.startRun()
         } else {
             locationPermissionLauncher.launch(LOCATION_PERMISSIONS)
@@ -102,6 +105,7 @@ fun RunningScreen(
             onConfirm = {
                 showStopDialog = false
                 viewModel.stopRun { session ->
+                    hasStoppedRun = true
                     completedSession = session
                     completedRoutePoints = state.routePoints
                 }

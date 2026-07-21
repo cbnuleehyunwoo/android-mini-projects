@@ -100,7 +100,7 @@ private fun PausedControls(
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(32.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         StopControlButton(
@@ -112,7 +112,7 @@ private fun PausedControls(
             contentDescription = stringResource(R.string.running_resume),
             containerColor = Green40,
             iconColor = Color.Black,
-            iconSize = 48.dp,
+            iconSize = 34.dp,
             onClick = onResumeClick,
         )
     }
@@ -211,9 +211,8 @@ private fun PausedControlsPreview() {
     }
 }
 
-private val RUNNING_CONTROL_BUTTON_SIZE = 72.dp
-private val RUNNING_CONTROL_ICON_SIZE = 28.dp
-private val RUNNING_PLAY_ICON_SIZE = 36.dp
+private val RUNNING_CONTROL_BUTTON_SIZE = 70.dp
+private val RUNNING_CONTROL_ICON_SIZE = 32.dp
 private val RUNNING_STOP_ICON_SIZE = 24.dp
 private const val RUNNING_CONTROL_ANIMATION_MILLIS = 220
 private const val RUNNING_CONTROL_INITIAL_SCALE = 0.86f
