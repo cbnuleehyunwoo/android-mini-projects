@@ -1,4 +1,4 @@
-<resources>
+    <resources>
     <string name="app_name">runpamine</string>
     <string name="onboarding_title_1">런파민에서 꾸준히 달려보세요.</string>
     <string name="onboarding_description_1">런파민은 팀원들과 러닝 기록을 공유하고,\n서로의 꾸준함을 응원하는 러닝 서비스예요.</string>
