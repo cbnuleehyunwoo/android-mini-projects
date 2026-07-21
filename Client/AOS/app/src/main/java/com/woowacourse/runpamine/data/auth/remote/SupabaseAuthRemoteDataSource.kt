@@ -30,12 +30,8 @@ class SupabaseAuthRemoteDataSource(
         }
 
     override suspend fun loadSessionFromStorage(): AuthSession? {
-        val loaded = supabaseClient.auth.loadFromStorage()
-        return if (loaded) {
-            getCurrentSession()
-        } else {
-            null
-        }
+        supabaseClient.auth.awaitInitialization()
+        return getCurrentSession()
     }
 
     override suspend fun getCurrentSession(): AuthSession? = supabaseClient.auth.currentSessionOrNull()?.toDomain()
