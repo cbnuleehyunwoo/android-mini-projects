@@ -47,6 +47,11 @@
 	<string>러닝 중 화면이 꺼지거나 앱이 백그라운드에 있어도 이동 경로, 거리, 페이스를 계속 기록하기 위해 위치를 사용합니다.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>러닝 시작 시 현재 위치를 지도에 표시하고 이동 경로, 거리, 페이스를 기록하기 위해 위치를 사용합니다.</string>
+	<key>NSLocationTemporaryUsageDescriptionDictionary</key>
+	<dict>
+		<key>RunningRoute</key>
+		<string>정확한 이동 경로, 거리, 페이스를 기록하기 위해 정밀한 위치가 필요합니다.</string>
+	</dict>
 	<key>APIBaseURL</key>
 	<string>$(RUNPAMINE_API_BASE_URL)</string>
 	<key>SupabaseAnonKey</key>

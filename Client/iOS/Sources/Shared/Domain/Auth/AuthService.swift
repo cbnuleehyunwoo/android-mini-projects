@@ -364,7 +364,7 @@ enum AuthNonce {
     }
 }
 
-private struct SupabaseConfiguration {
+struct SupabaseConfiguration {
     static let redirectURL = URL(string: "runpamine://auth-callback/")!
 
     let url: URL
@@ -387,7 +387,7 @@ private struct AuthDeleteAccountPayload: Decodable {
     let deleted: Bool
 }
 
-private extension Bundle {
+extension Bundle {
     var authAPIBaseURL: URL? {
         guard
             let baseURLString = object(forInfoDictionaryKey: "APIBaseURL") as? String,
