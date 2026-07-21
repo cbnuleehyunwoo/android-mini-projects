@@ -1,0 +1,91 @@
+package com.woowacourse.runpamine.presentation.navigation
+
+import android.net.Uri
+
+sealed interface AppRoute {
+    val route: String
+
+    data object Splash : AppRoute {
+        override val route = "splash"
+    }
+
+    data object Login : AppRoute {
+        override val route = "login"
+    }
+
+    data object Onboarding : AppRoute {
+        override val route = "onboarding"
+    }
+
+    data object Home : AppRoute {
+        override val route = "home"
+    }
+
+    data object Team : AppRoute {
+        override val route = "team"
+    }
+
+    data object Record : AppRoute {
+        override val route = "record"
+    }
+
+    data object History : AppRoute {
+        const val RUN_ID = "runId"
+        const val DISTANCE = "distance"
+        const val TIME = "time"
+        const val PACE = "pace"
+        const val CALORIES = "calories"
+        const val DATE = "date"
+        const val START_TIME = "startTime"
+        const val END_TIME = "endTime"
+
+        override val route = "history/{$RUN_ID}/{$DISTANCE}/{$TIME}/{$PACE}/{$CALORIES}/{$DATE}/{$START_TIME}/{$END_TIME}"
+
+        fun createRoute(
+            runId: String,
+            distance: String,
+            time: String,
+            pace: String,
+            calories: String,
+            date: String,
+            startTime: String,
+            endTime: String,
+        ): String =
+            listOf("history", runId, distance, time, pace, calories, date, startTime, endTime)
+                .joinToString(separator = "/") { value -> Uri.encode(value) }
+    }
+
+    data object Ranking : AppRoute {
+        override val route = "ranking"
+    }
+
+    data object Running : AppRoute {
+        override val route = "running"
+    }
+
+    data object CreateTeam : AppRoute {
+        override val route = "create_team"
+    }
+
+    data object JoinTeam : AppRoute {
+        override val route = "join_team"
+    }
+
+    data object TermsAgreement : AppRoute {
+        override val route = "terms_agreement"
+    }
+
+    data object ChangeNickname : AppRoute {
+        override val route = "change_nickname"
+    }
+
+    data object SetupNickname : AppRoute {
+        override val route = "setup_nickname"
+    }
+
+    data object InviteTeam : AppRoute {
+        override val route = "invite_team/{code}"
+
+        fun createRoute(code: String): String = "invite_team/$code"
+    }
+}

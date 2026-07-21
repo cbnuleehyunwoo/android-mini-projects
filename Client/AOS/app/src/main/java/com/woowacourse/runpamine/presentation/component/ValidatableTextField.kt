@@ -1,0 +1,93 @@
+package com.woowacourse.runpamine.presentation.component
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
+import com.woowacourse.runpamine.ui.theme.Red40
+import com.woowacourse.runpamine.ui.theme.RunpamineLayout
+import com.woowacourse.runpamine.ui.theme.RunpamineTheme
+import com.woowacourse.runpamine.ui.theme.RunpamineTypography
+
+@Composable
+fun ValidatableTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    placeholder: String = "",
+    singleLine: Boolean = true,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    validator: (String) -> Boolean = { true },
+) {
+    val isError = value.isNotEmpty() && !validator(value)
+
+    Column(modifier = modifier) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(RunpamineLayout.FieldHeight),
+            textStyle = RunpamineTypography.Header3,
+            placeholder = {
+                Text(
+                    text = placeholder,
+                    style = RunpamineTypography.Header3,
+                )
+            },
+            isError = isError,
+            singleLine = singleLine,
+            shape = RoundedCornerShape(RunpamineLayout.CornerRadius),
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            colors =
+                OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black,
+                    errorTextColor = Color.Black,
+                    disabledTextColor = Color.Black,
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.primary,
+                    errorBorderColor = Red40,
+                    cursorColor = MaterialTheme.colorScheme.primary,
+                    errorCursorColor = Red40,
+                ),
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 320)
+@Composable
+private fun ValidatableTextFieldValidPreview() {
+    RunpamineTheme {
+        ValidatableTextField(
+            value = "러닝 크루",
+            onValueChange = {},
+            placeholder = "팀 이름을 입력하세요",
+            validator = { it.length <= 10 },
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 320)
+@Composable
+private fun ValidatableTextFieldErrorPreview() {
+    RunpamineTheme {
+        ValidatableTextField(
+            value = "너무너무너무긴팀이름입니다",
+            onValueChange = {},
+            placeholder = "팀 이름을 입력하세요",
+            validator = { it.length <= 10 },
+        )
+    }
+}
