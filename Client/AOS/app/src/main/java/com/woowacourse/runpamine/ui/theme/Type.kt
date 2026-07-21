@@ -22,6 +22,8 @@ val Pretendard =
         Font(R.font.pretendard_black, FontWeight.Black),
     )
 
+val RunpamineBrand = FontFamily(Font(R.font.kyobo_handwriting_2025_lyb))
+
 object RunpamineTypography {
     val Header1 =
         TextStyle(

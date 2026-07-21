@@ -1,25 +1,22 @@
 package com.woowacourse.runpamine.presentation.splash
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.woowacourse.runpamine.R
 import com.woowacourse.runpamine.di.runpamineContainer
+import com.woowacourse.runpamine.presentation.component.RunpamineLogo
 import kotlinx.coroutines.delay
 
 private const val SPLASH_EXTRA_DELAY_MILLIS = 1000L
@@ -60,13 +57,9 @@ private fun SplashContent(modifier: Modifier = Modifier) {
                 .background(Color.White),
         contentAlignment = Alignment.Center,
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.img_splash),
-            contentDescription = null,
-            modifier =
-                Modifier
-                    .size(200.dp),
-            contentScale = ContentScale.Fit,
+        RunpamineLogo(
+            characterSize = 230.dp,
+            titleFontSize = 48.sp,
         )
     }
 }
