@@ -45,38 +45,44 @@ fun RunningScreenContent(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(modifier = Modifier.weight(1f))
-            RunningDistance(
-                distance = session.distanceText(),
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            RunningTime(time = elapsedSeconds.elapsedTimeText())
-            Spacer(modifier = Modifier.height(24.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                RunningMetricCard(
-                    title = stringResource(R.string.running_pace),
-                    value = session.paceText(),
-                    unit = "/km",
-                    modifier = Modifier.weight(1f),
+                Spacer(modifier = Modifier.height(30.dp))
+                RunningDistance(
+                    distance = session.distanceText(),
+                    modifier = Modifier.fillMaxWidth(),
                 )
-                RunningMetricCard(
-                    title = stringResource(R.string.running_kcal),
-                    value = (session?.calories ?: 0).toString(),
-                    unit = "kcal",
-                    modifier = Modifier.weight(1f),
+                Spacer(modifier = Modifier.height(10.dp))
+                RunningTime(time = elapsedSeconds.elapsedTimeText())
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    RunningMetricCard(
+                        title = stringResource(R.string.running_pace),
+                        value = session.paceText(),
+                        unit = "/km",
+                        modifier = Modifier.weight(1f),
+                    )
+                    RunningMetricCard(
+                        title = stringResource(R.string.running_kcal),
+                        value = (session?.calories ?: 0).toString(),
+                        unit = "kcal",
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                RunningControls(
+                    isPaused = isPaused,
+                    onPauseClick = onPauseClick,
+                    onStopClick = onStopClick,
+                    modifier = Modifier.fillMaxWidth(),
                 )
+                Spacer(modifier = Modifier.height(42.dp))
             }
-            Spacer(modifier = Modifier.height(16.dp))
-            RunningControls(
-                isPaused = isPaused,
-                onPauseClick = onPauseClick,
-                onStopClick = onStopClick,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Spacer(modifier = Modifier.height(42.dp))
+            Spacer(modifier = Modifier.weight(1f))
         }
     }
 }
