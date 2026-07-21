@@ -25,6 +25,7 @@ final class RunningTracker: NSObject, ObservableObject {
     private var shouldValidateJumpFromPreviousLocation = false
     private var stationaryReferenceLocation: CLLocation?
     private var lastLocationMovementDate: Date?
+    private var isRequestingFullAccuracy = false
 
     init(historyStore: RunningHistoryStore = RunningHistoryStore()) {
         self.historyStore = historyStore
@@ -79,9 +80,9 @@ final class RunningTracker: NSObject, ObservableObject {
             manager.requestWhenInUseAuthorization()
         case .authorizedWhenInUse:
             manager.requestAlwaysAuthorization()
-            beginLocationUpdates()
+            beginPreciseLocationUpdates()
         case .authorizedAlways:
-            beginLocationUpdates()
+            beginPreciseLocationUpdates()
         case .denied, .restricted:
             trackingState = .denied
             lastError = "위치 권한이 필요합니다. 설정에서 위치 권한을 허용해주세요."
@@ -111,7 +112,7 @@ final class RunningTracker: NSObject, ObservableObject {
             manager.requestAlwaysAuthorization()
         }
         #endif
-        beginLocationUpdates()
+        beginPreciseLocationUpdates()
     }
 
     @discardableResult
@@ -130,6 +131,28 @@ final class RunningTracker: NSObject, ObservableObject {
         lastRecord = record
         trackingState = .ended
         return record
+    }
+
+    private func beginPreciseLocationUpdates() {
+        guard manager.accuracyAuthorization == .fullAccuracy else {
+            requestTemporaryFullAccuracy()
+            return
+        }
+
+        beginLocationUpdates()
+    }
+
+    private func requestTemporaryFullAccuracy() {
+        guard !isRequestingFullAccuracy else { return }
+        isRequestingFullAccuracy = true
+
+        manager.requestTemporaryFullAccuracyAuthorization(withPurposeKey: fullAccuracyPurposeKey) { [weak self] _ in
+            Task { @MainActor in
+                guard let self else { return }
+                self.isRequestingFullAccuracy = false
+                self.beginLocationUpdates()
+            }
+        }
     }
 
     private func beginLocationUpdates() {
@@ -187,7 +210,7 @@ extension RunningTracker: CLLocationManagerDelegate {
                     manager.requestAlwaysAuthorization()
                 }
                 #endif
-                beginLocationUpdates()
+                beginPreciseLocationUpdates()
             }
         }
     }
@@ -266,6 +289,7 @@ private let maxRunningMetersPerSecond: CLLocationDistance = 7
 private let jumpToleranceMeters: CLLocationDistance = 6
 private let stationaryLocationMovementThresholdMeters: CLLocationDistance = 1
 private let stationaryLocationPauseInterval: TimeInterval = 10
+private let fullAccuracyPurposeKey = "RunningRoute"
 
 private func isRunnableAuthorizationStatus(_ status: CLAuthorizationStatus) -> Bool {
     #if os(iOS)
