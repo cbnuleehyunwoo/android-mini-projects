@@ -230,6 +230,34 @@ private struct TeamSummaryPayload: Decodable {
     let ownerId: String?
     let memberCount: Int
     let isOwner: Bool
+    let todayRunMemberCount: Int
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case joinCode
+        case ownerId
+        case memberCount
+        case isOwner
+        case todayRunMemberCount
+        case todayRunnerCount
+        case runningMemberCount
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        joinCode = try container.decodeIfPresent(String.self, forKey: .joinCode)
+        ownerId = try container.decodeIfPresent(String.self, forKey: .ownerId)
+        memberCount = try container.decodeLossyIntIfPresent(forKey: .memberCount) ?? 0
+        isOwner = (try? container.decode(Bool.self, forKey: .isOwner)) ?? false
+        todayRunMemberCount =
+            try container.decodeLossyIntIfPresent(forKey: .todayRunMemberCount)
+            ?? container.decodeLossyIntIfPresent(forKey: .todayRunnerCount)
+            ?? container.decodeLossyIntIfPresent(forKey: .runningMemberCount)
+            ?? 0
+    }
 
     var domain: TeamSummary {
         TeamSummary(
@@ -238,18 +266,19 @@ private struct TeamSummaryPayload: Decodable {
             joinCode: joinCode,
             ownerId: ownerId,
             memberCount: memberCount,
-            isOwner: isOwner
+            isOwner: isOwner,
+            todayRunMemberCount: todayRunMemberCount
         )
     }
 }
 
 private struct ProfileMutationPayload: Encodable {
     let nickname: String
-    let avatarKey: String?
+    let avatarKey: String
 
     init(_ form: ProfileMutationForm) {
         nickname = form.nickname
-        avatarKey = form.avatarKey
+        avatarKey = form.avatarKey ?? "runner_default"
     }
 }
 
@@ -271,7 +300,7 @@ private extension Bundle {
             return nil
         }
 
-        return URL(string: baseURLString)
+        return URL(string: baseURLString)?.runpamineAPIBaseURL
     }
 }
 

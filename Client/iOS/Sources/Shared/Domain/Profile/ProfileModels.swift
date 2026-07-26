@@ -22,6 +22,25 @@ struct TeamSummary: Equatable {
     let ownerId: String?
     let memberCount: Int
     let isOwner: Bool
+    let todayRunMemberCount: Int
+
+    init(
+        id: String,
+        name: String,
+        joinCode: String?,
+        ownerId: String?,
+        memberCount: Int,
+        isOwner: Bool,
+        todayRunMemberCount: Int = 0
+    ) {
+        self.id = id
+        self.name = name
+        self.joinCode = joinCode
+        self.ownerId = ownerId
+        self.memberCount = memberCount
+        self.isOwner = isOwner
+        self.todayRunMemberCount = todayRunMemberCount
+    }
 }
 
 struct ProfileMutationForm: Equatable {

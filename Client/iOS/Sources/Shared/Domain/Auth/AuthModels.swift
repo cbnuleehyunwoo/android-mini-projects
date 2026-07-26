@@ -1,6 +1,6 @@
 import Foundation
 
-struct AuthSession: Equatable {
+struct AuthSession: Codable, Equatable {
     let accessToken: String
     let refreshToken: String?
     let userID: String
@@ -42,7 +42,7 @@ enum AuthError: LocalizedError, Equatable {
     case missingGoogleConfiguration
     case missingGoogleIDToken
     case missingLogoutConfiguration
-    case missingSupabaseConfiguration
+    case missingAPIConfiguration
     case logoutFailed
     case unavailable
 
@@ -64,8 +64,8 @@ enum AuthError: LocalizedError, Equatable {
             return "Google 로그인 정보를 가져오지 못했어요."
         case .missingLogoutConfiguration:
             return "로그아웃 설정을 확인해주세요."
-        case .missingSupabaseConfiguration:
-            return "Supabase 로그인 설정을 확인해주세요."
+        case .missingAPIConfiguration:
+            return "서버 API 주소를 확인해주세요."
         case .logoutFailed:
             return "로그아웃에 실패했어요. 잠시 후 다시 시도해주세요."
         case .unavailable:

@@ -20,16 +20,23 @@ struct HistoryView: View {
 
     private let runService: RunServiceProtocol
     private let accessToken: String?
+    private let refreshRevision: Int
     private var calendar: Calendar {
         var calendar = Calendar.current
         calendar.firstWeekday = 2
         return calendar
     }
 
-    init(runService: RunServiceProtocol = MockRunService(), accessToken: String? = nil, cache: HistoryCache = HistoryCache()) {
+    init(
+        runService: RunServiceProtocol = MockRunService(),
+        accessToken: String? = nil,
+        cache: HistoryCache = HistoryCache(),
+        refreshRevision: Int = 0
+    ) {
         self.runService = runService
         self.accessToken = accessToken
         self.cache = cache
+        self.refreshRevision = refreshRevision
     }
 
     var body: some View {
@@ -105,7 +112,7 @@ struct HistoryView: View {
                 cache.records = RunningHistoryStore().load()
             }
         }
-        .task(id: refreshIdentifier) {
+        .task(id: recordRefreshTaskIdentifier) {
             await refreshRecords()
         }
         .task(id: thumbnailRefreshIdentifier) {
@@ -196,6 +203,10 @@ struct HistoryView: View {
             let components = calendar.dateComponents([.year, .month], from: cache.displayedMonth)
             return "\(cache.selectedPeriod.rawValue)-\(components.year ?? 0)-\(components.month ?? 0)"
         }
+    }
+
+    private var recordRefreshTaskIdentifier: String {
+        "\(refreshIdentifier)|\(refreshRevision)"
     }
 
     private var thumbnailRefreshIdentifier: String {

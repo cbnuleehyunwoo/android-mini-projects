@@ -18,7 +18,7 @@ struct AppTabBar: View {
         }
         .padding(.horizontal, 30)
         .padding(.top, 10)
-        .padding(.bottom, 8)
+        .padding(.bottom, 20)
         .frame(height: Self.height)
         .frame(maxWidth: .infinity)
         .background(Color.white.ignoresSafeArea(.container, edges: .bottom))

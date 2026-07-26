@@ -4,7 +4,7 @@ protocol TeamServiceProtocol {
     func fetchMyTeam(accessToken: String) async throws -> RunningTeam?
     func fetchMyTeamMembers(accessToken: String) async throws -> [TeamMember]
     func fetchDailySummary(date: Date, accessToken: String) async throws -> TeamDailySummary
-    func fetchMyTeamSeasonStats(seasonID: String?, accessToken: String) async throws -> TeamSeasonStats
+    func fetchMyTeamStats(accessToken: String) async throws -> TeamStats
     func createTeam(name: String, accessToken: String) async throws -> RunningTeam
     func joinTeam(inviteCode: String, accessToken: String) async throws -> RunningTeam
     func leaveTeam(accessToken: String) async throws -> TeamLeaveResult
@@ -69,24 +69,15 @@ final class TeamAPIService: TeamServiceProtocol {
         return summary
     }
 
-    func fetchMyTeamSeasonStats(seasonID: String? = nil, accessToken: String) async throws -> TeamSeasonStats {
-        var queryItems: [URLQueryItem] = []
-        if let seasonID, !seasonID.isEmpty {
-            queryItems.append(URLQueryItem(name: "seasonId", value: seasonID))
-        }
-
-        let response: TeamSeasonStatsEnvelope = try await request(
-            path: "/teams/me/season-stats",
-            queryItems: queryItems,
+    func fetchMyTeamStats(accessToken: String) async throws -> TeamStats {
+        let response: TeamStatsEnvelope = try await request(
+            path: "/teams/me/stats",
+            queryItems: [URLQueryItem(name: "period", value: "all")],
             method: "GET",
             accessToken: accessToken
         )
 
-        guard let stats = response.data.domain else {
-            throw TeamError.invalidResponse
-        }
-
-        return stats
+        return response.data.domain
     }
 
     func createTeam(name: String, accessToken: String) async throws -> RunningTeam {
@@ -251,7 +242,7 @@ final class MockTeamService: TeamServiceProtocol {
         )
     }
 
-    func fetchMyTeamSeasonStats(seasonID: String? = nil, accessToken: String) async throws -> TeamSeasonStats {
+    func fetchMyTeamStats(accessToken: String) async throws -> TeamStats {
         let team = createdTeam ?? store.loadTeam() ?? RunningTeam(
             id: UUID(),
             name: "팀이름팀이름팀이름",
@@ -262,49 +253,47 @@ final class MockTeamService: TeamServiceProtocol {
         )
         let now = Date()
 
-        return TeamSeasonStats(
-            season: TeamSeason(
-                id: seasonID ?? "mock-season",
-                name: "2026-06",
-                year: 2026,
-                month: 6,
+        return TeamStats(
+            period: TeamStatsPeriod(
+                type: "all",
+                referenceDate: "2026-07-25",
                 startsAt: now,
                 endsAt: now,
                 elapsedDays: 10
             ),
-            team: TeamSeasonTeam(
+            team: TeamStatsTeam(
                 id: team.id.uuidString,
                 name: team.name,
                 ownerID: "member-primary"
             ),
             members: [
-                TeamSeasonMember(
+                TeamMemberStats(
                     id: "member-primary",
                     matchingID: "member-primary",
                     nickname: store.nickname,
                     avatarKey: "runner_default",
                     teamJoinedAt: "2026-05-01",
-                    seasonDistanceMeters: 42_800,
-                    seasonDurationSeconds: 13_200,
-                    seasonCalories: 1_200,
-                    seasonRunCount: 8,
-                    seasonActiveDays: 6,
+                    distanceMeters: 42_800,
+                    durationSeconds: 13_200,
+                    calories: 1_200,
+                    runCount: 8,
+                    activeDays: 6,
                     averagePaceSecondsPerKilometer: 308,
-                    consecutiveRunDays: 5
+                    recentRunDays: 5
                 ),
-                TeamSeasonMember(
+                TeamMemberStats(
                     id: "member-burger-1",
                     matchingID: "member-burger-1",
                     nickname: "버거킹 스마일",
                     avatarKey: "burger_default",
                     teamJoinedAt: "2026-05-01",
-                    seasonDistanceMeters: 3_800,
-                    seasonDurationSeconds: 1_400,
-                    seasonCalories: 120,
-                    seasonRunCount: 2,
-                    seasonActiveDays: 2,
+                    distanceMeters: 3_800,
+                    durationSeconds: 1_400,
+                    calories: 120,
+                    runCount: 2,
+                    activeDays: 2,
                     averagePaceSecondsPerKilometer: 368,
-                    consecutiveRunDays: -5
+                    recentRunDays: 0
                 )
             ]
         )
@@ -383,8 +372,8 @@ private struct TeamDailySummaryEnvelope: Decodable {
     let data: TeamDailySummaryPayload
 }
 
-private struct TeamSeasonStatsEnvelope: Decodable {
-    let data: TeamSeasonStatsPayload
+private struct TeamStatsEnvelope: Decodable {
+    let data: TeamStatsPayload
 }
 
 private struct TeamLeaveEnvelope: Decodable {
@@ -429,11 +418,38 @@ private struct TeamMembersPayload: Decodable {
 
 private struct TeamMemberPayload: Decodable {
     let id: String
+    let userId: String
     let nickname: String
     let avatarKey: String?
 
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case userId
+        case nickname
+        case avatarKey
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let decodedID = try container.decodeIfPresent(String.self, forKey: .id)
+        let decodedUserID = try container.decodeIfPresent(String.self, forKey: .userId)
+        guard let identity = decodedUserID ?? decodedID else {
+            throw DecodingError.keyNotFound(
+                CodingKeys.userId,
+                DecodingError.Context(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "Team member identity is missing."
+                )
+            )
+        }
+        id = decodedID ?? identity
+        userId = decodedUserID ?? identity
+        nickname = try container.decode(String.self, forKey: .nickname)
+        avatarKey = try container.decodeIfPresent(String.self, forKey: .avatarKey)
+    }
+
     var domain: TeamMember {
-        TeamMember(id: id, nickname: nickname, avatarKey: avatarKey)
+        TeamMember(id: userId, nickname: nickname, avatarKey: avatarKey)
     }
 }
 
@@ -444,6 +460,25 @@ private struct TeamDailySummaryPayload: Decodable {
     let completedMemberCount: Int
     let totalMemberCount: Int
     let members: [TeamDailyMemberPayload]
+
+    private enum CodingKeys: String, CodingKey {
+        case team
+        case date
+        case teamTotalDistanceMeters
+        case completedMemberCount
+        case totalMemberCount
+        case members
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        team = try container.decode(TeamIdentityPayload.self, forKey: .team)
+        date = try container.decode(String.self, forKey: .date)
+        teamTotalDistanceMeters = try container.decodeLossyInt(forKey: .teamTotalDistanceMeters)
+        completedMemberCount = try container.decodeLossyInt(forKey: .completedMemberCount)
+        totalMemberCount = try container.decodeLossyInt(forKey: .totalMemberCount)
+        members = try container.decode([TeamDailyMemberPayload].self, forKey: .members)
+    }
 
     var domain: TeamDailySummary? {
         guard
@@ -535,15 +570,15 @@ private struct TeamDailyMemberPayload: Decodable {
         nickname = try container.decode(String.self, forKey: .nickname)
         avatarKey = try container.decodeIfPresent(String.self, forKey: .avatarKey)
         teamJoinedAt = try container.decodeIfPresent(String.self, forKey: .teamJoinedAt)
-        distanceMeters = try container.decode(Int.self, forKey: .distanceMeters)
-        durationSeconds = try container.decode(Int.self, forKey: .durationSeconds)
-        averagePaceSecondsPerKm = try container.decodeIfPresent(Int.self, forKey: .averagePaceSecondsPerKm)
-        calories = try container.decode(Int.self, forKey: .calories)
+        distanceMeters = try container.decodeLossyInt(forKey: .distanceMeters)
+        durationSeconds = try container.decodeLossyInt(forKey: .durationSeconds)
+        averagePaceSecondsPerKm = try container.decodeLossyIntIfPresent(forKey: .averagePaceSecondsPerKm)
+        calories = try container.decodeLossyInt(forKey: .calories)
         completed = try container.decode(Bool.self, forKey: .completed)
-        totalDistanceMeters = try container.decodeIfPresent(Int.self, forKey: .totalDistanceMeters)
-        totalDurationSeconds = try container.decodeIfPresent(Int.self, forKey: .totalDurationSeconds)
-        totalRunCount = try container.decodeIfPresent(Int.self, forKey: .totalRunCount)
-        totalAveragePaceSecondsPerKm = try container.decodeIfPresent(Int.self, forKey: .totalAveragePaceSecondsPerKm)
+        totalDistanceMeters = try container.decodeLossyIntIfPresent(forKey: .totalDistanceMeters)
+        totalDurationSeconds = try container.decodeLossyIntIfPresent(forKey: .totalDurationSeconds)
+        totalRunCount = try container.decodeLossyIntIfPresent(forKey: .totalRunCount)
+        totalAveragePaceSecondsPerKm = try container.decodeLossyIntIfPresent(forKey: .totalAveragePaceSecondsPerKm)
     }
 
     var domain: TeamDailyMember {
@@ -565,74 +600,61 @@ private struct TeamDailyMemberPayload: Decodable {
     }
 }
 
-private struct TeamSeasonStatsPayload: Decodable {
-    let season: TeamSeasonPayload
-    let team: TeamSeasonTeamPayload
-    let members: [TeamSeasonMemberPayload]
+private struct TeamStatsPayload: Decodable {
+    let period: TeamStatsPeriodPayload
+    let team: TeamStatsTeamPayload
+    let members: [TeamMemberStatsPayload]
 
-    var domain: TeamSeasonStats? {
-        guard let season = season.domain else { return nil }
-
-        return TeamSeasonStats(
-            season: season,
+    var domain: TeamStats {
+        TeamStats(
+            period: period.domain,
             team: team.domain,
             members: members.map(\.domain)
         )
     }
 }
 
-private struct TeamSeasonPayload: Decodable {
-    let id: String
-    let name: String
-    let year: Int
-    let month: Int
-    let startsAt: String
-    let endsAt: String
+private struct TeamStatsPeriodPayload: Decodable {
+    let type: String
+    let referenceDate: String
+    let startsAt: String?
+    let endsAt: String?
     let elapsedDays: Int
 
-    var domain: TeamSeason? {
-        guard
-            let startsAt = TeamDateCoder.dateTime(from: startsAt),
-            let endsAt = TeamDateCoder.dateTime(from: endsAt)
-        else {
-            return nil
-        }
-
-        return TeamSeason(
-            id: id,
-            name: name,
-            year: year,
-            month: month,
-            startsAt: startsAt,
-            endsAt: endsAt,
+    var domain: TeamStatsPeriod {
+        TeamStatsPeriod(
+            type: type,
+            referenceDate: referenceDate,
+            startsAt: startsAt.flatMap(TeamDateCoder.dateTime(from:)),
+            endsAt: endsAt.flatMap(TeamDateCoder.dateTime(from:)),
             elapsedDays: elapsedDays
         )
     }
 }
 
-private struct TeamSeasonTeamPayload: Decodable {
+private struct TeamStatsTeamPayload: Decodable {
     let id: String
     let name: String
     let ownerId: String
 
-    var domain: TeamSeasonTeam {
-        TeamSeasonTeam(id: id, name: name, ownerID: ownerId)
+    var domain: TeamStatsTeam {
+        TeamStatsTeam(id: id, name: name, ownerID: ownerId)
     }
 }
 
-private struct TeamSeasonMemberPayload: Decodable {
+private struct TeamMemberStatsPayload: Decodable {
     let id: String
     let matchingID: String
     let nickname: String
     let avatarKey: String?
     let teamJoinedAt: String?
-    let seasonDistanceMeters: Int
-    let seasonDurationSeconds: Int
-    let seasonCalories: Int
-    let seasonRunCount: Int
-    let seasonActiveDays: Int
+    let distanceMeters: Int
+    let durationSeconds: Int
+    let calories: Int
+    let runCount: Int
+    let activeDays: Int
     let averagePaceSecondsPerKm: Int?
-    let consecutiveRunDays: Int
+    let recentRunDays: Int
 
     private enum CodingKeys: String, CodingKey {
         case id
@@ -641,13 +663,13 @@ private struct TeamSeasonMemberPayload: Decodable {
         case nickname
         case avatarKey
         case teamJoinedAt
-        case seasonDistanceMeters
-        case seasonDurationSeconds
-        case seasonCalories
-        case seasonRunCount
-        case seasonActiveDays
+        case distanceMeters
+        case durationSeconds
+        case calories
+        case runCount
+        case activeDays
         case averagePaceSecondsPerKm
-        case consecutiveRunDays
+        case recentRunDays
     }
 
     init(from decoder: Decoder) throws {
@@ -659,7 +681,7 @@ private struct TeamSeasonMemberPayload: Decodable {
         guard let id = decodedID ?? decodedUserID ?? decodedProfileID else {
             throw DecodingError.keyNotFound(
                 CodingKeys.id,
-                DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Team season member id is missing")
+                DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Team stats member id is missing")
             )
         }
 
@@ -668,29 +690,29 @@ private struct TeamSeasonMemberPayload: Decodable {
         nickname = try container.decode(String.self, forKey: .nickname)
         avatarKey = try container.decodeIfPresent(String.self, forKey: .avatarKey)
         teamJoinedAt = try container.decodeIfPresent(String.self, forKey: .teamJoinedAt)
-        seasonDistanceMeters = try container.decode(Int.self, forKey: .seasonDistanceMeters)
-        seasonDurationSeconds = try container.decode(Int.self, forKey: .seasonDurationSeconds)
-        seasonCalories = try container.decode(Int.self, forKey: .seasonCalories)
-        seasonRunCount = try container.decode(Int.self, forKey: .seasonRunCount)
-        seasonActiveDays = try container.decode(Int.self, forKey: .seasonActiveDays)
-        averagePaceSecondsPerKm = try container.decodeIfPresent(Int.self, forKey: .averagePaceSecondsPerKm)
-        consecutiveRunDays = try container.decode(Int.self, forKey: .consecutiveRunDays)
+        distanceMeters = try container.decodeLossyInt(forKey: .distanceMeters)
+        durationSeconds = try container.decodeLossyInt(forKey: .durationSeconds)
+        calories = try container.decodeLossyInt(forKey: .calories)
+        runCount = try container.decodeLossyInt(forKey: .runCount)
+        activeDays = try container.decodeLossyInt(forKey: .activeDays)
+        averagePaceSecondsPerKm = try container.decodeLossyIntIfPresent(forKey: .averagePaceSecondsPerKm)
+        recentRunDays = try container.decodeLossyInt(forKey: .recentRunDays)
     }
 
-    var domain: TeamSeasonMember {
-        TeamSeasonMember(
+    var domain: TeamMemberStats {
+        TeamMemberStats(
             id: id,
             matchingID: matchingID,
             nickname: nickname,
             avatarKey: avatarKey,
             teamJoinedAt: teamJoinedAt ?? "",
-            seasonDistanceMeters: seasonDistanceMeters,
-            seasonDurationSeconds: seasonDurationSeconds,
-            seasonCalories: seasonCalories,
-            seasonRunCount: seasonRunCount,
-            seasonActiveDays: seasonActiveDays,
+            distanceMeters: distanceMeters,
+            durationSeconds: durationSeconds,
+            calories: calories,
+            runCount: runCount,
+            activeDays: activeDays,
             averagePaceSecondsPerKilometer: averagePaceSecondsPerKm,
-            consecutiveRunDays: consecutiveRunDays
+            recentRunDays: recentRunDays
         )
     }
 }
@@ -759,7 +781,7 @@ private extension Bundle {
             return nil
         }
 
-        return URL(string: baseURLString)
+        return URL(string: baseURLString)?.runpamineAPIBaseURL
     }
 }
 

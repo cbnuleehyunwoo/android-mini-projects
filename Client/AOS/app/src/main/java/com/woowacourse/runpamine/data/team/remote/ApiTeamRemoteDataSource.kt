@@ -1,9 +1,10 @@
 package com.woowacourse.runpamine.data.team.remote
 
+import com.woowacourse.runpamine.data.network.toRunpamineApiBaseUrl
 import com.woowacourse.runpamine.domain.team.LeaveTeamResult
 import com.woowacourse.runpamine.domain.team.Team
 import com.woowacourse.runpamine.domain.team.TeamDailySummary
-import com.woowacourse.runpamine.domain.team.TeamMemberSeasonStats
+import com.woowacourse.runpamine.domain.team.TeamMemberStats
 import com.woowacourse.runpamine.domain.team.TeamMemberSummary
 import com.woowacourse.runpamine.domain.team.TeamRunSummary
 import kotlinx.coroutines.Dispatchers
@@ -16,7 +17,7 @@ import java.time.LocalDate
 class ApiTeamRemoteDataSource(
     baseUrl: String,
 ) : TeamRemoteDataSource {
-    private val apiBaseUrl = baseUrl.toApiBaseUrl()
+    private val apiBaseUrl = baseUrl.toRunpamineApiBaseUrl()
 
     override suspend fun createTeam(
         accessToken: String,
@@ -79,17 +80,17 @@ class ApiTeamRemoteDataSource(
             }
         }
 
-    override suspend fun getMyTeamSeasonStats(accessToken: String): List<TeamMemberSeasonStats> =
+    override suspend fun getMyTeamStats(accessToken: String): List<TeamMemberStats> =
         withContext(Dispatchers.IO) {
             val response =
                 request(
-                    path = "/teams/me/season-stats",
+                    path = "/teams/me/stats?period=$ALL_TIME_PERIOD",
                     method = "GET",
                     accessToken = accessToken,
                 )
             val members = response.getJSONObject("data").getJSONArray("members")
             List(members.length()) { index ->
-                members.getJSONObject(index).toTeamMemberSeasonStats()
+                members.getJSONObject(index).toTeamMemberStats()
             }
         }
 
@@ -192,24 +193,24 @@ private fun JSONObject.toTeamMemberSummary(): TeamMemberSummary =
         avatarKey = optString("avatarKey").takeIf { it.isNotBlank() },
     )
 
-private fun JSONObject.toTeamMemberSeasonStats(): TeamMemberSeasonStats =
-    TeamMemberSeasonStats(
+private fun JSONObject.toTeamMemberStats(): TeamMemberStats =
+    TeamMemberStats(
         id = getString("id"),
         nickname = getString("nickname"),
         avatarKey = optString("avatarKey").takeIf { it.isNotBlank() },
         teamJoinedAt = optString("teamJoinedAt"),
-        seasonDistanceMeters = optInt("seasonDistanceMeters"),
-        seasonDurationSeconds = optInt("seasonDurationSeconds"),
-        seasonCalories = optInt("seasonCalories"),
-        seasonRunCount = optInt("seasonRunCount"),
-        seasonActiveDays = optInt("seasonActiveDays"),
+        distanceMeters = optInt("distanceMeters"),
+        durationSeconds = optInt("durationSeconds"),
+        calories = optInt("calories"),
+        runCount = optInt("runCount"),
+        activeDays = optInt("activeDays"),
         averagePaceSecondsPerKm =
             if (has("averagePaceSecondsPerKm") && !isNull("averagePaceSecondsPerKm")) {
                 getInt("averagePaceSecondsPerKm")
             } else {
                 null
             },
-        consecutiveRunDays = getInt("consecutiveRunDays"),
+        recentRunDays = optInt("recentRunDays"),
     )
 
 private fun JSONObject.toTeamDailySummary(): TeamDailySummary {
@@ -258,17 +259,9 @@ private fun String.toApiErrorMessage(responseCode: Int): String =
         }
     }.getOrDefault("팀 요청에 실패했어요. ($responseCode)")
 
-private fun String.toApiBaseUrl(): String {
-    val normalized = trim().trimEnd('/')
-    return if (normalized.endsWith(".supabase.co")) {
-        "$normalized/functions/v1/api"
-    } else {
-        normalized
-    }
-}
-
 private const val CONNECT_TIMEOUT_MILLIS = 10_000
 private const val READ_TIMEOUT_MILLIS = 10_000
 private const val TEAM_NAME_ALREADY_EXISTS = "Team name already exists"
 private const val DUPLICATE_TEAM_NAME_MESSAGE = "중복된 팀 이름입니다."
+private const val ALL_TIME_PERIOD = "all"
 private const val TAG = "TeamApi"

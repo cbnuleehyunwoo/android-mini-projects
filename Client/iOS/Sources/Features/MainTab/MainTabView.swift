@@ -1,13 +1,14 @@
 import SwiftUI
 
 struct MainTabView: View {
-@State private var selectedTab: MainTab = .home
+    @State private var selectedTab: MainTab = .home
     @State private var presentedAction: HomeAction?
     @State private var team: RunningTeam?
     @State private var isShowingMyPage = false
     @State private var isRunning = false
     @State private var isShowingInvite = false
-    @State private var selectedTeamMemberDetail: TeamMemberSeasonDetail?
+    @State private var runDataRefreshRevision = 0
+    @State private var selectedTeamMemberDetail: TeamMemberStatsDetail?
     @State private var homeTeamProgress: HomeTeamProgress?
     @State private var nickname: String
     @State private var currentUserID: String?
@@ -71,6 +72,7 @@ struct MainTabView: View {
                         accessToken: accessToken,
                         currentUserID: currentUserID,
                         cache: teamDashboardCache,
+                        refreshRevision: runDataRefreshRevision,
                         onCreateTeam: {
                             presentedAction = .createTeam
                         },
@@ -95,10 +97,17 @@ struct MainTabView: View {
                         accessToken: accessToken,
                         team: team,
                         nickname: nickname,
-                        cache: rankingCache
+                        currentUserID: currentUserID,
+                        cache: rankingCache,
+                        refreshRevision: runDataRefreshRevision
                     )
                 case .history:
-                    HistoryView(runService: runService, accessToken: accessToken, cache: historyCache)
+                    HistoryView(
+                        runService: runService,
+                        accessToken: accessToken,
+                        cache: historyCache,
+                        refreshRevision: runDataRefreshRevision
+                    )
                 }
             }
             .padding(.bottom, AppTabBar.height)
@@ -114,7 +123,7 @@ struct MainTabView: View {
                     }
                     .zIndex(1)
 
-                TeamMemberSeasonDetailSheet(detail: selectedTeamMemberDetail) {
+                TeamMemberStatsDetailSheet(detail: selectedTeamMemberDetail) {
                     dismissTeamMemberDetail()
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -156,7 +165,12 @@ struct MainTabView: View {
             .networkErrorOverlay()
         }
         .runpamineFullScreenCover(isPresented: $isRunning) {
-            RunningView(runService: runService, accessToken: accessToken, onDismiss: { isRunning = false })
+            RunningView(
+                runService: runService,
+                accessToken: accessToken,
+                onRunSaved: handleRunSaved,
+                onDismiss: { isRunning = false }
+            )
         }
         .runpamineFullScreenCover(isPresented: $isShowingInvite) {
             InviteMemberView(inviteCode: team?.inviteCode ?? "", onDismiss: { isShowingInvite = false })
@@ -191,6 +205,16 @@ struct MainTabView: View {
         }
     }
 
+    private func handleRunSaved() {
+        teamDashboardCache.clearDashboard()
+        rankingCache.invalidate()
+        runDataRefreshRevision &+= 1
+
+        Task {
+            await refreshHomeState()
+        }
+    }
+
     @MainActor
     private func refreshHomeState() async {
         guard let accessToken else { return }
@@ -204,36 +228,24 @@ struct MainTabView: View {
                 store.saveNickname(profile.nickname)
             }
 
-            if let runningTeam = homeState.team?.runningTeam {
+            if let teamSummary = homeState.team, let runningTeam = teamSummary.runningTeam {
                 if team?.id != runningTeam.id {
                     teamDashboardCache.clearDashboard()
                 }
                 team = runningTeam
+                homeTeamProgress = HomeTeamProgress(
+                    completedMemberCount: teamSummary.todayRunMemberCount,
+                    totalMemberCount: teamSummary.memberCount
+                )
                 store.saveTeam(runningTeam)
-                await refreshHomeTeamProgress(for: runningTeam)
+            } else {
+                team = nil
+                homeTeamProgress = nil
+                teamDashboardCache.clearDashboard()
+                store.clearTeam()
             }
         } catch {
             return
-        }
-    }
-
-    @MainActor
-    private func refreshHomeTeamProgress(for runningTeam: RunningTeam) async {
-        guard let accessToken else {
-            homeTeamProgress = nil
-            return
-        }
-
-        do {
-            let summary = try await teamService.fetchDailySummary(date: Date(), accessToken: accessToken)
-            guard team?.id == runningTeam.id else { return }
-            homeTeamProgress =
-                HomeTeamProgress(
-                    completedMemberCount: summary.completedMemberCount,
-                    totalMemberCount: summary.totalMemberCount
-                )
-        } catch {
-            homeTeamProgress = nil
         }
     }
 }

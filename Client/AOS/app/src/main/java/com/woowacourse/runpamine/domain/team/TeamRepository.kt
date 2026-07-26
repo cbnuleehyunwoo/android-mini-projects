@@ -11,7 +11,7 @@ interface TeamRepository {
 
     suspend fun getMyTeamMembers(): List<TeamMemberSummary>
 
-    suspend fun getMyTeamSeasonStats(): List<TeamMemberSeasonStats>
+    suspend fun getMyTeamStats(): List<TeamMemberStats>
 
     suspend fun getMyTeamDailySummary(date: LocalDate): TeamDailySummary
 

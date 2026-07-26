@@ -34,7 +34,7 @@ import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TeamMemberSeasonBottomSheet(
+fun TeamMemberStatsBottomSheet(
     member: TeamMember,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
@@ -100,19 +100,19 @@ fun TeamMemberSeasonBottomSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                SeasonMetric(
+                TotalMetric(
                     label = "총 거리 (km)",
-                    value = member.seasonDistance,
+                    value = member.totalDistance,
                     modifier = Modifier.weight(1f),
                 )
-                SeasonMetric(
+                TotalMetric(
                     label = "총 러닝 횟수",
-                    value = member.seasonRunCount.toString(),
+                    value = member.totalRunCount.toString(),
                     modifier = Modifier.weight(1f),
                 )
-                SeasonMetric(
+                TotalMetric(
                     label = "평균 페이스",
-                    value = member.seasonAveragePace,
+                    value = member.averagePace,
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -122,7 +122,7 @@ fun TeamMemberSeasonBottomSheet(
 }
 
 @Composable
-private fun SeasonMetric(
+private fun TotalMetric(
     label: String,
     value: String,
     modifier: Modifier = Modifier,
@@ -157,9 +157,9 @@ private fun String.toJoinedDateText(): String =
 
 @Preview(showBackground = true)
 @Composable
-private fun TeamMemberSeasonBottomSheetPreview() {
+private fun TeamMemberStatsBottomSheetPreview() {
     RunpamineTheme {
-        TeamMemberSeasonBottomSheet(
+        TeamMemberStatsBottomSheet(
             member =
                 TeamMember(
                     id = "1",
@@ -169,10 +169,10 @@ private fun TeamMemberSeasonBottomSheetPreview() {
                     pace = "-",
                     calories = "0",
                     teamJoinedAt = "2026-05-01",
-                    seasonDistance = "87.3",
-                    seasonDuration = "7:51:32",
-                    seasonRunCount = 12,
-                    seasonAveragePace = "5′24″",
+                    totalDistance = "87.3",
+                    totalDuration = "7:51:32",
+                    totalRunCount = 12,
+                    averagePace = "5′24″",
                 ),
             onDismissRequest = {},
         )
