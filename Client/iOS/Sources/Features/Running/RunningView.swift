@@ -4,22 +4,40 @@ struct RunningView: View {
     @StateObject private var tracker = RunningTracker()
     @State private var finishedRecord: RunningRecord?
     @State private var isShowingStopDialog = false
+    @State private var isSavingRun = false
+    @State private var runSaveErrorMessage: String?
+    @State private var hasReportedSavedRun = false
     private let runService: RunServiceProtocol
     private let accessToken: String?
+    private let onRunSaved: () -> Void
     private let onDismiss: () -> Void
 
-    init(runService: RunServiceProtocol = MockRunService(), accessToken: String? = nil, onDismiss: @escaping () -> Void = {}) {
+    init(
+        runService: RunServiceProtocol = MockRunService(),
+        accessToken: String? = nil,
+        onRunSaved: @escaping () -> Void = {},
+        onDismiss: @escaping () -> Void = {}
+    ) {
         self.runService = runService
         self.accessToken = accessToken
+        self.onRunSaved = onRunSaved
         self.onDismiss = onDismiss
     }
 
     var body: some View {
         Group {
             if let finishedRecord {
-                RunningSummaryView(record: finishedRecord) {
-                    onDismiss()
-                }
+                RunningSummaryView(
+                    record: finishedRecord,
+                    isSaving: isSavingRun,
+                    saveErrorMessage: runSaveErrorMessage,
+                    onRetry: {
+                        Task {
+                            await saveRun(finishedRecord)
+                        }
+                    },
+                    onDone: onDismiss
+                )
             } else {
                 activeRunningView
             }
@@ -186,8 +204,24 @@ struct RunningView: View {
     }
 
     private func saveRun(_ record: RunningRecord) async {
-        guard let accessToken else { return }
-        _ = try? await runService.createRun(record: record, accessToken: accessToken)
+        guard let accessToken else {
+            runSaveErrorMessage = "로그인 정보가 없어 기록을 저장하지 못했습니다."
+            return
+        }
+
+        isSavingRun = true
+        runSaveErrorMessage = nil
+
+        do {
+            _ = try await runService.createRun(record: record, accessToken: accessToken)
+            if !hasReportedSavedRun {
+                hasReportedSavedRun = true
+                onRunSaved()
+            }
+        } catch {
+            runSaveErrorMessage = error.localizedDescription
+        }
+        isSavingRun = false
     }
 }
 

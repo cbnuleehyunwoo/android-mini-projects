@@ -1,5 +1,4 @@
+// EC2 test example: http:/$()/203.0.113.10:8080
 RUNPAMINE_API_BASE_URL =
-RUNPAMINE_SUPABASE_URL =
-RUNPAMINE_SUPABASE_ANON_KEY =
 
 #include? "Secrets.xcconfig"

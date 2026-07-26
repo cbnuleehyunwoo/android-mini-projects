@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -22,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.woowacourse.runpamine.presentation.team.model.TeamMember
 import com.woowacourse.runpamine.ui.theme.Red40
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
@@ -63,32 +66,46 @@ fun TeamContent(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
             ) {
                 IconButton(
                     onClick = onPreviousDateClick,
                     enabled = !isDateLoading,
+                    modifier = Modifier.size(40.dp),
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                         contentDescription = "이전 날짜",
+                        modifier = Modifier.size(18.dp),
+                        tint = if (isDateLoading) Color.Gray.copy(alpha = 0.3f) else Color.Black,
                     )
                 }
                 Text(
                     text = date,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.widthIn(min = 190.dp),
+                    style =
+                        MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium,
+                        ),
                     color = Color.Black,
                     textAlign = TextAlign.Center,
                 )
                 IconButton(
                     onClick = onNextDateClick,
                     enabled = canMoveToNextDate && !isDateLoading,
+                    modifier = Modifier.size(40.dp),
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                         contentDescription = "다음 날짜",
-                        tint = if (canMoveToNextDate) Color.Black else Color.Gray.copy(alpha = 0.3f),
+                        modifier = Modifier.size(18.dp),
+                        tint =
+                            if (canMoveToNextDate && !isDateLoading) {
+                                Color.Black
+                            } else {
+                                Color.Gray.copy(alpha = 0.3f)
+                            },
                     )
                 }
             }

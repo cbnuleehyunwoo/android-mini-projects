@@ -41,7 +41,7 @@ import com.woowacourse.runpamine.domain.profile.TeamSummary
 import com.woowacourse.runpamine.domain.profile.UserProfile
 import com.woowacourse.runpamine.domain.ranking.MyRankingSummary
 import com.woowacourse.runpamine.domain.ranking.RankingMetric
-import com.woowacourse.runpamine.domain.ranking.RankingSeason
+import com.woowacourse.runpamine.domain.ranking.RankingPeriod
 import com.woowacourse.runpamine.domain.ranking.TeamRanking
 import com.woowacourse.runpamine.domain.ranking.UserRanking
 import com.woowacourse.runpamine.domain.ranking.teamStandardLabel
@@ -431,7 +431,7 @@ private fun previewUiState(scope: RankingScope = RankingScope.PERSONAL): Ranking
             ),
         myRankingSummary =
             MyRankingSummary(
-                season = RankingSeason("season", "2026-06", 2026, 6, 10),
+                period = RankingPeriod("all", null, null, 10),
                 eligible = true,
                 requiredDistanceMeters = 10_000,
                 distanceMeters = 253_100,

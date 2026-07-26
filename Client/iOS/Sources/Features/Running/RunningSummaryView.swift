@@ -2,6 +2,9 @@ import SwiftUI
 
 struct RunningSummaryView: View {
     let record: RunningRecord
+    var isSaving = false
+    var saveErrorMessage: String?
+    var onRetry: (() -> Void)?
     let onDone: () -> Void
 
     var body: some View {
@@ -34,7 +37,25 @@ struct RunningSummaryView: View {
 
                 Spacer()
 
-                PrimaryButton(title: "완료") {
+                if !isSaving, let saveErrorMessage {
+                    VStack(spacing: 8) {
+                        Text(saveErrorMessage)
+                            .font(AppTheme.Typography.font(size: 13, weight: .semibold))
+                            .foregroundStyle(AppTheme.Colors.danger)
+                            .multilineTextAlignment(.center)
+
+                        if let onRetry {
+                            Button("다시 저장") {
+                                onRetry()
+                            }
+                            .font(AppTheme.Typography.font(size: 14, weight: .bold))
+                            .foregroundStyle(AppTheme.Colors.primary)
+                        }
+                    }
+                    .padding(.horizontal, 24)
+                }
+
+                PrimaryButton(title: "완료", isLoading: isSaving, isDisabled: isSaving) {
                     onDone()
                 }
                 .padding(.horizontal, AppTheme.Layout.horizontalPadding)

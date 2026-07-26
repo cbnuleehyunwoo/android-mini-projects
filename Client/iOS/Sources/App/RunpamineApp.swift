@@ -1,5 +1,4 @@
 import GoogleSignIn
-import Supabase
 import SwiftUI
 
 @main
@@ -13,25 +12,14 @@ struct RunpamineApp: App {
     private let authService: AuthServiceProtocol
 
     init() {
-        let supabase = Bundle.main.supabaseConfiguration.map {
-            SupabaseClient(
-                supabaseURL: $0.url,
-                supabaseKey: $0.anonKey,
-                options: .init(
-                    auth: .init(
-                        redirectToURL: SupabaseConfiguration.redirectURL,
-                        emitLocalSessionAsInitialSession: true
-                    )
-                )
-            )
-        }
-        let httpClient = AuthenticatedHTTPClient(supabase: supabase)
+        let sessionStore = AuthSessionStore.shared
+        let httpClient = AuthenticatedHTTPClient(sessionStore: sessionStore)
 
-        authService = SupabaseAuthService(store: store, supabase: supabase, httpClient: httpClient)
-        profileService = (try? ProfileAPIService(httpClient: httpClient)) ?? MockProfileService()
-        runService = (try? RunAPIService(httpClient: httpClient)) ?? MockRunService()
-        teamService = (try? TeamAPIService(httpClient: httpClient)) ?? MockTeamService(store: store)
-        rankingService = (try? RankingAPIService(httpClient: httpClient)) ?? MockRankingService()
+        authService = WASAuthService(store: store, sessionStore: sessionStore, httpClient: httpClient)
+        profileService = Self.makeProfileService(httpClient: httpClient)
+        runService = Self.makeRunService(httpClient: httpClient)
+        teamService = Self.makeTeamService(httpClient: httpClient, store: store)
+        rankingService = Self.makeRankingService(httpClient: httpClient)
     }
 
     var body: some Scene {
@@ -50,5 +38,58 @@ struct RunpamineApp: App {
                     GIDSignIn.sharedInstance.handle(url)
                 }
         }
+    }
+}
+
+private extension RunpamineApp {
+    static func makeProfileService(httpClient: AuthenticatedHTTPClient) -> ProfileServiceProtocol {
+        #if DEBUG
+        return (try? ProfileAPIService(httpClient: httpClient)) ?? MockProfileService()
+        #else
+        do {
+            return try ProfileAPIService(httpClient: httpClient)
+        } catch {
+            fatalError("ProfileAPIService initialization failed: \(error.localizedDescription)")
+        }
+        #endif
+    }
+
+    static func makeRunService(httpClient: AuthenticatedHTTPClient) -> RunServiceProtocol {
+        #if DEBUG
+        return (try? RunAPIService(httpClient: httpClient)) ?? MockRunService()
+        #else
+        do {
+            return try RunAPIService(httpClient: httpClient)
+        } catch {
+            fatalError("RunAPIService initialization failed: \(error.localizedDescription)")
+        }
+        #endif
+    }
+
+    static func makeTeamService(
+        httpClient: AuthenticatedHTTPClient,
+        store: LocalAppStateStore
+    ) -> TeamServiceProtocol {
+        #if DEBUG
+        return (try? TeamAPIService(httpClient: httpClient)) ?? MockTeamService(store: store)
+        #else
+        do {
+            return try TeamAPIService(httpClient: httpClient)
+        } catch {
+            fatalError("TeamAPIService initialization failed: \(error.localizedDescription)")
+        }
+        #endif
+    }
+
+    static func makeRankingService(httpClient: AuthenticatedHTTPClient) -> RankingServiceProtocol {
+        #if DEBUG
+        return (try? RankingAPIService(httpClient: httpClient)) ?? MockRankingService()
+        #else
+        do {
+            return try RankingAPIService(httpClient: httpClient)
+        } catch {
+            fatalError("RankingAPIService initialization failed: \(error.localizedDescription)")
+        }
+        #endif
     }
 }

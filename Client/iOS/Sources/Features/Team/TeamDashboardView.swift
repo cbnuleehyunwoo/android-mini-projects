@@ -4,7 +4,7 @@ final class TeamDashboardCache: ObservableObject {
     @Published var records: [RunningRecord] = []
     @Published var teamMembers: [TeamMember]?
     @Published var dailySummary: TeamDailySummary?
-    @Published var seasonStats: TeamSeasonStats?
+    @Published var teamStats: TeamStats?
     @Published var hasResolvedDashboard = false
     @Published var selectedDate = Calendar.current.startOfDay(for: Date())
     @Published var isDateLoading = false
@@ -12,7 +12,7 @@ final class TeamDashboardCache: ObservableObject {
     func clearDashboard() {
         teamMembers = nil
         dailySummary = nil
-        seasonStats = nil
+        teamStats = nil
         hasResolvedDashboard = false
         isDateLoading = false
         selectedDate = Calendar.current.startOfDay(for: Date())
@@ -26,11 +26,12 @@ struct TeamDashboardView: View {
     let accessToken: String?
     let currentUserID: String?
     @ObservedObject var cache: TeamDashboardCache
+    var refreshRevision = 0
     let onCreateTeam: () -> Void
     let onJoinTeam: () -> Void
     let onInvite: () -> Void
     let onLeaveTeam: () -> Void
-    let onSelectMember: (TeamMemberSeasonDetail) -> Void
+    let onSelectMember: (TeamMemberStatsDetail) -> Void
     @State private var isShowingTeamMenu = false
     @State private var isShowingLeaveConfirmation = false
     @State private var isLeavingTeam = false
@@ -46,9 +47,13 @@ struct TeamDashboardView: View {
                 teamContent
             }
         }
-        .task(id: team?.id) {
+        .task(id: dashboardRefreshIdentifier) {
             await refreshDashboard()
         }
+    }
+
+    private var dashboardRefreshIdentifier: String {
+        "\(team?.id.uuidString ?? "no-team")|\(refreshRevision)"
     }
 
     private var teamContent: some View {
@@ -250,7 +255,7 @@ struct TeamDashboardView: View {
 
     private var memberCards: [TeamMemberCardModel] {
         if let dailySummary = cache.dailySummary {
-            let seasonMembersByID = cache.seasonStats?.members.reduce(into: [String: TeamSeasonMember]()) { result, member in
+            let statsMembersByID = cache.teamStats?.members.reduce(into: [String: TeamMemberStats]()) { result, member in
                 result[member.matchingID] = member
                 result[member.id] = member
             } ?? [:]
@@ -263,7 +268,7 @@ struct TeamDashboardView: View {
                     TeamMemberCardModel(
                         teamMember: member,
                         dailyMember: dailyMembersByID[member.id],
-                        seasonMember: seasonMembersByID[member.id],
+                        memberStats: statsMembersByID[member.id],
                         isCurrentUser: member.id == currentUserID
                     )
                 }
@@ -272,7 +277,23 @@ struct TeamDashboardView: View {
             return dailySummary.members.map { member in
                 TeamMemberCardModel(
                     member: member,
-                    seasonMember: seasonMembersByID[member.id],
+                    memberStats: statsMembersByID[member.id],
+                    isCurrentUser: member.id == currentUserID
+                )
+            }
+        }
+
+        if let teamMembers = cache.teamMembers {
+            let statsMembersByID = cache.teamStats?.members.reduce(into: [String: TeamMemberStats]()) { result, member in
+                result[member.matchingID] = member
+                result[member.id] = member
+            } ?? [:]
+
+            return teamMembers.map { member in
+                TeamMemberCardModel(
+                    teamMember: member,
+                    dailyMember: nil,
+                    memberStats: statsMembersByID[member.id],
                     isCurrentUser: member.id == currentUserID
                 )
             }
@@ -323,7 +344,7 @@ struct TeamDashboardView: View {
     }
 
     private var displayTeam: RunningTeam? {
-        cache.dailySummary?.team ?? cache.seasonStats?.runningTeam ?? team
+        cache.dailySummary?.team ?? cache.teamStats?.runningTeam ?? team
     }
 
     private var shouldShowSkeleton: Bool {
@@ -398,34 +419,27 @@ struct TeamDashboardView: View {
     private func refreshDashboard() async {
         guard team != nil, let accessToken else { return }
         cache.selectedDate = Calendar.current.startOfDay(for: Date())
-        cache.hasResolvedDashboard = cache.dailySummary != nil
+        cache.hasResolvedDashboard = false
 
-        do {
-            async let nextTeamMembers = teamService.fetchMyTeamMembers(accessToken: accessToken)
-            async let nextDailySummary = teamService.fetchDailySummary(date: cache.selectedDate, accessToken: accessToken)
-            async let nextSeasonStats = teamService.fetchMyTeamSeasonStats(seasonID: nil, accessToken: accessToken)
-
-            cache.teamMembers = try? await nextTeamMembers
-            let fetchedDailySummary = try await nextDailySummary
-            do {
-                let fetchedSeasonStats = try await nextSeasonStats
-                if cache.dailySummary != fetchedDailySummary {
-                    cache.dailySummary = fetchedDailySummary
-                }
-                if cache.seasonStats != fetchedSeasonStats {
-                    cache.seasonStats = fetchedSeasonStats
-                }
-            } catch {
-                if cache.dailySummary != fetchedDailySummary {
-                    cache.dailySummary = fetchedDailySummary
-                }
-                cache.seasonStats = nil
-            }
-        } catch {
-            if cache.dailySummary == nil {
-                cache.seasonStats = nil
-            }
+        async let nextTeamMembers = optionalResult {
+            try await teamService.fetchMyTeamMembers(accessToken: accessToken)
         }
+        async let nextDailySummary = optionalResult {
+            try await teamService.fetchDailySummary(date: cache.selectedDate, accessToken: accessToken)
+        }
+        async let nextTeamStats = optionalResult {
+            try await teamService.fetchMyTeamStats(accessToken: accessToken)
+        }
+
+        let (teamMembers, dailySummary, teamStats) = await (
+            nextTeamMembers,
+            nextDailySummary,
+            nextTeamStats
+        )
+
+        cache.teamMembers = teamMembers
+        cache.dailySummary = dailySummary
+        cache.teamStats = teamStats
 
         cache.hasResolvedDashboard = true
     }
@@ -449,6 +463,12 @@ struct TeamDashboardView: View {
             cache.dailySummary = nil
         }
     }
+}
+
+private func optionalResult<Value>(
+    _ operation: () async throws -> Value
+) async -> Value? {
+    try? await operation()
 }
 
 private struct TeamEmptyStateView: View {
@@ -665,16 +685,16 @@ private enum TeamSkeletonStyle {
     static let fill = Color(red: 0.92, green: 0.94, blue: 0.97)
 }
 
-struct TeamMemberSeasonDetail: Identifiable, Equatable {
+struct TeamMemberStatsDetail: Identifiable, Equatable {
     let id: String
     let name: String
     let joinedAt: String
-    let seasonDistance: String
-    let seasonRunCount: String
-    let seasonAveragePace: String
+    let totalDistance: String
+    let totalRunCount: String
+    let averagePace: String
 
     var joinedAtText: String {
-        TeamMemberSeasonDetailFormatter.joinedDateText(from: joinedAt)
+        TeamMemberStatsDetailFormatter.joinedDateText(from: joinedAt)
     }
 }
 
@@ -687,7 +707,7 @@ private struct TeamMemberCardModel: Identifiable {
     let paceText: String
     let hasRunRecord: Bool
     let isCurrentUser: Bool
-    let detail: TeamMemberSeasonDetail?
+    let detail: TeamMemberStatsDetail?
 
     init(
         id: String,
@@ -698,7 +718,7 @@ private struct TeamMemberCardModel: Identifiable {
         paceText: String,
         hasRunRecord: Bool,
         isCurrentUser: Bool,
-        detail: TeamMemberSeasonDetail?
+        detail: TeamMemberStatsDetail?
     ) {
         self.id = id
         self.name = name
@@ -714,12 +734,12 @@ private struct TeamMemberCardModel: Identifiable {
     init(
         teamMember: TeamMember,
         dailyMember: TeamDailyMember?,
-        seasonMember: TeamSeasonMember?,
+        memberStats: TeamMemberStats?,
         isCurrentUser: Bool
     ) {
         id = teamMember.id
         name = dailyMember?.nickname ?? teamMember.nickname
-        animation = .teamMember(consecutiveRunDays: seasonMember?.consecutiveRunDays ?? (dailyMember?.completed == true ? 1 : nil))
+        animation = .teamMember(consecutiveRunDays: memberStats?.recentRunDays ?? (dailyMember?.completed == true ? 1 : nil))
         distanceText = TeamDashboardFormatter.memberDistanceKilometers(dailyMember?.distanceMeters ?? 0)
         timeText = if let durationSeconds = dailyMember?.durationSeconds, durationSeconds > 0 {
             RunningMetricFormatter.duration(TimeInterval(durationSeconds))
@@ -729,66 +749,43 @@ private struct TeamMemberCardModel: Identifiable {
         paceText = "\(RunningMetricFormatter.pace(dailyMember?.averagePaceSecondsPerKilometer.map(TimeInterval.init)))/km"
         hasRunRecord = dailyMember?.completed ?? false
         self.isCurrentUser = isCurrentUser
-        detail = Self.seasonDetail(
-            id: teamMember.id,
-            name: name,
-            seasonMember: seasonMember,
+        detail = Self.statsDetail(
+            memberStats: memberStats,
             dailyMember: dailyMember
         )
     }
 
-    init(member: TeamDailyMember, seasonMember: TeamSeasonMember?, isCurrentUser: Bool) {
+    init(member: TeamDailyMember, memberStats: TeamMemberStats?, isCurrentUser: Bool) {
         let memberDistanceText = TeamDashboardFormatter.memberDistanceKilometers(member.distanceMeters)
         let memberPaceText = "\(RunningMetricFormatter.pace(member.averagePaceSecondsPerKilometer.map(TimeInterval.init)))/km"
 
         id = member.id
         name = member.nickname
-        animation = .teamMember(consecutiveRunDays: seasonMember?.consecutiveRunDays ?? (member.completed ? 1 : nil))
+        animation = .teamMember(consecutiveRunDays: memberStats?.recentRunDays ?? (member.completed ? 1 : nil))
         distanceText = memberDistanceText
         timeText = member.durationSeconds > 0 ? RunningMetricFormatter.duration(TimeInterval(member.durationSeconds)) : "--:--"
         paceText = memberPaceText
         hasRunRecord = member.completed
         self.isCurrentUser = isCurrentUser
-        detail = Self.seasonDetail(
-            id: member.id,
-            name: member.nickname,
-            seasonMember: seasonMember,
+        detail = Self.statsDetail(
+            memberStats: memberStats,
             dailyMember: member
         )
     }
 
-    private static func seasonDetail(
-        id: String,
-        name: String,
-        seasonMember: TeamSeasonMember?,
+    private static func statsDetail(
+        memberStats: TeamMemberStats?,
         dailyMember: TeamDailyMember?
-    ) -> TeamMemberSeasonDetail? {
-        guard let seasonMember else {
-            guard let dailyMember else { return nil }
-            let hasTotalProfile = dailyMember.totalDistanceMeters != nil || dailyMember.totalRunCount != nil || dailyMember.totalAveragePaceSecondsPerKilometer != nil
-            guard hasTotalProfile || (dailyMember.completed && dailyMember.distanceMeters > 0) else { return nil }
+    ) -> TeamMemberStatsDetail? {
+        guard let memberStats else { return nil }
 
-            return TeamMemberSeasonDetail(
-                id: id,
-                name: name,
-                joinedAt: dailyMember.teamJoinedAt,
-                seasonDistance: TeamDashboardFormatter.seasonDistanceKilometers(dailyMember.totalDistanceMeters ?? dailyMember.distanceMeters),
-                seasonRunCount: "\(dailyMember.totalRunCount ?? 1)",
-                seasonAveragePace: RunningMetricFormatter.pace((dailyMember.totalAveragePaceSecondsPerKilometer ?? dailyMember.averagePaceSecondsPerKilometer).map(TimeInterval.init))
-            )
-        }
-
-        let distanceMeters = dailyMember?.totalDistanceMeters ?? seasonMember.seasonDistanceMeters
-        let runCount = dailyMember?.totalRunCount ?? seasonMember.seasonRunCount
-        let averagePaceSecondsPerKilometer = dailyMember?.totalAveragePaceSecondsPerKilometer ?? seasonMember.averagePaceSecondsPerKilometer
-
-        return TeamMemberSeasonDetail(
-            id: seasonMember.id,
-            name: seasonMember.nickname,
-            joinedAt: dailyMember.flatMap { $0.teamJoinedAt.isEmpty ? nil : $0.teamJoinedAt } ?? seasonMember.teamJoinedAt,
-            seasonDistance: TeamDashboardFormatter.seasonDistanceKilometers(distanceMeters),
-            seasonRunCount: "\(runCount)",
-            seasonAveragePace: RunningMetricFormatter.pace(averagePaceSecondsPerKilometer.map(TimeInterval.init))
+        return TeamMemberStatsDetail(
+            id: memberStats.id,
+            name: memberStats.nickname,
+            joinedAt: dailyMember.flatMap { $0.teamJoinedAt.isEmpty ? nil : $0.teamJoinedAt } ?? memberStats.teamJoinedAt,
+            totalDistance: TeamDashboardFormatter.totalDistanceKilometers(memberStats.distanceMeters),
+            totalRunCount: "\(memberStats.runCount)",
+            averagePace: RunningMetricFormatter.pace(memberStats.averagePaceSecondsPerKilometer.map(TimeInterval.init))
         )
     }
 
@@ -813,13 +810,13 @@ private struct TeamMemberCardModel: Identifiable {
             paceText: "\(RunningMetricFormatter.pace(averagePace))/km",
             hasRunRecord: !records.isEmpty,
             isCurrentUser: isCurrentUser,
-            detail: TeamMemberSeasonDetail(
+            detail: TeamMemberStatsDetail(
                 id: id,
                 name: name,
                 joinedAt: "",
-                seasonDistance: totalDistanceKilometers.formatted(.number.precision(.fractionLength(2))),
-                seasonRunCount: "\(records.count)",
-                seasonAveragePace: RunningMetricFormatter.pace(averagePace)
+                totalDistance: totalDistanceKilometers.formatted(.number.precision(.fractionLength(2))),
+                totalRunCount: "\(records.count)",
+                averagePace: RunningMetricFormatter.pace(averagePace)
             )
         )
     }
@@ -834,20 +831,20 @@ private struct TeamMemberCardModel: Identifiable {
             paceText: "0'00\"/km",
             hasRunRecord: false,
             isCurrentUser: false,
-            detail: TeamMemberSeasonDetail(
+            detail: TeamMemberStatsDetail(
                 id: "member-empty-\(index)",
                 name: "버거킹 스마일",
                 joinedAt: "",
-                seasonDistance: "0.00",
-                seasonRunCount: "0",
-                seasonAveragePace: "0'00\""
+                totalDistance: "0.00",
+                totalRunCount: "0",
+                averagePace: "0'00\""
             )
         )
     }
 }
 
-struct TeamMemberSeasonDetailSheet: View {
-    let detail: TeamMemberSeasonDetail
+struct TeamMemberStatsDetailSheet: View {
+    let detail: TeamMemberStatsDetail
     let onDismiss: () -> Void
 
     var body: some View {
@@ -886,9 +883,9 @@ struct TeamMemberSeasonDetailSheet: View {
             .padding(.top, 2)
 
             HStack(alignment: .top, spacing: 10) {
-                detailMetric(label: "총 거리 (km)", value: detail.seasonDistance)
-                detailMetric(label: "총 러닝 횟수", value: detail.seasonRunCount)
-                detailMetric(label: "평균 페이스", value: detail.seasonAveragePace)
+                detailMetric(label: "총 거리 (km)", value: detail.totalDistance)
+                detailMetric(label: "총 러닝 횟수", value: detail.totalRunCount)
+                detailMetric(label: "평균 페이스", value: detail.averagePace)
             }
             .padding(.top, 48)
         }
@@ -1189,13 +1186,13 @@ private enum TeamDashboardFormatter {
         return "\(kilometers.formatted(.number.precision(.fractionLength(2)))) km"
     }
 
-    static func seasonDistanceKilometers(_ distanceMeters: Int) -> String {
+    static func totalDistanceKilometers(_ distanceMeters: Int) -> String {
         let kilometers = Double(distanceMeters) / 1_000
         return kilometers.formatted(.number.precision(.fractionLength(2)))
     }
 }
 
-private enum TeamMemberSeasonDetailFormatter {
+private enum TeamMemberStatsDetailFormatter {
     private static let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.calendar = Calendar(identifier: .gregorian)
@@ -1296,13 +1293,13 @@ private enum TeamRunStreakCalculator {
             paceText: "0'50\"/km",
             hasRunRecord: true,
             isCurrentUser: true,
-            detail: TeamMemberSeasonDetail(
+            detail: TeamMemberStatsDetail(
                 id: "member-preview",
                 name: "커비",
                 joinedAt: "2026-05-01",
-                seasonDistance: "87.30",
-                seasonRunCount: "12",
-                seasonAveragePace: "5'24\""
+                totalDistance: "87.30",
+                totalRunCount: "12",
+                averagePace: "5'24\""
             )
         )
     )

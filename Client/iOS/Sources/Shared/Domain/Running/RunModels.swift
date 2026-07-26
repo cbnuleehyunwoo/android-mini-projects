@@ -36,6 +36,7 @@ extension RunningRecord {
                 sequence: index + 1,
                 latitude: point.latitude,
                 longitude: point.longitude,
+                horizontalAccuracyMeters: point.horizontalAccuracy,
                 recordedAt: point.recordedAt ?? fallbackRecordedAt
             )
         }
@@ -56,6 +57,7 @@ struct CreateRunPoint: Equatable {
     let sequence: Int
     let latitude: CLLocationDegrees
     let longitude: CLLocationDegrees
+    let horizontalAccuracyMeters: CLLocationAccuracy?
     let recordedAt: Date
 }
 

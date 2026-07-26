@@ -34,7 +34,7 @@ import com.woowacourse.runpamine.presentation.error.ErrorScreen
 import com.woowacourse.runpamine.presentation.mypage.MyPageBottomSheet
 import com.woowacourse.runpamine.presentation.navigation.AppRoute
 import com.woowacourse.runpamine.presentation.navigation.NavHost
-import com.woowacourse.runpamine.presentation.team.TeamMemberSeasonBottomSheet
+import com.woowacourse.runpamine.presentation.team.TeamMemberStatsBottomSheet
 import com.woowacourse.runpamine.presentation.team.model.TeamMember
 
 @Composable
@@ -121,7 +121,7 @@ fun RunpamineApp(
         }
 
         selectedTeamMember?.let { member ->
-            TeamMemberSeasonBottomSheet(
+            TeamMemberStatsBottomSheet(
                 member = member,
                 onDismissRequest = { selectedTeamMember = null },
             )

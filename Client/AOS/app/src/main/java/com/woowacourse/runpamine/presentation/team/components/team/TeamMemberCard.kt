@@ -12,8 +12,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -21,13 +22,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.woowacourse.runpamine.R
 import com.woowacourse.runpamine.presentation.team.model.RunningStatus
 import com.woowacourse.runpamine.presentation.team.model.TeamMember
+import com.woowacourse.runpamine.ui.theme.Pretendard
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
 @Composable
@@ -58,13 +63,18 @@ fun TeamMemberCard(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.padding(start = 10.dp),
         ) {
             Text(
                 text = member.name,
                 modifier = Modifier.weight(1f, fill = false),
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Black,
+                style =
+                    TextStyle(
+                        fontFamily = Pretendard,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                    ),
                 color = Color.Black,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -74,32 +84,43 @@ fun TeamMemberCard(
                     text = "나",
                     modifier =
                         Modifier
+                            .size(width = 19.dp, height = 20.dp)
                             .background(
                                 color = Color(0xFF0D5BFF),
-                                shape = RoundedCornerShape(8.dp),
-                            ).padding(horizontal = 6.dp, vertical = 4.dp),
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
+                                shape = RoundedCornerShape(5.dp),
+                            ).wrapContentHeight(Alignment.CenterVertically),
+                    style =
+                        TextStyle(
+                            fontFamily = Pretendard,
+                            fontSize = 10.sp,
+                            lineHeight = 10.sp,
+                            fontWeight = FontWeight.Black,
+                        ),
                     color = Color.White,
+                    textAlign = TextAlign.Center,
                 )
             }
         }
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(24.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(15.dp),
         ) {
             RunnerThumbnail(
                 runningStatus = member.runningStatus,
-                modifier = Modifier.size(80.dp),
+                modifier =
+                    Modifier
+                        .padding(start = 10.dp)
+                        .size(80.dp),
             )
+            Spacer(modifier = Modifier.width(14.dp))
             RunningMetricSection(
                 distance = distance,
                 time = time,
                 pace = pace,
                 modifier = Modifier.weight(1f),
             )
+            Spacer(modifier = Modifier.width(10.dp))
             Box(
                 modifier = Modifier.size(64.dp),
                 contentAlignment = Alignment.Center,

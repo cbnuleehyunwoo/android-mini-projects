@@ -1,25 +1,20 @@
 import Foundation
 
 protocol RankingServiceProtocol {
-    func fetchCurrentSeason(date: Date?, accessToken: String) async throws -> RankingSeason
-    func fetchTeamRankings(metric: UserRankingMetric, seasonID: String?, accessToken: String) async throws -> TeamRankingBoard
-    func fetchUserRankings(metric: UserRankingMetric, seasonID: String?, accessToken: String) async throws -> UserRankingBoard
-    func fetchMyRankingSummary(seasonID: String?, accessToken: String) async throws -> MyRankingSummary
+    func fetchTeamRankings(metric: UserRankingMetric, accessToken: String) async throws -> TeamRankingBoard
+    func fetchUserRankings(metric: UserRankingMetric, accessToken: String) async throws -> UserRankingBoard
+    func fetchMyRankingSummary(accessToken: String) async throws -> MyRankingSummary
 }
 
-struct RankingSeason: Equatable {
-    let id: String
-    let name: String
-    let year: Int
-    let month: Int
-    let startsAt: Date
-    let endsAt: Date
-    let elapsedDays: Int?
-    let requiredDistanceMeters: Int?
+struct RankingPeriod: Equatable {
+    let type: String
+    let startsAt: Date?
+    let endsAt: Date?
+    let elapsedDays: Int
 }
 
 struct TeamRankingBoard: Equatable {
-    let season: RankingSeason
+    let period: RankingPeriod
     let requiredDistanceMeters: Int
     let eligibleCount: Int
     let rankings: [TeamRankingEntry]
@@ -48,7 +43,7 @@ enum UserRankingMetric: String, CaseIterable, Equatable {
 }
 
 struct UserRankingBoard: Equatable {
-    let season: RankingSeason
+    let period: RankingPeriod
     let metric: UserRankingMetric
     let requiredDistanceMeters: Int
     let eligibleCount: Int
@@ -76,7 +71,7 @@ struct UserRankingEntry: Identifiable, Equatable {
 }
 
 struct MyRankingSummary: Equatable {
-    let season: RankingSeason
+    let period: RankingPeriod
     let eligible: Bool
     let requiredDistanceMeters: Int
     let distanceMeters: Int
@@ -121,23 +116,13 @@ final class RankingAPIService: RankingServiceProtocol {
         self.init(baseURL: baseURL, httpClient: httpClient)
     }
 
-    func fetchCurrentSeason(date: Date? = nil, accessToken: String) async throws -> RankingSeason {
-        let response: CurrentSeasonEnvelope = try await request(
-            path: "/seasons/current",
-            queryItems: date.map { [URLQueryItem(name: "date", value: RankingDateCoder.dateString(from: $0))] } ?? [],
-            accessToken: accessToken
-        )
-        return response.data.domain
-    }
-
     func fetchTeamRankings(
         metric: UserRankingMetric,
-        seasonID: String? = nil,
         accessToken: String
     ) async throws -> TeamRankingBoard {
         let response: TeamRankingEnvelope = try await request(
             path: metric.teamRankingPath,
-            queryItems: seasonID.map { [URLQueryItem(name: "seasonId", value: $0)] } ?? [],
+            queryItems: [URLQueryItem(name: "period", value: RankingPeriodType.all)],
             accessToken: accessToken
         )
         return response.data.domain
@@ -145,21 +130,20 @@ final class RankingAPIService: RankingServiceProtocol {
 
     func fetchUserRankings(
         metric: UserRankingMetric,
-        seasonID: String? = nil,
         accessToken: String
     ) async throws -> UserRankingBoard {
         let response: UserRankingEnvelope = try await request(
             path: metric.rankingPath,
-            queryItems: seasonID.map { [URLQueryItem(name: "seasonId", value: $0)] } ?? [],
+            queryItems: [URLQueryItem(name: "period", value: RankingPeriodType.all)],
             accessToken: accessToken
         )
         return response.data.domain
     }
 
-    func fetchMyRankingSummary(seasonID: String? = nil, accessToken: String) async throws -> MyRankingSummary {
+    func fetchMyRankingSummary(accessToken: String) async throws -> MyRankingSummary {
         let response: MyRankingSummaryEnvelope = try await request(
             path: "/rankings/me",
-            queryItems: seasonID.map { [URLQueryItem(name: "seasonId", value: $0)] } ?? [],
+            queryItems: [URLQueryItem(name: "period", value: RankingPeriodType.all)],
             accessToken: accessToken
         )
         return response.data.domain
@@ -197,17 +181,12 @@ final class RankingAPIService: RankingServiceProtocol {
 }
 
 final class MockRankingService: RankingServiceProtocol {
-    func fetchCurrentSeason(date: Date? = nil, accessToken: String) async throws -> RankingSeason {
-        Self.sampleSeason
-    }
-
     func fetchTeamRankings(
         metric: UserRankingMetric,
-        seasonID: String? = nil,
         accessToken: String
     ) async throws -> TeamRankingBoard {
         TeamRankingBoard(
-            season: Self.sampleSeason,
+            period: Self.samplePeriod,
             requiredDistanceMeters: 10_000,
             eligibleCount: Self.sampleTeamRankings.count,
             rankings: Self.sampleTeams(for: metric)
@@ -216,11 +195,10 @@ final class MockRankingService: RankingServiceProtocol {
 
     func fetchUserRankings(
         metric: UserRankingMetric,
-        seasonID: String? = nil,
         accessToken: String
     ) async throws -> UserRankingBoard {
         UserRankingBoard(
-            season: Self.sampleSeason,
+            period: Self.samplePeriod,
             metric: metric,
             requiredDistanceMeters: 10_000,
             eligibleCount: Self.sampleUsers.count,
@@ -228,9 +206,9 @@ final class MockRankingService: RankingServiceProtocol {
         )
     }
 
-    func fetchMyRankingSummary(seasonID: String? = nil, accessToken: String) async throws -> MyRankingSummary {
+    func fetchMyRankingSummary(accessToken: String) async throws -> MyRankingSummary {
         MyRankingSummary(
-            season: Self.sampleSeason,
+            period: Self.samplePeriod,
             eligible: true,
             requiredDistanceMeters: 10_000,
             distanceMeters: 253_100,
@@ -252,15 +230,11 @@ final class MockRankingService: RankingServiceProtocol {
         )
     }
 
-    private static let sampleSeason = RankingSeason(
-        id: "season-uuid",
-        name: "2026-06",
-        year: 2026,
-        month: 6,
-        startsAt: Date(timeIntervalSince1970: 1_780_272_000),
-        endsAt: Date(timeIntervalSince1970: 1_782_864_000),
-        elapsedDays: 10,
-        requiredDistanceMeters: 10_000
+    private static let samplePeriod = RankingPeriod(
+        type: RankingPeriodType.all,
+        startsAt: nil,
+        endsAt: nil,
+        elapsedDays: 10
     )
 
     private static let sampleTeamRankings: [TeamRankingEntry] = [
@@ -351,10 +325,6 @@ enum RankingAPIError: LocalizedError, Equatable {
     }
 }
 
-private struct CurrentSeasonEnvelope: Decodable {
-    let data: SeasonPayload
-}
-
 private struct TeamRankingEnvelope: Decodable {
     let data: TeamRankingBoardPayload
 }
@@ -367,38 +337,49 @@ private struct MyRankingSummaryEnvelope: Decodable {
     let data: MyRankingSummaryPayload
 }
 
-private struct SeasonPayload: Decodable {
-    let id: String
-    let name: String
-    let year: Int
-    let month: Int
-    let startsAt: String
-    let endsAt: String
-    let elapsedDays: Int?
-    let requiredDistanceMeters: Int?
+private enum RankingPeriodType {
+    static let all = "all"
+}
 
-    var domain: RankingSeason {
-        RankingSeason(
-            id: id,
-            name: name,
-            year: year,
-            month: month,
-            startsAt: RankingDateCoder.dateTime(from: startsAt) ?? Date(),
-            endsAt: RankingDateCoder.dateTime(from: endsAt) ?? Date(),
-            elapsedDays: elapsedDays,
-            requiredDistanceMeters: requiredDistanceMeters
+private struct PeriodPayload: Decodable {
+    let type: String
+    let startsAt: Date?
+    let endsAt: Date?
+    let elapsedDays: Int
+
+    private enum CodingKeys: String, CodingKey {
+        case type
+        case startsAt
+        case endsAt
+        case elapsedDays
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        type = try container.decode(String.self, forKey: .type)
+        startsAt = try container.decodeRankingDateIfPresent(forKey: .startsAt)
+        endsAt = try container.decodeRankingDateIfPresent(forKey: .endsAt)
+        elapsedDays = try container.decodeLossyInt(forKey: .elapsedDays)
+    }
+
+    var domain: RankingPeriod {
+        RankingPeriod(
+            type: type,
+            startsAt: startsAt,
+            endsAt: endsAt,
+            elapsedDays: elapsedDays
         )
     }
 }
 
 private struct TeamRankingBoardPayload: Decodable {
-    let season: SeasonPayload
+    let period: PeriodPayload
     let requiredDistanceMeters: Int
     let eligibleCount: Int
     let rankings: [TeamRankingEntryPayload]
 
     private enum CodingKeys: String, CodingKey {
-        case season
+        case period
         case requiredDistanceMeters
         case eligibleCount
         case rankings
@@ -406,15 +387,15 @@ private struct TeamRankingBoardPayload: Decodable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        season = try container.decode(SeasonPayload.self, forKey: .season)
-        requiredDistanceMeters = try container.decodeLossyIntIfPresent(forKey: .requiredDistanceMeters) ?? 0
-        eligibleCount = try container.decodeLossyIntIfPresent(forKey: .eligibleCount) ?? 0
-        rankings = (try? container.decode([TeamRankingEntryPayload].self, forKey: .rankings)) ?? []
+        period = try container.decode(PeriodPayload.self, forKey: .period)
+        requiredDistanceMeters = try container.decodeLossyInt(forKey: .requiredDistanceMeters)
+        eligibleCount = try container.decodeLossyInt(forKey: .eligibleCount)
+        rankings = try container.decode([TeamRankingEntryPayload].self, forKey: .rankings)
     }
 
     var domain: TeamRankingBoard {
         TeamRankingBoard(
-            season: season.domain,
+            period: period.domain,
             requiredDistanceMeters: requiredDistanceMeters,
             eligibleCount: eligibleCount,
             rankings: rankings.map(\.domain)
@@ -433,7 +414,7 @@ private struct TeamRankingEntryPayload: Decodable {
     let averagePaceSecondsPerKm: Int?
     let runCount: Int
     let totalActiveDays: Int
-    let averageActiveDays: Double?
+    let averageActiveDays: Double
 
     private enum CodingKeys: String, CodingKey {
         case rank
@@ -452,16 +433,16 @@ private struct TeamRankingEntryPayload: Decodable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         rank = try container.decodeLossyInt(forKey: .rank)
-        topPercent = try container.decodeLossyIntIfPresent(forKey: .topPercent) ?? 0
-        eligibleCount = try container.decodeLossyIntIfPresent(forKey: .eligibleCount) ?? 0
-        teamName = (try container.decodeStringIfPresent(forKey: .teamName)) ?? ""
-        teamId = (try container.decodeStringIfPresent(forKey: .teamId)) ?? "team-\(rank)-\(teamName)"
-        distanceMeters = try container.decodeLossyIntIfPresent(forKey: .distanceMeters) ?? 0
-        durationSeconds = try container.decodeLossyIntIfPresent(forKey: .durationSeconds) ?? 0
+        topPercent = try container.decodeLossyInt(forKey: .topPercent)
+        eligibleCount = try container.decodeLossyInt(forKey: .eligibleCount)
+        teamName = try container.decode(String.self, forKey: .teamName)
+        teamId = try container.decode(String.self, forKey: .teamId)
+        distanceMeters = try container.decodeLossyInt(forKey: .distanceMeters)
+        durationSeconds = try container.decodeLossyInt(forKey: .durationSeconds)
         averagePaceSecondsPerKm = try container.decodeLossyIntIfPresent(forKey: .averagePaceSecondsPerKm)
-        runCount = try container.decodeLossyIntIfPresent(forKey: .runCount) ?? 0
-        totalActiveDays = try container.decodeLossyIntIfPresent(forKey: .totalActiveDays) ?? 0
-        averageActiveDays = try container.decodeLossyDoubleIfPresent(forKey: .averageActiveDays)
+        runCount = try container.decodeLossyInt(forKey: .runCount)
+        totalActiveDays = try container.decodeLossyInt(forKey: .totalActiveDays)
+        averageActiveDays = try container.decodeLossyDouble(forKey: .averageActiveDays)
     }
 
     var domain: TeamRankingEntry {
@@ -476,22 +457,39 @@ private struct TeamRankingEntryPayload: Decodable {
             averagePaceSecondsPerKilometer: averagePaceSecondsPerKm,
             runCount: runCount,
             totalActiveDays: totalActiveDays,
-            averageActiveDays: averageActiveDays ?? 0
+            averageActiveDays: averageActiveDays
         )
     }
 }
 
 private struct UserRankingBoardPayload: Decodable {
-    let season: SeasonPayload
-    let metric: String
+    let period: PeriodPayload
+    let metric: UserRankingMetric
     let requiredDistanceMeters: Int
     let eligibleCount: Int
     let rankings: [UserRankingEntryPayload]
 
+    private enum CodingKeys: String, CodingKey {
+        case period
+        case metric
+        case requiredDistanceMeters
+        case eligibleCount
+        case rankings
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        period = try container.decode(PeriodPayload.self, forKey: .period)
+        metric = try UserRankingMetric(apiValue: container.decode(String.self, forKey: .metric), codingPath: container.codingPath + [CodingKeys.metric])
+        requiredDistanceMeters = try container.decodeLossyInt(forKey: .requiredDistanceMeters)
+        eligibleCount = try container.decodeLossyInt(forKey: .eligibleCount)
+        rankings = try container.decode([UserRankingEntryPayload].self, forKey: .rankings)
+    }
+
     var domain: UserRankingBoard {
         UserRankingBoard(
-            season: season.domain,
-            metric: UserRankingMetric(apiValue: metric),
+            period: period.domain,
+            metric: metric,
             requiredDistanceMeters: requiredDistanceMeters,
             eligibleCount: eligibleCount,
             rankings: rankings.map(\.domain)
@@ -537,20 +535,20 @@ private struct UserRankingEntryPayload: Decodable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         rank = try container.decodeLossyInt(forKey: .rank)
-        topPercent = try container.decodeLossyIntIfPresent(forKey: .topPercent) ?? 0
-        eligibleCount = try container.decodeLossyIntIfPresent(forKey: .eligibleCount) ?? 0
+        topPercent = try container.decodeLossyInt(forKey: .topPercent)
+        eligibleCount = try container.decodeLossyInt(forKey: .eligibleCount)
         userId = try container.decode(String.self, forKey: .userId)
         nickname = try container.decode(String.self, forKey: .nickname)
         avatarKey = try container.decodeStringIfPresent(forKey: .avatarKey)
         teamId = try container.decodeStringIfPresent(forKey: .teamId)
         teamName = try container.decodeStringIfPresent(forKey: .teamName)
         distanceMeters = try container.decodeLossyInt(forKey: .distanceMeters)
-        durationSeconds = try container.decodeLossyIntIfPresent(forKey: .durationSeconds) ?? 0
+        durationSeconds = try container.decodeLossyInt(forKey: .durationSeconds)
         averagePaceSecondsPerKm = try container.decodeLossyIntIfPresent(forKey: .averagePaceSecondsPerKm)
-        runCount = try container.decodeLossyIntIfPresent(forKey: .runCount) ?? 0
-        activeDays = try container.decodeLossyIntIfPresent(forKey: .activeDays) ?? 0
-        elapsedDays = try container.decodeLossyIntIfPresent(forKey: .elapsedDays) ?? 0
-        consistencyRate = try container.decodeLossyIntIfPresent(forKey: .consistencyRate) ?? 0
+        runCount = try container.decodeLossyInt(forKey: .runCount)
+        activeDays = try container.decodeLossyInt(forKey: .activeDays)
+        elapsedDays = try container.decodeLossyInt(forKey: .elapsedDays)
+        consistencyRate = try container.decodeLossyInt(forKey: .consistencyRate)
     }
 
     var domain: UserRankingEntry {
@@ -575,7 +573,7 @@ private struct UserRankingEntryPayload: Decodable {
 }
 
 private struct MyRankingSummaryPayload: Decodable {
-    let season: SeasonPayload
+    let period: PeriodPayload
     let eligible: Bool
     let requiredDistanceMeters: Int
     let distanceMeters: Int
@@ -596,7 +594,7 @@ private struct MyRankingSummaryPayload: Decodable {
     let consistencyEligibleCount: Int
 
     private enum CodingKeys: String, CodingKey {
-        case season
+        case period
         case eligible
         case requiredDistanceMeters
         case distanceMeters
@@ -619,30 +617,30 @@ private struct MyRankingSummaryPayload: Decodable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        season = try container.decode(SeasonPayload.self, forKey: .season)
-        eligible = (try? container.decode(Bool.self, forKey: .eligible)) ?? false
-        requiredDistanceMeters = try container.decodeLossyIntIfPresent(forKey: .requiredDistanceMeters) ?? 0
-        distanceMeters = try container.decodeLossyIntIfPresent(forKey: .distanceMeters) ?? 0
-        remainingDistanceMeters = try container.decodeLossyIntIfPresent(forKey: .remainingDistanceMeters) ?? 0
-        durationSeconds = try container.decodeLossyIntIfPresent(forKey: .durationSeconds) ?? 0
+        period = try container.decode(PeriodPayload.self, forKey: .period)
+        eligible = try container.decode(Bool.self, forKey: .eligible)
+        requiredDistanceMeters = try container.decodeLossyInt(forKey: .requiredDistanceMeters)
+        distanceMeters = try container.decodeLossyInt(forKey: .distanceMeters)
+        remainingDistanceMeters = try container.decodeLossyInt(forKey: .remainingDistanceMeters)
+        durationSeconds = try container.decodeLossyInt(forKey: .durationSeconds)
         averagePaceSecondsPerKm = try container.decodeLossyIntIfPresent(forKey: .averagePaceSecondsPerKm)
-        runCount = try container.decodeLossyIntIfPresent(forKey: .runCount) ?? 0
-        activeDays = try container.decodeLossyIntIfPresent(forKey: .activeDays) ?? 0
-        consistencyRate = try container.decodeLossyIntIfPresent(forKey: .consistencyRate) ?? 0
+        runCount = try container.decodeLossyInt(forKey: .runCount)
+        activeDays = try container.decodeLossyInt(forKey: .activeDays)
+        consistencyRate = try container.decodeLossyInt(forKey: .consistencyRate)
         distanceRank = try container.decodeLossyIntIfPresent(forKey: .distanceRank)
         distanceTopPercent = try container.decodeLossyIntIfPresent(forKey: .distanceTopPercent)
-        distanceEligibleCount = try container.decodeLossyIntIfPresent(forKey: .distanceEligibleCount) ?? 0
+        distanceEligibleCount = try container.decodeLossyInt(forKey: .distanceEligibleCount)
         paceRank = try container.decodeLossyIntIfPresent(forKey: .paceRank)
         paceTopPercent = try container.decodeLossyIntIfPresent(forKey: .paceTopPercent)
-        paceEligibleCount = try container.decodeLossyIntIfPresent(forKey: .paceEligibleCount) ?? 0
+        paceEligibleCount = try container.decodeLossyInt(forKey: .paceEligibleCount)
         consistencyRank = try container.decodeLossyIntIfPresent(forKey: .consistencyRank)
         consistencyTopPercent = try container.decodeLossyIntIfPresent(forKey: .consistencyTopPercent)
-        consistencyEligibleCount = try container.decodeLossyIntIfPresent(forKey: .consistencyEligibleCount) ?? 0
+        consistencyEligibleCount = try container.decodeLossyInt(forKey: .consistencyEligibleCount)
     }
 
     var domain: MyRankingSummary {
         MyRankingSummary(
-            season: season.domain,
+            period: period.domain,
             eligible: eligible,
             requiredDistanceMeters: requiredDistanceMeters,
             distanceMeters: distanceMeters,
@@ -673,7 +671,7 @@ private struct RankingAPIErrorPayload: Decodable {
     let message: String
 }
 
-private extension KeyedDecodingContainer {
+extension KeyedDecodingContainer {
     func decodeLossyInt(forKey key: Key) throws -> Int {
         if let value = try? decode(Int.self, forKey: key) {
             return value
@@ -711,7 +709,35 @@ private extension KeyedDecodingContainer {
             return Int(number.rounded())
         }
 
-        return nil
+        throw DecodingError.typeMismatch(
+            Int.self,
+            DecodingError.Context(
+                codingPath: codingPath + [key],
+                debugDescription: "Expected Int-compatible value."
+            )
+        )
+    }
+
+    func decodeLossyDouble(forKey key: Key) throws -> Double {
+        if let value = try? decode(Double.self, forKey: key) {
+            return value
+        }
+
+        if let value = try? decode(Int.self, forKey: key) {
+            return Double(value)
+        }
+
+        if let value = try? decode(String.self, forKey: key), let number = Double(value) {
+            return number
+        }
+
+        throw DecodingError.typeMismatch(
+            Double.self,
+            DecodingError.Context(
+                codingPath: codingPath + [key],
+                debugDescription: "Expected Double-compatible value."
+            )
+        )
     }
 
     func decodeLossyDoubleIfPresent(forKey key: Key) throws -> Double? {
@@ -729,7 +755,13 @@ private extension KeyedDecodingContainer {
             return number
         }
 
-        return nil
+        throw DecodingError.typeMismatch(
+            Double.self,
+            DecodingError.Context(
+                codingPath: codingPath + [key],
+                debugDescription: "Expected Double-compatible value."
+            )
+        )
     }
 
     func decodeStringIfPresent(forKey key: Key) throws -> String? {
@@ -739,12 +771,34 @@ private extension KeyedDecodingContainer {
             return value.isEmpty ? nil : value
         }
 
-        return nil
+        throw DecodingError.typeMismatch(
+            String.self,
+            DecodingError.Context(
+                codingPath: codingPath + [key],
+                debugDescription: "Expected String value."
+            )
+        )
+    }
+
+    func decodeRankingDateIfPresent(forKey key: Key) throws -> Date? {
+        guard contains(key), try !decodeNil(forKey: key) else { return nil }
+
+        let value = try decode(String.self, forKey: key)
+        if let date = RankingDateCoder.dateTime(from: value) {
+            return date
+        }
+
+        throw DecodingError.dataCorrupted(
+            DecodingError.Context(
+                codingPath: codingPath + [key],
+                debugDescription: "Expected ISO8601 ranking date."
+            )
+        )
     }
 }
 
 private extension UserRankingMetric {
-    init(apiValue: String) {
+    init(apiValue: String, codingPath: [CodingKey]) throws {
         switch apiValue {
         case "distance":
             self = .distance
@@ -753,7 +807,12 @@ private extension UserRankingMetric {
         case "consistency", "count":
             self = .consistency
         default:
-            self = .distance
+            throw DecodingError.dataCorrupted(
+                DecodingError.Context(
+                    codingPath: codingPath,
+                    debugDescription: "Unsupported ranking metric value: \(apiValue)"
+                )
+            )
         }
     }
 
@@ -781,6 +840,12 @@ private extension UserRankingMetric {
 }
 
 private enum RankingDateCoder {
+    private static var productCalendar: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "Asia/Seoul") ?? .current
+        return calendar
+    }
+
     private static let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.calendar = Calendar(identifier: .gregorian)
@@ -809,6 +874,14 @@ private enum RankingDateCoder {
     static func dateTime(from string: String) -> Date? {
         dateTimeFormatter.date(from: string) ?? fallbackDateTimeFormatter.date(from: string)
     }
+
+    static func monthInterval(year: Int, month: Int) -> DateInterval {
+        let calendar = productCalendar
+        let fallbackStart = Date(timeIntervalSince1970: 0)
+        let start = calendar.date(from: DateComponents(year: year, month: month, day: 1)) ?? fallbackStart
+        let end = calendar.date(byAdding: .month, value: 1, to: start) ?? start
+        return DateInterval(start: start, end: end)
+    }
 }
 
 private extension Bundle {
@@ -824,7 +897,7 @@ private extension Bundle {
             return nil
         }
 
-        return URL(string: baseURLString)
+        return URL(string: baseURLString)?.runpamineAPIBaseURL
     }
 }
 

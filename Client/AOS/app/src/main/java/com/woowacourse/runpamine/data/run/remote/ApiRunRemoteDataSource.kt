@@ -1,5 +1,6 @@
 package com.woowacourse.runpamine.data.run.remote
 
+import com.woowacourse.runpamine.data.network.toRunpamineApiBaseUrl
 import com.woowacourse.runpamine.domain.run.RunDaySummary
 import com.woowacourse.runpamine.domain.run.RunPeriodSummary
 import com.woowacourse.runpamine.domain.run.RunPoint
@@ -20,7 +21,7 @@ import java.time.format.DateTimeFormatter
 class ApiRunRemoteDataSource(
     baseUrl: String,
 ) : RunRemoteDataSource {
-    private val apiBaseUrl = baseUrl.toApiBaseUrl()
+    private val apiBaseUrl = baseUrl.toRunpamineApiBaseUrl()
 
     override suspend fun createRun(
         accessToken: String,
@@ -148,6 +149,7 @@ private fun RunSession.toCreateRunRequest(points: List<RunPoint>): JSONObject =
                         .put("sequence", point.sequence)
                         .put("latitude", point.latitude)
                         .put("longitude", point.longitude)
+                        .put("horizontalAccuracyMeters", point.horizontalAccuracyMeters)
                         .put("recordedAt", point.recordedAt.toApiDateTimeString())
                 },
             ),
@@ -234,15 +236,6 @@ private fun String.toApiErrorMessage(responseCode: Int): String =
     runCatching {
         JSONObject(this).getJSONObject("error").getString("message")
     }.getOrDefault("러닝 기록 요청에 실패했어요. ($responseCode)")
-
-private fun String.toApiBaseUrl(): String {
-    val normalized = trim().trimEnd('/')
-    return if (normalized.endsWith(".supabase.co")) {
-        "$normalized/functions/v1/api"
-    } else {
-        normalized
-    }
-}
 
 private const val CONNECT_TIMEOUT_MILLIS = 10_000
 private const val READ_TIMEOUT_MILLIS = 10_000

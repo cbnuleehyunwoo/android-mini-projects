@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.woowacourse.runpamine.domain.profile.ProfileRepository
 import com.woowacourse.runpamine.domain.team.Team
-import com.woowacourse.runpamine.domain.team.TeamMemberSeasonStats
+import com.woowacourse.runpamine.domain.team.TeamMemberStats
 import com.woowacourse.runpamine.domain.team.TeamMemberSummary
 import com.woowacourse.runpamine.domain.team.TeamRepository
 import com.woowacourse.runpamine.domain.team.TeamRunSummary
@@ -32,7 +32,7 @@ class TeamViewModel(
     private var selectedDate: LocalDate = cache.selectedDate
     private var currentTeam: Team? = null
     private var teamMembers: List<TeamMemberSummary>? = null
-    private var seasonStats: List<TeamMemberSeasonStats>? = null
+    private var memberStats: List<TeamMemberStats>? = null
     private var currentUserId: String? = null
 
     init {
@@ -62,7 +62,7 @@ class TeamViewModel(
             }.onSuccess { team ->
                 currentTeam = team
                 teamMembers = runCatching { teamRepository.getMyTeamMembers() }.getOrNull()
-                seasonStats = runCatching { teamRepository.getMyTeamSeasonStats() }.getOrNull()
+                memberStats = runCatching { teamRepository.getMyTeamStats() }.getOrNull()
                 loadTeamDailySummary(team, selectedDate, isInitialLoad = true)
             }.onFailure { throwable ->
                 _uiState.update {
@@ -102,7 +102,7 @@ class TeamViewModel(
                     runCatching { profileRepository.getMyProfile() }
                     currentTeam = null
                     teamMembers = null
-                    seasonStats = null
+                    memberStats = null
                     cache.clear()
                 }
                 _uiState.update {
@@ -160,7 +160,7 @@ class TeamViewModel(
                     mergeMembersWithRuns(
                         members = teamMembers,
                         runs = summary.members,
-                        seasonStats = seasonStats,
+                        memberStats = memberStats,
                     )
                 _uiState.update {
                     it.copy(
@@ -181,7 +181,7 @@ class TeamViewModel(
                 val members =
                     buildEmptyTeamMembers(
                         members = teamMembers,
-                        seasonStats = seasonStats,
+                        memberStats = memberStats,
                     )
                 _uiState.update {
                     it.copy(
@@ -220,13 +220,13 @@ private fun List<TeamMember>.markCurrentUser(currentUserId: String?): List<TeamM
 
 private fun buildEmptyTeamMembers(
     members: List<TeamMemberSummary>?,
-    seasonStats: List<TeamMemberSeasonStats>?,
+    memberStats: List<TeamMemberStats>?,
 ): List<TeamMember> {
-    val statsByUserId = seasonStats.orEmpty().associateBy { stats -> stats.id }
+    val statsByUserId = memberStats.orEmpty().associateBy { stats -> stats.id }
     if (members == null) {
-        return seasonStats
+        return memberStats
             .orEmpty()
-            .map { stats -> stats.toEmptyTeamMember(stats.consecutiveRunDays.toRunningStatus()) }
+            .map { stats -> stats.toEmptyTeamMember(stats.recentRunDays.toRunningStatus()) }
     }
 
     return members.map { member ->
@@ -237,15 +237,15 @@ private fun buildEmptyTeamMembers(
 private fun mergeMembersWithRuns(
     members: List<TeamMemberSummary>?,
     runs: List<TeamRunSummary>,
-    seasonStats: List<TeamMemberSeasonStats>?,
+    memberStats: List<TeamMemberStats>?,
 ): List<TeamMember> {
-    val statsByUserId = seasonStats.orEmpty().associateBy { stats -> stats.id }
+    val statsByUserId = memberStats.orEmpty().associateBy { stats -> stats.id }
     if (members == null) {
-        if (seasonStats != null) {
+        if (memberStats != null) {
             val runsByUserId = runs.associateBy { run -> run.userId }
-            return seasonStats.map { stats ->
+            return memberStats.map { stats ->
                 runsByUserId[stats.id]?.toTeamMember(stats)
-                    ?: stats.toEmptyTeamMember(stats.consecutiveRunDays.toRunningStatus())
+                    ?: stats.toEmptyTeamMember(stats.recentRunDays.toRunningStatus())
             }
         }
         return runs.map { run -> run.toTeamMember(statsByUserId[run.userId]) }
@@ -259,7 +259,7 @@ private fun mergeMembersWithRuns(
     }
 }
 
-private fun TeamRunSummary.toTeamMember(seasonStats: TeamMemberSeasonStats?): TeamMember =
+private fun TeamRunSummary.toTeamMember(memberStats: TeamMemberStats?): TeamMember =
     TeamMember(
         id = userId,
         name = nickname,
@@ -267,16 +267,16 @@ private fun TeamRunSummary.toTeamMember(seasonStats: TeamMemberSeasonStats?): Te
         time = durationSeconds.toDurationText(),
         pace = averagePaceSecondsPerKm.toPaceText(),
         calories = calories.toString(),
-        runningStatus = seasonStats?.consecutiveRunDays.toRunningStatus(),
-        teamJoinedAt = teamJoinedAt.ifBlank { seasonStats?.teamJoinedAt.orEmpty() },
-        seasonDistance = totalDistanceMeters.toSeasonKilometerText(),
-        seasonDuration = totalDurationSeconds.toDurationText(),
-        seasonRunCount = totalRunCount,
-        seasonAveragePace = totalAveragePaceSecondsPerKm.toSeasonPaceText(),
+        runningStatus = memberStats?.recentRunDays.toRunningStatus(),
+        teamJoinedAt = teamJoinedAt.ifBlank { memberStats?.teamJoinedAt.orEmpty() },
+        totalDistance = (memberStats?.distanceMeters ?: totalDistanceMeters).toTotalKilometerText(),
+        totalDuration = (memberStats?.durationSeconds ?: totalDurationSeconds).toDurationText(),
+        totalRunCount = memberStats?.runCount ?: totalRunCount,
+        averagePace = (memberStats?.averagePaceSecondsPerKm ?: totalAveragePaceSecondsPerKm).toTotalPaceText(),
         hasTodayRunRecord = hasRunRecord,
     )
 
-private fun TeamMemberSummary.toEmptyTeamMember(seasonStats: TeamMemberSeasonStats? = null): TeamMember =
+private fun TeamMemberSummary.toEmptyTeamMember(memberStats: TeamMemberStats? = null): TeamMember =
     TeamMember(
         id = id,
         name = nickname,
@@ -284,15 +284,15 @@ private fun TeamMemberSummary.toEmptyTeamMember(seasonStats: TeamMemberSeasonSta
         time = 0.toDurationText(),
         pace = "-",
         calories = "0",
-        runningStatus = seasonStats?.consecutiveRunDays.toRunningStatus(),
-        teamJoinedAt = seasonStats?.teamJoinedAt.orEmpty(),
-        seasonDistance = seasonStats?.seasonDistanceMeters.toSeasonKilometerText(),
-        seasonDuration = seasonStats?.seasonDurationSeconds.toDurationText(),
-        seasonRunCount = seasonStats?.seasonRunCount ?: 0,
-        seasonAveragePace = seasonStats?.averagePaceSecondsPerKm.toSeasonPaceText(),
+        runningStatus = memberStats?.recentRunDays.toRunningStatus(),
+        teamJoinedAt = memberStats?.teamJoinedAt.orEmpty(),
+        totalDistance = memberStats?.distanceMeters.toTotalKilometerText(),
+        totalDuration = memberStats?.durationSeconds.toDurationText(),
+        totalRunCount = memberStats?.runCount ?: 0,
+        averagePace = memberStats?.averagePaceSecondsPerKm.toTotalPaceText(),
     )
 
-private fun TeamMemberSeasonStats.toEmptyTeamMember(runningStatus: RunningStatus = RunningStatus.Resting): TeamMember =
+private fun TeamMemberStats.toEmptyTeamMember(runningStatus: RunningStatus = RunningStatus.Resting): TeamMember =
     TeamMember(
         id = id,
         name = nickname,
@@ -302,10 +302,10 @@ private fun TeamMemberSeasonStats.toEmptyTeamMember(runningStatus: RunningStatus
         calories = "0",
         runningStatus = runningStatus,
         teamJoinedAt = teamJoinedAt,
-        seasonDistance = seasonDistanceMeters.toSeasonKilometerText(),
-        seasonDuration = seasonDurationSeconds.toDurationText(),
-        seasonRunCount = seasonRunCount,
-        seasonAveragePace = averagePaceSecondsPerKm.toSeasonPaceText(),
+        totalDistance = distanceMeters.toTotalKilometerText(),
+        totalDuration = durationSeconds.toDurationText(),
+        totalRunCount = runCount,
+        averagePace = averagePaceSecondsPerKm.toTotalPaceText(),
     )
 
 private val TeamRunSummary.hasRunRecord: Boolean
@@ -334,7 +334,7 @@ private fun LocalDate.toKoreanDisplayText(): String {
 
 private fun Int.toKilometerText(): String = "%.2f km".format(Locale.US, this / 1000.0)
 
-private fun Int?.toSeasonKilometerText(): String = "%.2f".format(Locale.US, (this ?: 0) / 1000.0)
+private fun Int?.toTotalKilometerText(): String = "%.2f".format(Locale.US, (this ?: 0) / 1000.0)
 
 private fun Int?.toDurationText(): String = (this ?: 0).toDurationText()
 
@@ -356,7 +356,7 @@ private fun Int.toPaceText(): String {
     return "%d'%02d\"".format(Locale.US, minutes, seconds)
 }
 
-private fun Int?.toSeasonPaceText(): String {
+private fun Int?.toTotalPaceText(): String {
     if (this == null || this <= 0) return "-"
     val minutes = this / 60
     val seconds = this % 60
