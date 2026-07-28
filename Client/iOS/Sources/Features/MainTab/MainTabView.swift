@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct MainTabView: View {
+    @Environment(\.scenePhase) private var scenePhase
+    @EnvironmentObject private var networkMonitor: NetworkMonitor
     @State private var selectedTab: MainTab = .home
     @State private var presentedAction: HomeAction?
     @State private var team: RunningTeam?
@@ -18,9 +20,11 @@ struct MainTabView: View {
     private let teamService: TeamServiceProtocol
     private let profileService: ProfileServiceProtocol
     private let runService: RunServiceProtocol
+    private let runUploadRetrier: RunningUploadRetrier
     private let rankingService: RankingServiceProtocol
     private let authService: AuthServiceProtocol
     private let accessToken: String?
+    private let historyStore: RunningHistoryStore
     private let onLogout: () -> Void
     private let store: LocalAppStateStore
 
@@ -28,9 +32,11 @@ struct MainTabView: View {
         store: LocalAppStateStore,
         profileService: ProfileServiceProtocol = MockProfileService(),
         runService: RunServiceProtocol = MockRunService(),
+        runUploadRetrier: RunningUploadRetrier? = nil,
         teamService: TeamServiceProtocol? = nil,
         rankingService: RankingServiceProtocol = MockRankingService(),
         authService: AuthServiceProtocol = MockAuthService(),
+        historyStore: RunningHistoryStore = RunningHistoryStore(),
         accessToken: String? = nil,
         currentUserID: String? = nil,
         onLogout: @escaping () -> Void = {}
@@ -38,8 +44,10 @@ struct MainTabView: View {
         self.store = store
         self.profileService = profileService
         self.runService = runService
+        self.runUploadRetrier = runUploadRetrier ?? RunningUploadRetrier(store: historyStore, runService: runService)
         self.rankingService = rankingService
         self.authService = authService
+        self.historyStore = historyStore
         self.accessToken = accessToken
         self.onLogout = onLogout
         self.teamService = teamService ?? MockTeamService(store: store)
@@ -104,9 +112,12 @@ struct MainTabView: View {
                 case .history:
                     HistoryView(
                         runService: runService,
+                        historyStore: historyStore,
                         accessToken: accessToken,
+                        currentUserID: currentUserID,
                         cache: historyCache,
-                        refreshRevision: runDataRefreshRevision
+                        refreshRevision: runDataRefreshRevision,
+                        onRetryPendingRuns: retryPendingRuns
                     )
                 }
             }
@@ -154,6 +165,7 @@ struct MainTabView: View {
         .sheet(isPresented: $isShowingMyPage) {
             MyPageView(
                 store: store,
+                historyStore: historyStore,
                 profileService: profileService,
                 authService: authService,
                 accessToken: accessToken,
@@ -167,7 +179,10 @@ struct MainTabView: View {
         .runpamineFullScreenCover(isPresented: $isRunning) {
             RunningView(
                 runService: runService,
+                runUploadRetrier: runUploadRetrier,
+                historyStore: historyStore,
                 accessToken: accessToken,
+                currentUserID: currentUserID,
                 onRunSaved: handleRunSaved,
                 onDismiss: { isRunning = false }
             )
@@ -177,7 +192,26 @@ struct MainTabView: View {
                 .networkErrorOverlay()
         }
         .task(id: accessToken) {
+            await retryPendingRuns()
             await refreshHomeState()
+        }
+        .onChange(of: selectedTab) { _, nextTab in
+            guard nextTab == .history else { return }
+            Task {
+                await retryPendingRuns()
+            }
+        }
+        .onChange(of: scenePhase) { _, nextPhase in
+            guard nextPhase == .active else { return }
+            Task {
+                await retryPendingRuns()
+            }
+        }
+        .onChange(of: networkMonitor.isConnected) { _, isConnected in
+            guard isConnected else { return }
+            Task {
+                await retryPendingRuns()
+            }
         }
     }
 
@@ -213,6 +247,18 @@ struct MainTabView: View {
         Task {
             await refreshHomeState()
         }
+    }
+
+    private func retryPendingRuns() async {
+        guard let accessToken else { return }
+        let uploadedIDs = await runUploadRetrier.uploadPending(accessToken: accessToken, currentUserID: currentUserID)
+        guard !uploadedIDs.isEmpty else { return }
+        await MainActor.run {
+            teamDashboardCache.clearDashboard()
+            rankingCache.invalidate()
+            runDataRefreshRevision &+= 1
+        }
+        await refreshHomeState()
     }
 
     @MainActor
@@ -304,4 +350,5 @@ private extension View {
 
 #Preview {
     MainTabView(store: LocalAppStateStore(defaults: .standard))
+        .environmentObject(NetworkMonitor())
 }

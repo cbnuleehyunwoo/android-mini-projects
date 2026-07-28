@@ -39,6 +39,7 @@ final class RunAPIService: RunServiceProtocol {
             path: "/runs",
             method: "POST",
             accessToken: accessToken,
+            idempotencyKey: "run-\(record.id.uuidString)",
             body: CreateRunPayload(record)
         )
         return response.data.domain
@@ -93,9 +94,13 @@ final class RunAPIService: RunServiceProtocol {
         path: String,
         method: String,
         accessToken: String,
+        idempotencyKey: String? = nil,
         body: Body
     ) async throws -> Response {
         var request = makeRequest(path: path, method: method, accessToken: accessToken)
+        if let idempotencyKey {
+            request.setValue(idempotencyKey, forHTTPHeaderField: "Idempotency-Key")
+        }
         request.httpBody = try encoder.encode(body)
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         return try await send(request: request)

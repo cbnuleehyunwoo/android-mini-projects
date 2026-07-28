@@ -7,6 +7,8 @@ struct RunpamineApp: App {
     private let store = LocalAppStateStore()
     private let profileService: ProfileServiceProtocol
     private let runService: RunServiceProtocol
+    private let runUploadRetrier: RunningUploadRetrier
+    private let runningHistoryStore: RunningHistoryStore
     private let teamService: TeamServiceProtocol
     private let rankingService: RankingServiceProtocol
     private let authService: AuthServiceProtocol
@@ -18,6 +20,8 @@ struct RunpamineApp: App {
         authService = WASAuthService(store: store, sessionStore: sessionStore, httpClient: httpClient)
         profileService = Self.makeProfileService(httpClient: httpClient)
         runService = Self.makeRunService(httpClient: httpClient)
+        runningHistoryStore = RunningHistoryStore()
+        runUploadRetrier = RunningUploadRetrier(store: runningHistoryStore, runService: runService)
         teamService = Self.makeTeamService(httpClient: httpClient, store: store)
         rankingService = Self.makeRankingService(httpClient: httpClient)
     }
@@ -28,9 +32,11 @@ struct RunpamineApp: App {
                 authService: authService,
                 profileService: profileService,
                 runService: runService,
+                runUploadRetrier: runUploadRetrier,
                 teamService: teamService,
                 rankingService: rankingService,
-                store: store
+                store: store,
+                runningHistoryStore: runningHistoryStore
             )
                 .networkErrorOverlay()
                 .environmentObject(networkMonitor)

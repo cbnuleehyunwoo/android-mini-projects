@@ -107,6 +107,28 @@ class DefaultRunTrackingRepositoryTest {
             repository.discardActiveRun()
         }
 
+    @Test
+    fun `러닝 시작 시 현재 사용자 식별자를 로컬 세션에 저장한다`() =
+        runBlocking {
+            val localDataSource = FakeRunLocalDataSource()
+            val locationTracker = FakeLocationTracker()
+            val repository =
+                DefaultRunTrackingRepository(
+                    localDataSource = localDataSource,
+                    locationTracker = locationTracker,
+                    dispatcher = Dispatchers.Default,
+                    now = { STARTED_AT },
+                    currentUserId = { "user-id" },
+                )
+
+            val session = repository.startRun()
+
+            assertEquals("user-id", session.accountUserId)
+            assertEquals("user-id", localDataSource.session.value?.accountUserId)
+
+            repository.discardActiveRun()
+        }
+
     private fun repository(
         localDataSource: RunLocalDataSource,
         locationTracker: LocationTracker,

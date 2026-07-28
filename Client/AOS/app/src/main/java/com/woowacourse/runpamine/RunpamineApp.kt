@@ -43,6 +43,8 @@ fun RunpamineApp(
     navController: NavHostController = rememberNavController(),
 ) {
     val context = LocalContext.current
+    val container = context.runpamineContainer
+    val authSession by container.authRepository.observeSession().collectAsStateWithLifecycle(initialValue = null)
     val networkObserver = remember { NetworkConnectivityObserver(context.applicationContext) }
     val isConnected by
         networkObserver.connectionState.collectAsStateWithLifecycle(
@@ -68,6 +70,25 @@ fun RunpamineApp(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val showNetworkError = !isConnected && currentRoute != AppRoute.Running.route
+
+    LaunchedEffect(isConnected, currentRoute, authSession?.user?.id) {
+        if (isConnected && currentRoute.shouldSyncPendingRuns()) {
+            val results = container.runSyncRepository.syncPendingRuns()
+            if (results.any { it.isSuccess }) {
+                container.clearMainTabCaches()
+            }
+        }
+    }
+
+    var hadAuthenticatedSession by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(authSession) {
+        if (authSession != null) {
+            hadAuthenticatedSession = true
+        } else if (hadAuthenticatedSession) {
+            container.clearLocalUserData()
+            hadAuthenticatedSession = false
+        }
+    }
 
     val selectedTab =
         RunpamineBottomTab.entries.firstOrNull { tab ->
@@ -109,7 +130,7 @@ fun RunpamineApp(
                     navController.navigate(AppRoute.ChangeNickname.route)
                 },
                 onLogoutCompleted = {
-                    context.runpamineContainer.clearMainTabCaches()
+                    container.clearMainTabCaches()
                     isShowingMyPage = false
                     navController.navigate(AppRoute.Login.route) {
                         popUpTo(navController.graph.id) {
@@ -146,6 +167,13 @@ fun RunpamineApp(
         }
     }
 }
+
+private fun String?.shouldSyncPendingRuns(): Boolean =
+    this != null &&
+        this != AppRoute.Splash.route &&
+        this != AppRoute.Login.route &&
+        this != AppRoute.TermsAgreement.route &&
+        this != AppRoute.Running.route
 
 private fun Context.openPlayStore() {
     val appPackageName = packageName

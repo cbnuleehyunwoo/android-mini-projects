@@ -10,7 +10,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         RunSessionEntity::class,
         RunPointEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = false,
 )
 abstract class RunDatabase : RoomDatabase() {
@@ -38,6 +38,21 @@ abstract class RunDatabase : RoomDatabase() {
                         ADD COLUMN horizontalAccuracyMeters REAL
                         """.trimIndent(),
                     )
+                }
+            }
+
+        val MIGRATION_3_4 =
+            object : Migration(3, 4) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        """
+                        ALTER TABLE run_sessions
+                        ADD COLUMN accountUserId TEXT
+                        """.trimIndent(),
+                    )
+                    // 기존 스키마의 정밀 위치에는 계정 소유자 정보가 없어 안전하게 재전송할 수 없다.
+                    db.execSQL("DELETE FROM run_points")
+                    db.execSQL("DELETE FROM run_sessions")
                 }
             }
     }

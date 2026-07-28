@@ -4,6 +4,7 @@ import UIKit
 
 struct RootView: View {
     @Environment(\.scenePhase) private var scenePhase
+    @EnvironmentObject private var networkMonitor: NetworkMonitor
     @State private var route: OnboardingRoute = .splash
     @State private var acceptedTerms: [TermsAgreement] = []
     @State private var currentSession: AuthSession?
@@ -12,24 +13,30 @@ struct RootView: View {
     private let authService: AuthServiceProtocol
     private let profileService: ProfileServiceProtocol
     private let runService: RunServiceProtocol
+    private let runUploadRetrier: RunningUploadRetrier
     private let teamService: TeamServiceProtocol
     private let rankingService: RankingServiceProtocol
     private let store: LocalAppStateStore
+    private let runningHistoryStore: RunningHistoryStore
 
     init(
         authService: AuthServiceProtocol,
         profileService: ProfileServiceProtocol = MockProfileService(),
         runService: RunServiceProtocol = MockRunService(),
+        runUploadRetrier: RunningUploadRetrier? = nil,
         teamService: TeamServiceProtocol = MockTeamService(),
         rankingService: RankingServiceProtocol = MockRankingService(),
-        store: LocalAppStateStore
+        store: LocalAppStateStore,
+        runningHistoryStore: RunningHistoryStore = RunningHistoryStore()
     ) {
         self.authService = authService
         self.profileService = profileService
         self.runService = runService
+        self.runUploadRetrier = runUploadRetrier ?? RunningUploadRetrier(store: runningHistoryStore, runService: runService)
         self.teamService = teamService
         self.rankingService = rankingService
         self.store = store
+        self.runningHistoryStore = runningHistoryStore
     }
 
     var body: some View {
@@ -90,9 +97,11 @@ struct RootView: View {
                     store: store,
                     profileService: profileService,
                     runService: runService,
+                    runUploadRetrier: runUploadRetrier,
                     teamService: teamService,
                     rankingService: rankingService,
                     authService: authService,
+                    historyStore: runningHistoryStore,
                     accessToken: currentSession?.accessToken,
                     currentUserID: currentProfileID ?? currentSession?.userID,
                     onLogout: handleLogoutCompleted
@@ -104,6 +113,13 @@ struct RootView: View {
             guard nextPhase == .active else { return }
             Task {
                 await refreshRestoredSession()
+                await retryPendingRunsIfPossible()
+            }
+        }
+        .onChange(of: networkMonitor.isConnected) { _, isConnected in
+            guard isConnected else { return }
+            Task {
+                await retryPendingRunsIfPossible()
             }
         }
     }
@@ -135,6 +151,7 @@ struct RootView: View {
         do {
             let homeState = try await profileService.fetchHomeState(accessToken: session.accessToken)
             apply(homeState)
+            await retryPendingRunsIfPossible()
             withAnimation(.easeInOut(duration: 0.3)) {
                 route = homeState.profile == nil ? .terms : mainOrOnboardingRoute()
             }
@@ -156,6 +173,14 @@ struct RootView: View {
 
     @MainActor
     private func handleLogoutCompleted() {
+        do {
+            try runningHistoryStore.removeAll()
+        } catch {
+            return
+        }
+        Task {
+            await authService.clearLocalSession()
+        }
         currentSession = nil
         currentProfileID = nil
         acceptedTerms = []
@@ -191,6 +216,15 @@ struct RootView: View {
 
     private func routeToMainOrOnboarding() {
         route = mainOrOnboardingRoute()
+    }
+
+    private func retryPendingRunsIfPossible() async {
+        if case .main = route { return }
+        guard networkMonitor.isConnected, let accessToken = currentSession?.accessToken else { return }
+        _ = await runUploadRetrier.uploadPending(
+            accessToken: accessToken,
+            currentUserID: currentProfileID ?? currentSession?.userID
+        )
     }
 
     private func mainOrOnboardingRoute() -> OnboardingRoute {

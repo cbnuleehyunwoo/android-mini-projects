@@ -11,5 +11,6 @@ data class RunSession(
     val averagePaceSecondsPerKm: Int = 0,
     val calories: Int = 0,
     val syncStatus: RunSyncStatus = RunSyncStatus.LOCAL_ONLY,
+    val accountUserId: String? = null,
     val routePoints: List<RunPoint> = emptyList(),
 )

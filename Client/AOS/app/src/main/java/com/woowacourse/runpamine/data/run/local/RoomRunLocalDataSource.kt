@@ -88,6 +88,6 @@ class RoomRunLocalDataSource(
 
     override suspend fun findPendingSessions(): List<RunSession> =
         runDao
-            .getSessionsByStatuses(listOf(RunSyncStatus.LOCAL_ONLY, RunSyncStatus.FAILED))
+            .getSessionsByStatuses(listOf(RunSyncStatus.LOCAL_ONLY, RunSyncStatus.SYNCING, RunSyncStatus.FAILED))
             .map { it.toDomain() }
 }

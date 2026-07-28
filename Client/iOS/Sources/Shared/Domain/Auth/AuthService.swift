@@ -11,6 +11,7 @@ protocol AuthServiceProtocol {
     func completeSignup(profile: SignupProfile) async throws -> AuthSession
     func logout(accessToken: String) async throws
     func deleteAccount(accessToken: String) async throws
+    func clearLocalSession() async
 }
 
 actor AuthSessionStore {
@@ -204,6 +205,10 @@ final class WASAuthService: AuthServiceProtocol {
         try await sessionStore.load()
     }
 
+    func clearLocalSession() async {
+        try? await sessionStore.clear()
+    }
+
     func loginWithGoogle() async throws -> AuthSession {
         guard let googleConfiguration = Bundle.main.googleSignInConfiguration else {
             throw AuthError.missingGoogleConfiguration
@@ -383,6 +388,8 @@ final class MockAuthService: AuthServiceProtocol {
     func deleteAccount(accessToken: String) async throws {
         try await Task.sleep(nanoseconds: 350_000_000)
     }
+
+    func clearLocalSession() async {}
 
     private func mockSession(needsSignup: Bool) -> AuthSession {
         AuthSession(

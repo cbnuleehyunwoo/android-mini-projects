@@ -16,6 +16,7 @@ data class RunSessionEntity(
     val averagePaceSecondsPerKm: Int,
     val calories: Int,
     val syncStatus: RunSyncStatus,
+    val accountUserId: String?,
 )
 
 fun RunSessionEntity.toDomain(): RunSession =
@@ -28,6 +29,7 @@ fun RunSessionEntity.toDomain(): RunSession =
         averagePaceSecondsPerKm = averagePaceSecondsPerKm,
         calories = calories,
         syncStatus = syncStatus,
+        accountUserId = accountUserId,
     )
 
 fun RunSession.toEntity(): RunSessionEntity =
@@ -40,4 +42,5 @@ fun RunSession.toEntity(): RunSessionEntity =
         averagePaceSecondsPerKm = averagePaceSecondsPerKm,
         calories = calories,
         syncStatus = syncStatus,
+        accountUserId = accountUserId,
     )
