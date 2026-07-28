@@ -8,6 +8,7 @@ struct RootView: View {
     @State private var acceptedTerms: [TermsAgreement] = []
     @State private var currentSession: AuthSession?
     @State private var currentProfileID: String?
+    @State private var isResolvingProfile = false
     private let authService: AuthServiceProtocol
     private let profileService: ProfileServiceProtocol
     private let runService: RunServiceProtocol
@@ -68,6 +69,16 @@ struct RootView: View {
                     withAnimation(.easeInOut(duration: 0.3)) { routeToMainOrOnboarding() }
                 }
                 .transition(.move(edge: .trailing))
+            case .profileLoadFailed:
+                ProfileLoadErrorView(isRetrying: isResolvingProfile) {
+                    guard let currentSession else {
+                        route = .login
+                        return
+                    }
+                    Task {
+                        await handleLoginCompleted(currentSession)
+                    }
+                }
             case .onboarding:
                 OnboardingView {
                     store.markOnboardingCompleted()
@@ -115,6 +126,10 @@ struct RootView: View {
 
     @MainActor
     private func handleLoginCompleted(_ session: AuthSession) async {
+        guard !isResolvingProfile else { return }
+
+        isResolvingProfile = true
+        defer { isResolvingProfile = false }
         currentSession = session
 
         do {
@@ -124,8 +139,17 @@ struct RootView: View {
                 route = homeState.profile == nil ? .terms : mainOrOnboardingRoute()
             }
         } catch {
+            do {
+                guard let restoredSession = try await authService.restoreSession() else {
+                    handleLogoutCompleted()
+                    return
+                }
+                currentSession = restoredSession
+            } catch {
+                // 세션 저장소를 확인하지 못한 경우에도 가입 상태를 추측하지 않는다.
+            }
             withAnimation(.easeInOut(duration: 0.3)) {
-                route = session.needsSignup ? .terms : mainOrOnboardingRoute()
+                route = .profileLoadFailed
             }
         }
     }
@@ -135,6 +159,7 @@ struct RootView: View {
         currentSession = nil
         currentProfileID = nil
         acceptedTerms = []
+        isResolvingProfile = false
         route = .login
     }
 
@@ -178,8 +203,49 @@ private enum OnboardingRoute {
     case login
     case terms
     case nickname
+    case profileLoadFailed
     case onboarding
     case main
+}
+
+private struct ProfileLoadErrorView: View {
+    let isRetrying: Bool
+    let onRetry: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.white.ignoresSafeArea()
+
+            VStack(spacing: 20) {
+                errorImage
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 220, height: 220)
+
+                Text("회원 정보를 불러오지 못했어요.\n잠시 후 다시 시도해주세요.")
+                    .font(AppTheme.Typography.body1)
+                    .foregroundStyle(AppTheme.Colors.textSecondary)
+                    .multilineTextAlignment(.center)
+
+                PrimaryButton(
+                    title: "다시 시도",
+                    isLoading: isRetrying,
+                    isDisabled: isRetrying,
+                    action: onRetry
+                )
+                .padding(.horizontal, AppTheme.Layout.horizontalPadding)
+            }
+        }
+    }
+
+    private var errorImage: Image {
+        guard let imageURL = Bundle.main.url(forResource: "error", withExtension: "png"),
+              let image = UIImage(contentsOfFile: imageURL.path)
+        else {
+            return Image(systemName: "exclamationmark.triangle.fill")
+        }
+        return Image(uiImage: image)
+    }
 }
 
 final class NetworkMonitor: ObservableObject {
