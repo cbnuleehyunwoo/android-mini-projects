@@ -12,6 +12,7 @@ struct MyPageView: View {
     @State private var logoutErrorMessage: String?
     @State private var nickname: String
     private let store: LocalAppStateStore
+    private let historyStore: RunningHistoryStore
     private let profileService: ProfileServiceProtocol
     private let authService: AuthServiceProtocol
     private let accessToken: String?
@@ -20,6 +21,7 @@ struct MyPageView: View {
 
     init(
         store: LocalAppStateStore,
+        historyStore: RunningHistoryStore = RunningHistoryStore(),
         profileService: ProfileServiceProtocol = MockProfileService(),
         authService: AuthServiceProtocol = MockAuthService(),
         accessToken: String? = nil,
@@ -27,6 +29,7 @@ struct MyPageView: View {
         onNicknameChanged: @escaping (String) -> Void = { _ in }
     ) {
         self.store = store
+        self.historyStore = historyStore
         self.profileService = profileService
         self.authService = authService
         self.accessToken = accessToken
@@ -210,7 +213,11 @@ struct MyPageView: View {
         guard !isBusy else { return }
 
         guard let accessToken else {
-            completeLocalSessionRemoval()
+            do {
+                try await completeLocalSessionRemoval()
+            } catch {
+                logoutErrorMessage = error.localizedDescription
+            }
             return
         }
 
@@ -223,7 +230,11 @@ struct MyPageView: View {
 
         do {
             try await authService.logout(accessToken: accessToken)
-            completeLocalSessionRemoval(shouldResetOnboarding: false)
+        } catch {
+            // Server revoke is best-effort; local credentials and GPS history must still be purged.
+        }
+        do {
+            try await completeLocalSessionRemoval(shouldResetOnboarding: false)
         } catch {
             logoutErrorMessage = error.localizedDescription
         }
@@ -233,7 +244,11 @@ struct MyPageView: View {
     private func deleteAccount() async {
         guard !isBusy else { return }
         guard let accessToken else {
-            deleteAccountErrorMessage = AuthError.unavailable.localizedDescription
+            do {
+                try await completeLocalSessionRemoval(shouldResetOnboarding: true)
+            } catch {
+                deleteAccountErrorMessage = error.localizedDescription
+            }
             return
         }
 
@@ -246,13 +261,21 @@ struct MyPageView: View {
 
         do {
             try await authService.deleteAccount(accessToken: accessToken)
-            completeLocalSessionRemoval(shouldResetOnboarding: true)
+            try await completeLocalSessionRemoval(shouldResetOnboarding: true)
         } catch {
-            deleteAccountErrorMessage = error.localizedDescription
+            let remoteError = error
+            do {
+                try historyStore.removeAll()
+                deleteAccountErrorMessage = remoteError.localizedDescription
+            } catch {
+                deleteAccountErrorMessage = error.localizedDescription
+            }
         }
     }
 
-    private func completeLocalSessionRemoval(shouldResetOnboarding: Bool = false) {
+    private func completeLocalSessionRemoval(shouldResetOnboarding: Bool = false) async throws {
+        try historyStore.removeAll()
+        await authService.clearLocalSession()
         if shouldResetOnboarding {
             store.deleteAccount()
         } else {

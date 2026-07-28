@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 class MyPageViewModel(
     private val profileRepository: ProfileRepository,
     private val authRepository: AuthRepository,
+    private val clearLocalUserData: suspend () -> Unit,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(MyPageUiState())
     val uiState = _uiState.asStateFlow()
@@ -66,20 +67,25 @@ class MyPageViewModel(
                 )
             }
 
+            val signOutError =
+                runCatching {
+                    authRepository.signOut()
+                }.exceptionOrNull()
             runCatching {
-                authRepository.signOut()
+                clearLocalUserData()
             }.onSuccess {
                 _uiState.update {
                     it.copy(
                         isLoggingOut = false,
                         isLoggedOut = true,
+                        errorMessage = null,
                     )
                 }
             }.onFailure { throwable ->
                 _uiState.update {
                     it.copy(
                         isLoggingOut = false,
-                        errorMessage = throwable.message ?: "로그아웃에 실패했어요.",
+                        errorMessage = throwable.message ?: signOutError?.message ?: "로그아웃에 실패했어요.",
                     )
                 }
             }
@@ -97,9 +103,22 @@ class MyPageViewModel(
                 )
             }
 
+            val deleteAccountError =
+                runCatching {
+                    authRepository.deleteAccount()
+                }.exceptionOrNull()
             runCatching {
-                authRepository.deleteAccount()
+                clearLocalUserData()
             }.onSuccess {
+                if (deleteAccountError != null) {
+                    _uiState.update {
+                        it.copy(
+                            isDeletingAccount = false,
+                            errorMessage = deleteAccountError.message ?: "회원 탈퇴에 실패했어요.",
+                        )
+                    }
+                    return@onSuccess
+                }
                 _uiState.update {
                     it.copy(
                         isDeletingAccount = false,
@@ -126,6 +145,7 @@ class MyPageViewModel(
     class Factory(
         private val profileRepository: ProfileRepository,
         private val authRepository: AuthRepository,
+        private val clearLocalUserData: suspend () -> Unit,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -133,6 +153,7 @@ class MyPageViewModel(
             return MyPageViewModel(
                 profileRepository = profileRepository,
                 authRepository = authRepository,
+                clearLocalUserData = clearLocalUserData,
             ) as T
         }
     }

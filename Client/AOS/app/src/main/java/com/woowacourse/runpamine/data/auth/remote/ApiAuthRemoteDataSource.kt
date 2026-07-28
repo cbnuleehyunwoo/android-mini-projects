@@ -62,8 +62,9 @@ class ApiAuthRemoteDataSource(
             )
         } catch (exception: ApiAuthException) {
             if (exception.statusCode != HttpURLConnection.HTTP_UNAUTHORIZED) throw exception
+        } finally {
+            sessionStore.clear()
         }
-        sessionStore.clear()
     }
 
     override suspend fun deleteAccount() {

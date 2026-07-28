@@ -34,6 +34,7 @@ class ApiRunRemoteDataSource(
                     path = "/runs",
                     method = "POST",
                     accessToken = accessToken,
+                    idempotencyKey = "run-session-${session.id}",
                     body = session.toCreateRunRequest(points),
                 )
             response.getJSONObject("data").toRunResult()
@@ -92,17 +93,19 @@ class ApiRunRemoteDataSource(
         method: String,
         accessToken: String,
         query: Map<String, String> = emptyMap(),
+        idempotencyKey: String? = null,
         body: JSONObject? = null,
     ): JSONObject {
         val url = "$apiBaseUrl$path${query.toQueryString()}"
         val connection = URL(url).openConnection() as HttpURLConnection
-        return connection.useJsonRequest(method, accessToken, body)
+        return connection.useJsonRequest(method, accessToken, idempotencyKey, body)
     }
 }
 
 private fun HttpURLConnection.useJsonRequest(
     method: String,
     accessToken: String,
+    idempotencyKey: String?,
     body: JSONObject?,
 ): JSONObject =
     try {
@@ -111,6 +114,7 @@ private fun HttpURLConnection.useJsonRequest(
         readTimeout = READ_TIMEOUT_MILLIS
         setRequestProperty("Authorization", "Bearer $accessToken")
         setRequestProperty("Accept", "application/json")
+        idempotencyKey?.let { setRequestProperty("Idempotency-Key", it) }
         if (body != null) {
             doOutput = true
             setRequestProperty("Content-Type", "application/json")

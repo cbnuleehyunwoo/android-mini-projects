@@ -1,6 +1,7 @@
 package com.woowacourse.runpamine.di
 
 import android.content.Context
+import android.content.Intent
 import androidx.room.Room
 import com.google.android.gms.location.LocationServices
 import com.woowacourse.runpamine.BuildConfig
@@ -40,6 +41,9 @@ import com.woowacourse.runpamine.domain.team.TeamRepository
 import com.woowacourse.runpamine.presentation.cache.RankingCache
 import com.woowacourse.runpamine.presentation.cache.RecordCache
 import com.woowacourse.runpamine.presentation.cache.TeamDashboardCache
+import com.woowacourse.runpamine.service.RunTrackingService
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class RunpamineContainer(
     private val context: Context,
@@ -54,10 +58,23 @@ class RunpamineContainer(
         recordCache.clear()
     }
 
+    suspend fun clearLocalUserData() {
+        context.stopService(Intent(context, RunTrackingService::class.java))
+        runTrackingRepository.discardActiveRun()
+        withContext(Dispatchers.IO) {
+            database.clearAllTables()
+        }
+        clearMainTabCaches()
+    }
+
+    private val authSessionStore by lazy {
+        EncryptedAuthSessionStore(context)
+    }
+
     private val authRemoteDataSource: AuthRemoteDataSource by lazy {
         ApiAuthRemoteDataSource(
             baseUrl = BuildConfig.BASE_URL,
-            sessionStore = EncryptedAuthSessionStore(context),
+            sessionStore = authSessionStore,
         )
     }
 
@@ -122,6 +139,7 @@ class RunpamineContainer(
             ).addMigrations(
                 RunDatabase.MIGRATION_1_2,
                 RunDatabase.MIGRATION_2_3,
+                RunDatabase.MIGRATION_3_4,
             ).build()
     }
 
@@ -143,6 +161,7 @@ class RunpamineContainer(
         DefaultRunTrackingRepository(
             localDataSource = runLocalDataSource,
             locationTracker = locationTracker,
+            currentUserId = { authSessionStore.current()?.user?.id },
         )
     }
 

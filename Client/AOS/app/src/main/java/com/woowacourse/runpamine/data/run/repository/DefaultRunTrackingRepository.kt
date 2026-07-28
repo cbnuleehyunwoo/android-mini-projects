@@ -36,6 +36,7 @@ class DefaultRunTrackingRepository(
     private val metricCalculator: RunMetricCalculator = RunMetricCalculator(),
     private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
     private val now: () -> Instant = Instant::now,
+    private val currentUserId: suspend () -> String? = { null },
     private val autoPauseInactivitySeconds: Long = AUTO_PAUSE_INACTIVITY_SECONDS,
     private val inactivityCheckIntervalMillis: Long = INACTIVITY_CHECK_INTERVAL_MILLIS,
     private val movementDistanceMeters: (RunPoint, RunPoint) -> Int = metricCalculator::distanceBetweenMeters,
@@ -70,10 +71,13 @@ class DefaultRunTrackingRepository(
     override suspend fun startRun(): RunSession =
         mutex.withLock {
             val session =
-                localDataSource.findActiveSession()
+                localDataSource
+                    .findActiveSession()
+                    ?.withCurrentUserId()
                     ?: RunSession(
                         id = UUID.randomUUID().toString(),
                         startedAt = now(),
+                        accountUserId = currentUserId(),
                     ).also { localDataSource.saveSession(it) }
 
             if (activeSessionId != session.id) {
@@ -193,6 +197,12 @@ class DefaultRunTrackingRepository(
                 collectLocation(session, resetLastPoint)
             }
         startInactivityMonitorIfNeeded()
+    }
+
+    private suspend fun RunSession.withCurrentUserId(): RunSession {
+        if (accountUserId != null) return this
+        val userId = currentUserId() ?: return this
+        return copy(accountUserId = userId).also { localDataSource.saveSession(it) }
     }
 
     private fun startInactivityMonitorIfNeeded() {

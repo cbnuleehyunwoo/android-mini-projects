@@ -94,6 +94,7 @@ fun MyPageScreen(
                 MyPageViewModel.Factory(
                     profileRepository = container.profileRepository,
                     authRepository = container.authRepository,
+                    clearLocalUserData = container::clearLocalUserData,
                 ),
         )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

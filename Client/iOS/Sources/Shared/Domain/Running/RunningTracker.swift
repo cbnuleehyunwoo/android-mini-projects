@@ -24,7 +24,6 @@ final class RunningTracker: NSObject, ObservableObject {
     @Published private var session = RunningSession()
 
     private let manager = CLLocationManager()
-    private let historyStore: RunningHistoryStore
     private var timer: Timer?
     private var shouldStartAfterAuthorization = false
     private var shouldValidateJumpFromPreviousLocation = false
@@ -36,8 +35,7 @@ final class RunningTracker: NSObject, ObservableObject {
     private var automaticResumeBackgroundSession: CLBackgroundActivitySession?
     private var isRequestingFullAccuracy = false
 
-    init(historyStore: RunningHistoryStore = RunningHistoryStore()) {
-        self.historyStore = historyStore
+    override init() {
         authorizationStatus = manager.authorizationStatus
         super.init()
 
@@ -158,9 +156,6 @@ final class RunningTracker: NSObject, ObservableObject {
         stopElapsedTimer()
 
         let record = session.makeRecord(endedAt: endedAt)
-        if let record {
-            historyStore.prepend(record)
-        }
         lastRecord = record
         trackingState = .ended
         return record
