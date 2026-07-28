@@ -1,5 +1,6 @@
 package com.woowacourse.runpamine.presentation.error
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,17 +27,27 @@ import com.woowacourse.runpamine.ui.theme.Gray40
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
 @Composable
-fun ErrorScreen(modifier: Modifier = Modifier) {
+fun ErrorScreen(
+    modifier: Modifier = Modifier,
+    @StringRes messageResId: Int = R.string.network_error_message,
+    onRetryClick: (() -> Unit)? = null,
+) {
     Column(
         modifier =
             modifier
                 .fillMaxSize()
                 .background(Color.White)
-                .pointerInput(Unit) {
-                    awaitEachGesture {
-                        awaitPointerEvent().changes.forEach { change -> change.consume() }
-                    }
-                },
+                .then(
+                    if (onRetryClick == null) {
+                        Modifier.pointerInput(Unit) {
+                            awaitEachGesture {
+                                awaitPointerEvent().changes.forEach { change -> change.consume() }
+                            }
+                        }
+                    } else {
+                        Modifier
+                    },
+                ),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -46,10 +58,16 @@ fun ErrorScreen(modifier: Modifier = Modifier) {
         )
         Spacer(modifier = Modifier.height(15.dp))
         Text(
-            text = stringResource(R.string.network_error_message),
+            text = stringResource(messageResId),
             style = MaterialTheme.typography.bodyLarge,
             color = Gray40,
         )
+        if (onRetryClick != null) {
+            Spacer(modifier = Modifier.height(20.dp))
+            Button(onClick = onRetryClick) {
+                Text(text = stringResource(R.string.retry))
+            }
+        }
     }
 }
 
