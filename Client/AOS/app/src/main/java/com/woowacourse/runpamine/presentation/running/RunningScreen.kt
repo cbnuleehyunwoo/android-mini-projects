@@ -44,6 +44,7 @@ fun RunningScreen(
                     application = context.applicationContext as Application,
                     runTrackingRepository = container.runTrackingRepository,
                     runSyncRepository = container.runSyncRepository,
+                    runAnnouncer = container.runAnnouncer,
                 ),
         )
     val state by viewModel.currentRunState.collectAsStateWithLifecycle()

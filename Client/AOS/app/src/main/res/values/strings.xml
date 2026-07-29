@@ -86,6 +86,10 @@
     <string name="running_notification_channel">러닝 측정</string>
     <string name="running_notification_title">러닝 측정 중</string>
     <string name="running_notification_text">현재 위치를 기록하고 있어요.</string>
+    <string name="running_announce_start">러닝을 시작합니다.</string>
+    <string name="running_announce_pause">러닝을 일시 중지합니다.</string>
+    <string name="running_announce_resume">러닝을 재개합니다.</string>
+    <string name="running_announce_end">러닝을 종료합니다.</string>
     <string name="my_page_title">마이페이지</string>
     <string name="my_page_default_nickname">러너</string>
     <string name="my_page_account_settings">계정 설정</string>
