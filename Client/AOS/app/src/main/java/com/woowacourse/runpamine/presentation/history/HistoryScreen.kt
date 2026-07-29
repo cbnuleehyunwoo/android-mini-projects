@@ -115,8 +115,9 @@ private fun HistoryContent(
                     ),
             )
             Spacer(
-                modifier = Modifier
-                    .height(28.dp)
+                modifier =
+                    Modifier
+                        .height(28.dp),
             )
             Column(
                 modifier =
