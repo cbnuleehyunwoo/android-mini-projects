@@ -6,8 +6,6 @@ import com.woowacourse.runpamine.domain.run.LocationTrackingMode
 import com.woowacourse.runpamine.domain.run.RunPoint
 import com.woowacourse.runpamine.domain.run.RunSession
 import com.woowacourse.runpamine.domain.run.RunTrackingRepository
-import com.woowacourse.runpamine.sound.RunAnnouncement
-import com.woowacourse.runpamine.sound.RunAnnouncer
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -45,8 +43,6 @@ class DefaultRunTrackingRepository(
     private val isAutoResumePointPlausible: (RunPoint, RunPoint) -> Boolean = { reference, candidate ->
         candidate.isPlausibleAfter(reference)
     },
-    private val runAnnouncer: RunAnnouncer = NoOpRunAnnouncer,
-    private val announcementDispatcher: CoroutineDispatcher = Dispatchers.Main,
 ) : RunTrackingRepository {
     private val scope = CoroutineScope(SupervisorJob() + dispatcher)
     private val mutex = Mutex()
@@ -227,23 +223,20 @@ class DefaultRunTrackingRepository(
     }
 
     private suspend fun autoPauseRun() {
-        val didAutoPause =
-            mutex.withLock {
-                val activeSession = localDataSource.findActiveSession() ?: return@withLock false
-                if (isPaused.value) return@withLock false
+        mutex.withLock {
+            val activeSession = localDataSource.findActiveSession() ?: return@withLock
+            if (isPaused.value) return@withLock
 
-                accumulatedDurationSeconds = currentElapsedSeconds()
-                currentSegmentStartedAt = null
-                isPaused.value = true
-                isAutoPaused = true
-                trackingJob?.cancel()
-                trackingJob = null
-                inactivityJob = null
-                saveCurrentMetrics(activeSession, accumulatedDurationSeconds)
-                startAutoResumeMonitoringIfNeeded()
-                true
-            }
-        if (didAutoPause) announce(RunAnnouncement.PAUSED)
+            accumulatedDurationSeconds = currentElapsedSeconds()
+            currentSegmentStartedAt = null
+            isPaused.value = true
+            isAutoPaused = true
+            trackingJob?.cancel()
+            trackingJob = null
+            inactivityJob = null
+            saveCurrentMetrics(activeSession, accumulatedDurationSeconds)
+            startAutoResumeMonitoringIfNeeded()
+        }
     }
 
     private fun startAutoResumeMonitoringIfNeeded() {
@@ -301,25 +294,16 @@ class DefaultRunTrackingRepository(
     }
 
     private suspend fun resumeAutomatically() {
-        val didAutoResume =
-            mutex.withLock {
-                val activeSession = localDataSource.findActiveSession() ?: return@withLock false
-                if (!isPaused.value || !isAutoPaused) return@withLock false
+        mutex.withLock {
+            val activeSession = localDataSource.findActiveSession() ?: return@withLock
+            if (!isPaused.value || !isAutoPaused) return@withLock
 
-                currentSegmentStartedAt = now()
-                lastMovementAt = now()
-                isPaused.value = false
-                isAutoPaused = false
-                autoResumeJob = null
-                startCollectingIfNeeded(activeSession, resetLastPoint = true)
-                true
-            }
-        if (didAutoResume) announce(RunAnnouncement.RESUMED)
-    }
-
-    private suspend fun announce(announcement: RunAnnouncement) {
-        withContext(announcementDispatcher) {
-            runAnnouncer.announce(announcement)
+            currentSegmentStartedAt = now()
+            lastMovementAt = now()
+            isPaused.value = false
+            isAutoPaused = false
+            autoResumeJob = null
+            startCollectingIfNeeded(activeSession, resetLastPoint = true)
         }
     }
 
@@ -409,14 +393,6 @@ class DefaultRunTrackingRepository(
             calories = metricCalculator.calories(session.distanceMeters),
         )
     }
-}
-
-private object NoOpRunAnnouncer : RunAnnouncer {
-    override fun prepare() = Unit
-
-    override fun announce(announcement: RunAnnouncement) = Unit
-
-    override fun shutdown() = Unit
 }
 
 private const val AUTO_PAUSE_INACTIVITY_SECONDS = 10L
