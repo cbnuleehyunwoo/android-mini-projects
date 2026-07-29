@@ -282,7 +282,7 @@ private fun RankingMetric.standardLabel(scope: RankingScope): String =
         RankingScope.PERSONAL ->
             when (this) {
                 RankingMetric.DISTANCE -> "누적 거리 기준"
-                RankingMetric.PACE -> "평균 페이스 기준"
+                RankingMetric.PACE -> "평균 페이스 기준[10km 이상]"
                 RankingMetric.CONSISTENCY -> "활동일 기준"
             }
     }

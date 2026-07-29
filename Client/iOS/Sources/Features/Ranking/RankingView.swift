@@ -326,7 +326,7 @@ struct RankingView: View {
         case .distance:
             return "누적 거리 기준"
         case .pace:
-            return "평균 페이스 기준"
+            return "평균 페이스 기준[10km 이상]"
         case .consistency:
             return "활동일 기준"
         }
