@@ -79,6 +79,10 @@ sealed interface AppRoute {
         override val route = "change_nickname"
     }
 
+    data object Feedback : AppRoute {
+        override val route = "feedback"
+    }
+
     data object SetupNickname : AppRoute {
         override val route = "setup_nickname"
     }

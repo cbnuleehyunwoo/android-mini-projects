@@ -134,6 +134,10 @@ fun RunpamineApp(
                     isShowingMyPage = false
                     navController.navigate(AppRoute.ChangeNickname.route)
                 },
+                onFeedbackClick = {
+                    isShowingMyPage = false
+                    navController.navigate(AppRoute.Feedback.route)
+                },
                 onLogoutCompleted = {
                     container.clearMainTabCaches()
                     isShowingMyPage = false
