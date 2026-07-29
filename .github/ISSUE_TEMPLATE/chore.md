@@ -1,7 +1,7 @@
 ---
 name: 기타 작업
 about: 설정, 빌드, CI, 의존성 등 기능/버그/리팩터링/문서 외 작업에 사용해주세요.
-title: "[chore] chore: "
+title: "chore: "
 labels: chore
 ---
 

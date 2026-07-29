@@ -1,7 +1,7 @@
 ---
 name: 문서 작업
 about: README, GitConvention, API 문서, 회의록 등 문서 작성/수정에 사용해주세요.
-title: "[docs] docs: "
+title: "docs: "
 labels: docs
 ---
 
