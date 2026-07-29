@@ -17,6 +17,14 @@ data class RankingUiState(
     val errorMessage: String? = null,
 )
 
+val RankingUiState.shouldShowLoadingSkeleton: Boolean
+    get() =
+        isLoading &&
+            when (selectedScope) {
+                RankingScope.TEAM -> teamRankings.isEmpty()
+                RankingScope.PERSONAL -> userRankings.isEmpty()
+            }
+
 enum class RankingScope(
     val label: String,
 ) {

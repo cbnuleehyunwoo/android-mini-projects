@@ -53,6 +53,7 @@ import com.woowacourse.runpamine.presentation.ranking.components.RankingStateMes
 import com.woowacourse.runpamine.presentation.ranking.model.RankingItem
 import com.woowacourse.runpamine.presentation.ranking.model.RankingScope
 import com.woowacourse.runpamine.presentation.ranking.model.RankingUiState
+import com.woowacourse.runpamine.presentation.ranking.model.shouldShowLoadingSkeleton
 import com.woowacourse.runpamine.presentation.ranking.viewmodel.RankingViewModel
 import com.woowacourse.runpamine.ui.theme.Blue10
 import com.woowacourse.runpamine.ui.theme.Blue40
@@ -113,7 +114,7 @@ private fun RankingContent(
                     .padding(horizontal = 22.dp),
         )
         Spacer(modifier = Modifier.height(28.dp))
-        if (uiState.isLoading) {
+        if (uiState.shouldShowLoadingSkeleton) {
             RankingSkeletonBody(
                 selectedScope = uiState.selectedScope,
                 selectedMetric = uiState.selectedMetric,
