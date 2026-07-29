@@ -1,8 +1,9 @@
 package com.woowacourse.runpamine.data.ranking.remote
 
+import com.woowacourse.runpamine.data.network.toRunpamineApiBaseUrl
 import com.woowacourse.runpamine.domain.ranking.MyRankingSummary
 import com.woowacourse.runpamine.domain.ranking.RankingMetric
-import com.woowacourse.runpamine.domain.ranking.RankingSeason
+import com.woowacourse.runpamine.domain.ranking.RankingPeriod
 import com.woowacourse.runpamine.domain.ranking.TeamRanking
 import com.woowacourse.runpamine.domain.ranking.UserRanking
 import kotlinx.coroutines.Dispatchers
@@ -14,7 +15,7 @@ import java.net.URL
 class ApiRankingRemoteDataSource(
     baseUrl: String,
 ) : RankingRemoteDataSource {
-    private val apiBaseUrl = baseUrl.toApiBaseUrl()
+    private val apiBaseUrl = baseUrl.toRunpamineApiBaseUrl()
 
     override suspend fun getTeamRankings(
         accessToken: String,
@@ -23,7 +24,7 @@ class ApiRankingRemoteDataSource(
         withContext(Dispatchers.IO) {
             val response =
                 request(
-                    path = "/rankings/teams/${metric.pathSegment}",
+                    path = "/rankings/teams/${metric.pathSegment}?period=$ALL_TIME_PERIOD",
                     method = "GET",
                     accessToken = accessToken,
                 )
@@ -40,7 +41,7 @@ class ApiRankingRemoteDataSource(
         withContext(Dispatchers.IO) {
             val response =
                 request(
-                    path = "/rankings/users/${metric.pathSegment}",
+                    path = "/rankings/users/${metric.pathSegment}?period=$ALL_TIME_PERIOD",
                     method = "GET",
                     accessToken = accessToken,
                 )
@@ -54,7 +55,7 @@ class ApiRankingRemoteDataSource(
         withContext(Dispatchers.IO) {
             val response =
                 request(
-                    path = "/rankings/me",
+                    path = "/rankings/me?period=$ALL_TIME_PERIOD",
                     method = "GET",
                     accessToken = accessToken,
                 )
@@ -137,7 +138,14 @@ private fun JSONObject.toUserRanking(): UserRanking =
 
 private fun JSONObject.toMyRankingSummary(): MyRankingSummary =
     MyRankingSummary(
-        season = getJSONObject("season").toRankingSeason(),
+        period =
+            optJSONObject("period")?.toRankingPeriod()
+                ?: RankingPeriod(
+                    type = ALL_TIME_PERIOD,
+                    startsAt = null,
+                    endsAt = null,
+                    elapsedDays = optInt("elapsedDays", 0),
+                ),
         eligible = getBoolean("eligible"),
         requiredDistanceMeters = getInt("requiredDistanceMeters"),
         distanceMeters = getInt("distanceMeters"),
@@ -155,12 +163,11 @@ private fun JSONObject.toMyRankingSummary(): MyRankingSummary =
         consistencyTopPercent = optNullableDouble("consistencyTopPercent"),
     )
 
-private fun JSONObject.toRankingSeason(): RankingSeason =
-    RankingSeason(
-        id = getString("id"),
-        name = getString("name"),
-        year = getInt("year"),
-        month = getInt("month"),
+private fun JSONObject.toRankingPeriod(): RankingPeriod =
+    RankingPeriod(
+        type = getString("type"),
+        startsAt = optString("startsAt").takeIf { it.isNotBlank() },
+        endsAt = optString("endsAt").takeIf { it.isNotBlank() },
         elapsedDays = optInt("elapsedDays", 0),
     )
 
@@ -173,14 +180,6 @@ private fun String.toApiErrorMessage(responseCode: Int): String =
         JSONObject(this).getJSONObject("error").getString("message")
     }.getOrDefault("랭킹 요청에 실패했어요. ($responseCode)")
 
-private fun String.toApiBaseUrl(): String {
-    val normalized = trim().trimEnd('/')
-    return if (normalized.endsWith(".supabase.co")) {
-        "$normalized/functions/v1/api"
-    } else {
-        normalized
-    }
-}
-
 private const val CONNECT_TIMEOUT_MILLIS = 10_000
 private const val READ_TIMEOUT_MILLIS = 10_000
+private const val ALL_TIME_PERIOD = "all"

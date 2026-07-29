@@ -11,6 +11,8 @@ import com.woowacourse.runpamine.domain.run.RunPoint
 import com.woowacourse.runpamine.domain.run.RunResult
 import com.woowacourse.runpamine.domain.run.RunSession
 import com.woowacourse.runpamine.domain.run.RunSyncStatus
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.runBlocking
@@ -51,6 +53,83 @@ class DefaultRunSyncRepositoryTest {
             assertEquals(RunSyncStatus.SYNCED, localDataSource.syncStatus)
         }
 
+    @Test
+    fun `업로드 실패 기록은 FAILED로 남고 pending 재시도 대상이 된다`() =
+        runBlocking {
+            val localDataSource = FakeRunLocalDataSource(runSession(distanceMeters = 1))
+            val remoteDataSource =
+                FakeRunRemoteDataSource().apply {
+                    failure = IllegalStateException("network error")
+                }
+            val repository = repository(localDataSource, remoteDataSource)
+
+            val failedResult = repository.syncRun(RUN_ID)
+
+            assertTrue(failedResult.isFailure)
+            assertEquals(RunSyncStatus.FAILED, localDataSource.syncStatus)
+
+            remoteDataSource.failure = null
+            val retryResults = repository.syncPendingRuns()
+
+            assertEquals(1, retryResults.size)
+            assertTrue(retryResults.single().isSuccess)
+            assertEquals(RunSyncStatus.SYNCED, localDataSource.syncStatus)
+            assertEquals(2, remoteDataSource.createRunCallCount)
+        }
+
+    @Test
+    fun `동일 러닝 동시 업로드 요청은 한 번만 서버로 전송한다`() =
+        runBlocking {
+            val localDataSource = FakeRunLocalDataSource(runSession(distanceMeters = 1))
+            val remoteDataSource =
+                FakeRunRemoteDataSource().apply {
+                    createRunDelayMillis = 50
+                }
+            val repository = repository(localDataSource, remoteDataSource)
+
+            val first = async { repository.syncRun(RUN_ID) }
+            val second = async { repository.syncRun(RUN_ID) }
+
+            assertTrue(first.await().isSuccess)
+            assertTrue(second.await().isSuccess)
+            assertEquals(1, remoteDataSource.createRunCallCount)
+            assertEquals(RunSyncStatus.SYNCED, localDataSource.syncStatus)
+        }
+
+    @Test
+    fun `다른 계정의 로컬 러닝은 서버로 전송하지 않는다`() =
+        runBlocking {
+            val localDataSource =
+                FakeRunLocalDataSource(
+                    runSession(distanceMeters = 1).copy(accountUserId = "other-user-id"),
+                )
+            val remoteDataSource = FakeRunRemoteDataSource()
+            val repository = repository(localDataSource, remoteDataSource)
+
+            val result = repository.syncRun(RUN_ID)
+
+            assertTrue(result.isFailure)
+            assertFalse(remoteDataSource.createRunCalled)
+            assertEquals(RunSyncStatus.LOCAL_ONLY, localDataSource.syncStatus)
+        }
+
+    @Test
+    fun `소유자가 없는 로컬 러닝은 서버로 전송하지 않는다`() =
+        runBlocking {
+            val localDataSource =
+                FakeRunLocalDataSource(
+                    runSession(distanceMeters = 1).copy(accountUserId = null),
+                )
+            val remoteDataSource = FakeRunRemoteDataSource()
+            val repository = repository(localDataSource, remoteDataSource)
+
+            val result = repository.syncRun(RUN_ID)
+
+            assertTrue(result.isFailure)
+            assertFalse(remoteDataSource.createRunCalled)
+            assertEquals(RunSyncStatus.LOCAL_ONLY, localDataSource.syncStatus)
+        }
+
     private fun repository(
         localDataSource: RunLocalDataSource,
         remoteDataSource: RunRemoteDataSource,
@@ -67,6 +146,7 @@ class DefaultRunSyncRepositoryTest {
             endedAt = Instant.parse("2026-06-15T00:01:00Z"),
             distanceMeters = distanceMeters,
             durationSeconds = 60,
+            accountUserId = "user-id",
         )
 
     private class FakeAuthRepository : AuthRepository {
@@ -89,12 +169,14 @@ class DefaultRunSyncRepositoryTest {
     }
 
     private class FakeRunLocalDataSource(
-        private val session: RunSession,
+        session: RunSession,
     ) : RunLocalDataSource {
+        private var session: RunSession? = session
         var syncStatus: RunSyncStatus = session.syncStatus
             private set
 
-        override suspend fun findSession(sessionId: String): RunSession? = session.takeIf { it.id == sessionId }
+        override suspend fun findSession(sessionId: String): RunSession? =
+            session?.copy(syncStatus = syncStatus)?.takeIf { it.id == sessionId }
 
         override suspend fun findPoints(sessionId: String): List<RunPoint> = emptyList()
 
@@ -103,6 +185,7 @@ class DefaultRunSyncRepositoryTest {
             status: RunSyncStatus,
         ) {
             syncStatus = status
+            session = session?.copy(syncStatus = status)
         }
 
         override suspend fun saveSession(session: RunSession) = Unit
@@ -140,12 +223,23 @@ class DefaultRunSyncRepositoryTest {
 
         override suspend fun deleteActiveSession() = Unit
 
-        override suspend fun findPendingSessions(): List<RunSession> = emptyList()
+        override suspend fun findPendingSessions(): List<RunSession> =
+            listOfNotNull(
+                session
+                    ?.copy(syncStatus = syncStatus)
+                    ?.takeIf {
+                        it.endedAt != null && it.syncStatus.isPending()
+                    },
+            )
     }
 
     private class FakeRunRemoteDataSource : RunRemoteDataSource {
         var createRunCalled = false
             private set
+        var createRunCallCount = 0
+            private set
+        var createRunDelayMillis = 0L
+        var failure: Throwable? = null
 
         override suspend fun createRun(
             accessToken: String,
@@ -153,6 +247,9 @@ class DefaultRunSyncRepositoryTest {
             points: List<RunPoint>,
         ): RunResult {
             createRunCalled = true
+            createRunCallCount += 1
+            if (createRunDelayMillis > 0) delay(createRunDelayMillis)
+            failure?.let { throw it }
             return RunResult(session.id, session.distanceMeters, session.durationSeconds, session.averagePaceSecondsPerKm, session.calories)
         }
 
@@ -176,3 +273,12 @@ class DefaultRunSyncRepositoryTest {
         const val RUN_ID = "run-id"
     }
 }
+
+private fun RunSyncStatus.isPending(): Boolean =
+    when (this) {
+        RunSyncStatus.LOCAL_ONLY,
+        RunSyncStatus.SYNCING,
+        RunSyncStatus.FAILED,
+        -> true
+        RunSyncStatus.SYNCED -> false
+    }

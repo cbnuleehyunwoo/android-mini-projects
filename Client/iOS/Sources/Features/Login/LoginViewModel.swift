@@ -9,6 +9,7 @@ final class LoginViewModel: ObservableObject {
     @Published var errorMessage: String?
 
     private let authService: AuthServiceProtocol
+    private var appleNonce: String?
 
     init(authService: AuthServiceProtocol) {
         self.authService = authService
@@ -30,7 +31,10 @@ final class LoginViewModel: ObservableObject {
     }
 
     func configureAppleLoginRequest(_ request: ASAuthorizationAppleIDRequest) {
+        let nonce = AuthNonce.make()
+        appleNonce = nonce
         request.requestedScopes = [.fullName, .email]
+        request.nonce = AuthNonce.sha256Hex(nonce)
     }
 
     func loginWithApple(result: Result<ASAuthorization, Error>) async {
@@ -48,8 +52,11 @@ final class LoginViewModel: ObservableObject {
                 guard let idToken = credential.identityToken.flatMap({ String(data: $0, encoding: .utf8) }) else {
                     throw AuthError.missingAppleIdentityToken
                 }
+                guard let nonce = appleNonce else {
+                    throw AuthError.unavailable
+                }
 
-                session = try await authService.loginWithApple(identityToken: idToken)
+                session = try await authService.loginWithApple(identityToken: idToken, nonce: nonce)
             case .failure(let error):
                 let authorizationError = error as? ASAuthorizationError
                 if authorizationError?.code == .canceled {
@@ -61,6 +68,7 @@ final class LoginViewModel: ObservableObject {
             errorMessage = error.localizedDescription
         }
 
+        appleNonce = nil
         isLoading = false
     }
 }

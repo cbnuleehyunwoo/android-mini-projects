@@ -15,8 +15,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.woowacourse.runpamine.R
 import com.woowacourse.runpamine.di.runpamineContainer
 import com.woowacourse.runpamine.presentation.component.RunpamineLogo
+import com.woowacourse.runpamine.presentation.error.ErrorScreen
 import kotlinx.coroutines.delay
 
 private const val SPLASH_EXTRA_DELAY_MILLIS = 1000L
@@ -35,17 +37,28 @@ fun SplashScreen(
                     profileRepository = container.profileRepository,
                 ),
         )
-    val destination by viewModel.destination.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(destination) {
-        destination?.let {
+    LaunchedEffect(uiState) {
+        (uiState as? SplashUiState.Completed)?.let {
             delay(SPLASH_EXTRA_DELAY_MILLIS)
             viewModel.onDestinationHandled()
-            onSplashFinished(it)
+            onSplashFinished(it.destination)
         }
     }
 
-    SplashContent(modifier = modifier)
+    when (uiState) {
+        SplashUiState.ProfileLoadFailed ->
+            ErrorScreen(
+                messageResId = R.string.profile_load_error_message,
+                onRetryClick = viewModel::retry,
+                modifier = modifier,
+            )
+
+        SplashUiState.Loading,
+        is SplashUiState.Completed,
+        -> SplashContent(modifier = modifier)
+    }
 }
 
 @Composable

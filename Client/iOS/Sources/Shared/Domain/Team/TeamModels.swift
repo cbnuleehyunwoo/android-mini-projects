@@ -48,17 +48,17 @@ struct TeamDailyMember: Identifiable, Equatable {
     var id: String { userID }
 }
 
-struct TeamSeasonStats: Equatable {
-    let season: TeamSeason
-    let team: TeamSeasonTeam
-    let members: [TeamSeasonMember]
+struct TeamStats: Equatable {
+    let period: TeamStatsPeriod
+    let team: TeamStatsTeam
+    let members: [TeamMemberStats]
 
     var teamTotalDistanceMeters: Int {
-        members.reduce(0) { $0 + $1.seasonDistanceMeters }
+        members.reduce(0) { $0 + $1.distanceMeters }
     }
 
     var completedMemberCount: Int {
-        members.filter { $0.consecutiveRunDays > 0 }.count
+        members.filter { $0.recentRunDays > 0 }.count
     }
 
     var totalMemberCount: Int {
@@ -79,35 +79,33 @@ struct TeamSeasonStats: Equatable {
     }
 }
 
-struct TeamSeason: Equatable {
-    let id: String
-    let name: String
-    let year: Int
-    let month: Int
-    let startsAt: Date
-    let endsAt: Date
+struct TeamStatsPeriod: Equatable {
+    let type: String
+    let referenceDate: String
+    let startsAt: Date?
+    let endsAt: Date?
     let elapsedDays: Int
 }
 
-struct TeamSeasonTeam: Equatable {
+struct TeamStatsTeam: Equatable {
     let id: String
     let name: String
     let ownerID: String
 }
 
-struct TeamSeasonMember: Identifiable, Equatable {
+struct TeamMemberStats: Identifiable, Equatable {
     let id: String
     let matchingID: String
     let nickname: String
     let avatarKey: String?
     let teamJoinedAt: String
-    let seasonDistanceMeters: Int
-    let seasonDurationSeconds: Int
-    let seasonCalories: Int
-    let seasonRunCount: Int
-    let seasonActiveDays: Int
+    let distanceMeters: Int
+    let durationSeconds: Int
+    let calories: Int
+    let runCount: Int
+    let activeDays: Int
     let averagePaceSecondsPerKilometer: Int?
-    let consecutiveRunDays: Int
+    let recentRunDays: Int
 }
 
 enum TeamError: LocalizedError, Equatable {

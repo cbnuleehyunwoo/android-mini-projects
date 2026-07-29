@@ -41,7 +41,7 @@ import com.woowacourse.runpamine.domain.profile.TeamSummary
 import com.woowacourse.runpamine.domain.profile.UserProfile
 import com.woowacourse.runpamine.domain.ranking.MyRankingSummary
 import com.woowacourse.runpamine.domain.ranking.RankingMetric
-import com.woowacourse.runpamine.domain.ranking.RankingSeason
+import com.woowacourse.runpamine.domain.ranking.RankingPeriod
 import com.woowacourse.runpamine.domain.ranking.TeamRanking
 import com.woowacourse.runpamine.domain.ranking.UserRanking
 import com.woowacourse.runpamine.domain.ranking.teamStandardLabel
@@ -53,6 +53,7 @@ import com.woowacourse.runpamine.presentation.ranking.components.RankingStateMes
 import com.woowacourse.runpamine.presentation.ranking.model.RankingItem
 import com.woowacourse.runpamine.presentation.ranking.model.RankingScope
 import com.woowacourse.runpamine.presentation.ranking.model.RankingUiState
+import com.woowacourse.runpamine.presentation.ranking.model.shouldShowLoadingSkeleton
 import com.woowacourse.runpamine.presentation.ranking.viewmodel.RankingViewModel
 import com.woowacourse.runpamine.ui.theme.Blue10
 import com.woowacourse.runpamine.ui.theme.Blue40
@@ -113,7 +114,7 @@ private fun RankingContent(
                     .padding(horizontal = 22.dp),
         )
         Spacer(modifier = Modifier.height(28.dp))
-        if (uiState.isLoading) {
+        if (uiState.shouldShowLoadingSkeleton) {
             RankingSkeletonBody(
                 selectedScope = uiState.selectedScope,
                 selectedMetric = uiState.selectedMetric,
@@ -282,7 +283,7 @@ private fun RankingMetric.standardLabel(scope: RankingScope): String =
         RankingScope.PERSONAL ->
             when (this) {
                 RankingMetric.DISTANCE -> "누적 거리 기준"
-                RankingMetric.PACE -> "평균 페이스 기준"
+                RankingMetric.PACE -> "평균 페이스 기준[10km 이상]"
                 RankingMetric.CONSISTENCY -> "활동일 기준"
             }
     }
@@ -431,7 +432,7 @@ private fun previewUiState(scope: RankingScope = RankingScope.PERSONAL): Ranking
             ),
         myRankingSummary =
             MyRankingSummary(
-                season = RankingSeason("season", "2026-06", 2026, 6, 10),
+                period = RankingPeriod("all", null, null, 10),
                 eligible = true,
                 requiredDistanceMeters = 10_000,
                 distanceMeters = 253_100,

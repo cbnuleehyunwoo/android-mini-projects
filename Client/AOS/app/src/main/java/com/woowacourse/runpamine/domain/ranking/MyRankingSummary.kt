@@ -1,7 +1,7 @@
 package com.woowacourse.runpamine.domain.ranking
 
 data class MyRankingSummary(
-    val season: RankingSeason,
+    val period: RankingPeriod,
     val eligible: Boolean,
     val requiredDistanceMeters: Int,
     val distanceMeters: Int,

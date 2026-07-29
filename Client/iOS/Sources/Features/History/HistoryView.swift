@@ -19,17 +19,33 @@ struct HistoryView: View {
     @State private var selectedRecord: RunningRecord?
 
     private let runService: RunServiceProtocol
+    private let historyStore: RunningHistoryStore
     private let accessToken: String?
+    private let currentUserID: String?
+    private let refreshRevision: Int
+    private let onRetryPendingRuns: () async -> Void
     private var calendar: Calendar {
         var calendar = Calendar.current
         calendar.firstWeekday = 2
         return calendar
     }
 
-    init(runService: RunServiceProtocol = MockRunService(), accessToken: String? = nil, cache: HistoryCache = HistoryCache()) {
+    init(
+        runService: RunServiceProtocol = MockRunService(),
+        historyStore: RunningHistoryStore = RunningHistoryStore(),
+        accessToken: String? = nil,
+        currentUserID: String? = nil,
+        cache: HistoryCache = HistoryCache(),
+        refreshRevision: Int = 0,
+        onRetryPendingRuns: @escaping () async -> Void = {}
+    ) {
         self.runService = runService
+        self.historyStore = historyStore
         self.accessToken = accessToken
+        self.currentUserID = currentUserID
         self.cache = cache
+        self.refreshRevision = refreshRevision
+        self.onRetryPendingRuns = onRetryPendingRuns
     }
 
     var body: some View {
@@ -102,10 +118,13 @@ struct HistoryView: View {
         .background(Color.white)
         .onAppear {
             if accessToken == nil {
-                cache.records = RunningHistoryStore().load()
+                cache.records = historyStore.load()
+            }
+            Task {
+                await onRetryPendingRuns()
             }
         }
-        .task(id: refreshIdentifier) {
+        .task(id: recordRefreshTaskIdentifier) {
             await refreshRecords()
         }
         .task(id: thumbnailRefreshIdentifier) {
@@ -145,20 +164,29 @@ struct HistoryView: View {
 
     private var visibleRecords: [RunningRecord] {
         guard accessToken != nil else { return cache.records }
-        if cache.loadedRefreshIdentifier == refreshIdentifier { return cache.records }
-        return cache.summariesByIdentifier[refreshIdentifier]?.runs ?? []
+        let remoteRecords = if cache.loadedRefreshIdentifier == refreshIdentifier {
+            cache.records
+        } else {
+            cache.summariesByIdentifier[refreshIdentifier]?.runs ?? []
+        }
+        return mergePendingRecords(into: remoteRecords)
     }
 
     private var visibleDaySummaries: [RunDaySummary] {
         guard accessToken != nil else { return cache.daySummaries }
-        if cache.loadedRefreshIdentifier == refreshIdentifier { return cache.daySummaries }
-        return cache.summariesByIdentifier[refreshIdentifier]?.days ?? []
+        let remoteDays = if cache.loadedRefreshIdentifier == refreshIdentifier {
+            cache.daySummaries
+        } else {
+            cache.summariesByIdentifier[refreshIdentifier]?.days ?? []
+        }
+        return mergePendingDays(into: remoteDays)
     }
 
     private var isWaitingForRemoteRecords: Bool {
         accessToken != nil &&
         cache.loadedRefreshIdentifier != refreshIdentifier &&
-        cache.summariesByIdentifier[refreshIdentifier] == nil
+        cache.summariesByIdentifier[refreshIdentifier] == nil &&
+        pendingRecordsForSelectedPeriod.isEmpty
     }
 
     private func records(in records: [RunningRecord]) -> [RunningRecord] {
@@ -176,12 +204,21 @@ struct HistoryView: View {
         guard !isWaitingForRemoteRecords else { return "0.00" }
 
         if cache.loadedRefreshIdentifier == refreshIdentifier {
-            let total = cache.totalDistanceMeters.map { Double($0) / 1_000 } ?? visibleSelectedRecords.reduce(0) { $0 + $1.distanceKilometers }
+            let totalMeters: Double
+            if let remoteTotalDistanceMeters = cache.totalDistanceMeters {
+                let pendingDistanceMeters = pendingRecordsForSelectedPeriod.reduce(0) { $0 + $1.distanceMeters }
+                totalMeters = Double(remoteTotalDistanceMeters) + pendingDistanceMeters
+            } else {
+                totalMeters = visibleSelectedRecords.reduce(0) { $0 + $1.distanceMeters }
+            }
+            let total = totalMeters / 1_000
             return total.formatted(.number.precision(.fractionLength(2)))
         }
 
         if let summary = cache.summariesByIdentifier[refreshIdentifier] {
-            return (Double(summary.totalDistanceMeters) / 1_000).formatted(.number.precision(.fractionLength(2)))
+            let pendingDistanceMeters = pendingRecordsForSelectedPeriod.reduce(0) { $0 + $1.distanceMeters }
+            return ((Double(summary.totalDistanceMeters) + pendingDistanceMeters) / 1_000)
+                .formatted(.number.precision(.fractionLength(2)))
         }
 
         return "0.00"
@@ -196,6 +233,10 @@ struct HistoryView: View {
             let components = calendar.dateComponents([.year, .month], from: cache.displayedMonth)
             return "\(cache.selectedPeriod.rawValue)-\(components.year ?? 0)-\(components.month ?? 0)"
         }
+    }
+
+    private var recordRefreshTaskIdentifier: String {
+        "\(refreshIdentifier)|\(refreshRevision)"
     }
 
     private var thumbnailRefreshIdentifier: String {
@@ -355,7 +396,7 @@ struct HistoryView: View {
 
     private func useLocalRecords() {
         cache.loadedRefreshIdentifier = nil
-        cache.records = RunningHistoryStore().load()
+        cache.records = historyStore.load()
         cache.daySummaries = []
         cache.totalDistanceMeters = nil
         pruneThumbnailCache(for: cache.records)
@@ -404,6 +445,37 @@ struct HistoryView: View {
         let currentIDs = Set(records.map(\.id))
         cache.thumbnailRecordsByID = cache.thumbnailRecordsByID.filter { currentIDs.contains($0.key) }
         cache.thumbnailFetchIDs = cache.thumbnailFetchIDs.intersection(currentIDs)
+    }
+
+    private var pendingRecordsForCurrentUser: [RunningRecord] {
+        guard let currentUserID else { return [] }
+        return historyStore.pendingUploads()
+            .filter { $0.ownerUserID == currentUserID }
+            .map(\.record)
+    }
+
+    private var pendingRecordsForSelectedPeriod: [RunningRecord] {
+        records(in: pendingRecordsForCurrentUser)
+    }
+
+    private func mergePendingRecords(into remoteRecords: [RunningRecord]) -> [RunningRecord] {
+        let remoteIDs = Set(remoteRecords.map(\.id))
+        let pendingRecords = pendingRecordsForCurrentUser.filter { !remoteIDs.contains($0.id) }
+        return (remoteRecords + pendingRecords).sorted { $0.startedAt > $1.startedAt }
+    }
+
+    private func mergePendingDays(into remoteDays: [RunDaySummary]) -> [RunDaySummary] {
+        var daysByStartOfDay = Dictionary(uniqueKeysWithValues: remoteDays.map { (calendar.startOfDay(for: $0.date), $0) })
+        for record in pendingRecordsForCurrentUser {
+            let startOfDay = calendar.startOfDay(for: record.startedAt)
+            let existingDistance = daysByStartOfDay[startOfDay]?.distanceMeters ?? 0
+            daysByStartOfDay[startOfDay] = RunDaySummary(
+                date: startOfDay,
+                distanceMeters: existingDistance + Int(record.distanceMeters.rounded()),
+                hasRun: true
+            )
+        }
+        return daysByStartOfDay.values.sorted { $0.date < $1.date }
     }
 
     @MainActor

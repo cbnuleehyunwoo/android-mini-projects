@@ -54,10 +54,6 @@
 	</dict>
 	<key>APIBaseURL</key>
 	<string>$(RUNPAMINE_API_BASE_URL)</string>
-	<key>SupabaseAnonKey</key>
-	<string>$(RUNPAMINE_SUPABASE_ANON_KEY)</string>
-	<key>SupabaseURL</key>
-	<string>$(RUNPAMINE_SUPABASE_URL)</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>pretendard_black.otf</string>

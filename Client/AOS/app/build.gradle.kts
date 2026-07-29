@@ -31,12 +31,11 @@ android {
         applicationId = "com.woowacourse.runpamine"
         minSdk = 30
         targetSdk = 36
-        versionCode = 101
-        versionName = "1.0.1"
+        versionCode = 110
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "BASE_URL", runpamineProperty("base_url").toBuildConfigString())
-        buildConfigField("String", "SUPABASE_ANON_KEY", runpamineProperty("supabase_anon_key").toBuildConfigString())
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", runpamineProperty("google_web_client_id").toBuildConfigString())
     }
 
@@ -71,7 +70,6 @@ secrets {
     propertiesFileName = "local.properties"
     defaultPropertiesFileName = "local.defaults.properties"
     ignoreList.add("base_url")
-    ignoreList.add("supabase_anon_key")
     ignoreList.add("google_web_client_id")
 }
 
@@ -94,9 +92,6 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
-    implementation(platform(libs.supabase.bom))
-    implementation(libs.supabase.auth)
-    implementation(libs.ktor.client.android)
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.googleid)

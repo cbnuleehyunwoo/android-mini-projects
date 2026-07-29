@@ -1,15 +1,17 @@
 package com.woowacourse.runpamine.di
 
 import android.content.Context
+import android.content.Intent
 import androidx.room.Room
 import com.google.android.gms.location.LocationServices
 import com.woowacourse.runpamine.BuildConfig
 import com.woowacourse.runpamine.data.auth.google.AndroidGoogleAuthCredentialDataSource
 import com.woowacourse.runpamine.data.auth.google.GoogleAuthCredentialDataSource
+import com.woowacourse.runpamine.data.auth.remote.ApiAuthRemoteDataSource
 import com.woowacourse.runpamine.data.auth.remote.AuthRemoteDataSource
-import com.woowacourse.runpamine.data.auth.remote.SupabaseAuthRemoteDataSource
 import com.woowacourse.runpamine.data.auth.repository.DefaultAuthRepository
 import com.woowacourse.runpamine.data.auth.repository.MissingAuthConfigurationRepository
+import com.woowacourse.runpamine.data.auth.storage.EncryptedAuthSessionStore
 import com.woowacourse.runpamine.data.profile.remote.ApiProfileRemoteDataSource
 import com.woowacourse.runpamine.data.profile.remote.ProfileRemoteDataSource
 import com.woowacourse.runpamine.data.profile.repository.DefaultProfileRepository
@@ -39,8 +41,9 @@ import com.woowacourse.runpamine.domain.team.TeamRepository
 import com.woowacourse.runpamine.presentation.cache.RankingCache
 import com.woowacourse.runpamine.presentation.cache.RecordCache
 import com.woowacourse.runpamine.presentation.cache.TeamDashboardCache
-import io.github.jan.supabase.auth.Auth
-import io.github.jan.supabase.createSupabaseClient
+import com.woowacourse.runpamine.service.RunTrackingService
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class RunpamineContainer(
     private val context: Context,
@@ -55,19 +58,23 @@ class RunpamineContainer(
         recordCache.clear()
     }
 
-    private val supabaseClient by lazy {
-        createSupabaseClient(
-            supabaseUrl = BuildConfig.BASE_URL,
-            supabaseKey = BuildConfig.SUPABASE_ANON_KEY,
-        ) {
-            install(Auth)
+    suspend fun clearLocalUserData() {
+        context.stopService(Intent(context, RunTrackingService::class.java))
+        runTrackingRepository.discardActiveRun()
+        withContext(Dispatchers.IO) {
+            database.clearAllTables()
         }
+        clearMainTabCaches()
+    }
+
+    private val authSessionStore by lazy {
+        EncryptedAuthSessionStore(context)
     }
 
     private val authRemoteDataSource: AuthRemoteDataSource by lazy {
-        SupabaseAuthRemoteDataSource(
-            supabaseClient = supabaseClient,
+        ApiAuthRemoteDataSource(
             baseUrl = BuildConfig.BASE_URL,
+            sessionStore = authSessionStore,
         )
     }
 
@@ -81,7 +88,6 @@ class RunpamineContainer(
         val missingKeys =
             buildList {
                 if (BuildConfig.BASE_URL.isBlank()) add("base_url")
-                if (BuildConfig.SUPABASE_ANON_KEY.isBlank()) add("supabase_anon_key")
             }
 
         if (missingKeys.isEmpty()) {
@@ -133,6 +139,7 @@ class RunpamineContainer(
             ).addMigrations(
                 RunDatabase.MIGRATION_1_2,
                 RunDatabase.MIGRATION_2_3,
+                RunDatabase.MIGRATION_3_4,
             ).build()
     }
 
@@ -154,6 +161,7 @@ class RunpamineContainer(
         DefaultRunTrackingRepository(
             localDataSource = runLocalDataSource,
             locationTracker = locationTracker,
+            currentUserId = { authSessionStore.current()?.user?.id },
         )
     }
 

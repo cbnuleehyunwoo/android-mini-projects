@@ -4,22 +4,50 @@ struct RunningView: View {
     @StateObject private var tracker = RunningTracker()
     @State private var finishedRecord: RunningRecord?
     @State private var isShowingStopDialog = false
+    @State private var isSavingRun = false
+    @State private var runSaveErrorMessage: String?
+    @State private var hasReportedSavedRun = false
     private let runService: RunServiceProtocol
+    private let runUploadRetrier: RunningUploadRetrier?
+    private let historyStore: RunningHistoryStore
     private let accessToken: String?
+    private let currentUserID: String?
+    private let onRunSaved: () -> Void
     private let onDismiss: () -> Void
 
-    init(runService: RunServiceProtocol = MockRunService(), accessToken: String? = nil, onDismiss: @escaping () -> Void = {}) {
+    init(
+        runService: RunServiceProtocol = MockRunService(),
+        runUploadRetrier: RunningUploadRetrier? = nil,
+        historyStore: RunningHistoryStore = RunningHistoryStore(),
+        accessToken: String? = nil,
+        currentUserID: String? = nil,
+        onRunSaved: @escaping () -> Void = {},
+        onDismiss: @escaping () -> Void = {}
+    ) {
         self.runService = runService
+        self.runUploadRetrier = runUploadRetrier
+        self.historyStore = historyStore
         self.accessToken = accessToken
+        self.currentUserID = currentUserID
+        self.onRunSaved = onRunSaved
         self.onDismiss = onDismiss
     }
 
     var body: some View {
         Group {
             if let finishedRecord {
-                RunningSummaryView(record: finishedRecord) {
-                    onDismiss()
-                }
+                RunningSummaryView(
+                    record: finishedRecord,
+                    isSaving: isSavingRun,
+                    saveErrorMessage: runSaveErrorMessage,
+                    onRetry: {
+                        guard tracker.lastRecord?.id == finishedRecord.id else { return }
+                        Task {
+                            await saveRun(finishedRecord)
+                        }
+                    },
+                    onDone: onDismiss
+                )
             } else {
                 activeRunningView
             }
@@ -156,16 +184,14 @@ struct RunningView: View {
     private func finishRunning() {
         isShowingStopDialog = false
 
-        let record: RunningRecord
         if let completedRecord = tracker.end() {
-            record = completedRecord
+            finishedRecord = completedRecord
+            Task {
+                await saveRun(completedRecord)
+            }
         } else {
-            record = fallbackRunningRecord()
-        }
-        finishedRecord = record
-
-        Task {
-            await saveRun(record)
+            finishedRecord = fallbackRunningRecord()
+            runSaveErrorMessage = "저장할 러닝 기록이 없습니다."
         }
     }
 
@@ -186,8 +212,46 @@ struct RunningView: View {
     }
 
     private func saveRun(_ record: RunningRecord) async {
-        guard let accessToken else { return }
-        _ = try? await runService.createRun(record: record, accessToken: accessToken)
+        do {
+            try historyStore.enqueuePendingUpload(record, ownerUserID: currentUserID)
+        } catch {
+            runSaveErrorMessage = error.localizedDescription
+            return
+        }
+        reportSavedRunOnce()
+
+        guard let accessToken else {
+            runSaveErrorMessage = "러닝 기록은 기기에 보관되었고 로그인 후 자동 저장됩니다."
+            return
+        }
+
+        isSavingRun = true
+        runSaveErrorMessage = nil
+
+        if let runUploadRetrier {
+            _ = await runUploadRetrier.uploadPending(accessToken: accessToken, currentUserID: currentUserID)
+            if historyStore.pendingUpload(for: record.id) != nil {
+                runSaveErrorMessage = "러닝 기록은 기기에 보관되었고 네트워크 복구 후 자동 저장됩니다."
+            } else {
+                runSaveErrorMessage = nil
+                reportSavedRunOnce()
+            }
+        } else {
+            do {
+                _ = try await runService.createRun(record: record, accessToken: accessToken)
+                try historyStore.removePendingUpload(recordID: record.id)
+                reportSavedRunOnce()
+            } catch {
+                runSaveErrorMessage = "러닝 기록은 기기에 보관되었고 네트워크 복구 후 자동 저장됩니다."
+            }
+        }
+        isSavingRun = false
+    }
+
+    private func reportSavedRunOnce() {
+        guard !hasReportedSavedRun else { return }
+        hasReportedSavedRun = true
+        onRunSaved()
     }
 }
 

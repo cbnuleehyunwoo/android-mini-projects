@@ -9,6 +9,15 @@ final class RankingCache: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var activeRankingRequestID: UUID?
+
+    func invalidate() {
+        teamBoardsByMetric = [:]
+        userBoardsByMetric = [:]
+        mySummary = nil
+        isLoading = false
+        errorMessage = nil
+        activeRankingRequestID = nil
+    }
 }
 
 struct RankingView: View {
@@ -18,19 +27,25 @@ struct RankingView: View {
     private let accessToken: String?
     private let team: RunningTeam?
     private let nickname: String
+    private let currentUserID: String?
+    private let refreshRevision: Int
 
     init(
         rankingService: RankingServiceProtocol = MockRankingService(),
         accessToken: String? = nil,
         team: RunningTeam? = nil,
         nickname: String = "김영희",
-        cache: RankingCache = RankingCache()
+        currentUserID: String? = nil,
+        cache: RankingCache = RankingCache(),
+        refreshRevision: Int = 0
     ) {
         self.rankingService = rankingService
         self.accessToken = accessToken
         self.team = team
         self.nickname = nickname
+        self.currentUserID = currentUserID
         self.cache = cache
+        self.refreshRevision = refreshRevision
     }
 
     var body: some View {
@@ -59,7 +74,7 @@ struct RankingView: View {
             }
         }
         .background(Color.white)
-        .task {
+        .task(id: refreshRevision) {
             await loadRankings()
         }
         .onChange(of: cache.selectedScope) { _, _ in
@@ -246,6 +261,9 @@ struct RankingView: View {
     private var highlightedUserEntry: UserRankingEntry? {
         guard let board = currentUserBoard else { return nil }
         let summaryRank = cache.mySummary.flatMap { cache.selectedMetric.rank(from: $0) }
+        if let currentUserID, let entry = board.rankings.first(where: { $0.userID == currentUserID }) {
+            return entry
+        }
         if let entry = board.rankings.first(where: { $0.nickname == nickname }) {
             return entry
         }
@@ -308,7 +326,7 @@ struct RankingView: View {
         case .distance:
             return "누적 거리 기준"
         case .pace:
-            return "평균 페이스 기준"
+            return "평균 페이스 기준[10km 이상]"
         case .consistency:
             return "활동일 기준"
         }
@@ -329,41 +347,64 @@ struct RankingView: View {
         cache.isLoading = true
         cache.errorMessage = nil
 
-        do {
-            let token = accessToken ?? ""
-            async let summary = rankingService.fetchMyRankingSummary(seasonID: nil, accessToken: token)
+        let token = accessToken ?? ""
+        async let summaryResult = capturedResult {
+            try await rankingService.fetchMyRankingSummary(accessToken: token)
+        }
 
-            switch requestScope {
-            case .team:
-                async let teamRanking = rankingService.fetchTeamRankings(metric: requestMetric, seasonID: nil, accessToken: token)
-                let nextTeamBoard = try await teamRanking
-                let nextSummary = try await summary
-                guard shouldApplyRankingResponse(requestID: requestID, scope: requestScope, metric: requestMetric) else { return }
-                if cache.teamBoardsByMetric[requestMetric] != nextTeamBoard {
-                    cache.teamBoardsByMetric[requestMetric] = nextTeamBoard
-                }
-                if cache.mySummary != nextSummary {
-                    cache.mySummary = nextSummary
-                }
-            case .personal:
-                async let userRanking = rankingService.fetchUserRankings(metric: requestMetric, seasonID: nil, accessToken: token)
-                let nextUserBoard = try await userRanking
-                let nextSummary = try await summary
-                guard shouldApplyRankingResponse(requestID: requestID, scope: requestScope, metric: requestMetric) else { return }
-                if cache.userBoardsByMetric[requestMetric] != nextUserBoard {
-                    cache.userBoardsByMetric[requestMetric] = nextUserBoard
-                }
-                if cache.mySummary != nextSummary {
-                    cache.mySummary = nextSummary
-                }
+        switch requestScope {
+        case .team:
+            async let boardResult = capturedResult {
+                try await rankingService.fetchTeamRankings(metric: requestMetric, accessToken: token)
             }
-        } catch {
+            let (board, summary) = await (boardResult, summaryResult)
             guard shouldApplyRankingResponse(requestID: requestID, scope: requestScope, metric: requestMetric) else { return }
-            cache.errorMessage = error.localizedDescription
+            applyTeamRankingResult(board, metric: requestMetric)
+            applySummaryResult(summary)
+        case .personal:
+            async let boardResult = capturedResult {
+                try await rankingService.fetchUserRankings(metric: requestMetric, accessToken: token)
+            }
+            let (board, summary) = await (boardResult, summaryResult)
+            guard shouldApplyRankingResponse(requestID: requestID, scope: requestScope, metric: requestMetric) else { return }
+            applyUserRankingResult(board, metric: requestMetric)
+            applySummaryResult(summary)
         }
 
         guard shouldApplyRankingResponse(requestID: requestID, scope: requestScope, metric: requestMetric) else { return }
         cache.isLoading = false
+    }
+
+    @MainActor
+    private func applyTeamRankingResult(
+        _ result: Result<TeamRankingBoard, Error>,
+        metric: UserRankingMetric
+    ) {
+        switch result {
+        case let .success(board):
+            cache.teamBoardsByMetric[metric] = board
+        case let .failure(error):
+            cache.errorMessage = error.localizedDescription
+        }
+    }
+
+    @MainActor
+    private func applyUserRankingResult(
+        _ result: Result<UserRankingBoard, Error>,
+        metric: UserRankingMetric
+    ) {
+        switch result {
+        case let .success(board):
+            cache.userBoardsByMetric[metric] = board
+        case let .failure(error):
+            cache.errorMessage = error.localizedDescription
+        }
+    }
+
+    @MainActor
+    private func applySummaryResult(_ result: Result<MyRankingSummary, Error>) {
+        guard case let .success(summary) = result else { return }
+        cache.mySummary = summary
     }
 
     private func shouldApplyRankingResponse(
@@ -384,6 +425,16 @@ struct RankingView: View {
 
     private func formatTopPercent(_ percent: Int) -> String {
         "상위 \(max(0, percent))%"
+    }
+}
+
+private func capturedResult<Value>(
+    _ operation: () async throws -> Value
+) async -> Result<Value, Error> {
+    do {
+        return .success(try await operation())
+    } catch {
+        return .failure(error)
     }
 }
 

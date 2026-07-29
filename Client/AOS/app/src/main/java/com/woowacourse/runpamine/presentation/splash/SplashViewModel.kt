@@ -14,8 +14,8 @@ class SplashViewModel(
     private val authRepository: AuthRepository,
     private val profileRepository: ProfileRepository,
 ) : ViewModel() {
-    private val _destination = MutableStateFlow<SplashDestination?>(null)
-    val destination = _destination.asStateFlow()
+    private val _uiState = MutableStateFlow<SplashUiState>(SplashUiState.Loading)
+    val uiState = _uiState.asStateFlow()
 
     init {
         checkSession()
@@ -23,6 +23,8 @@ class SplashViewModel(
 
     private fun checkSession() {
         viewModelScope.launch {
+            _uiState.update { SplashUiState.Loading }
+
             val session =
                 runCatching {
                     authRepository.loadSessionFromStorage()
@@ -30,27 +32,26 @@ class SplashViewModel(
                 }.getOrNull()
 
             if (session == null) {
-                _destination.update { SplashDestination.LOGIN }
+                _uiState.update {
+                    SplashUiState.Completed(SplashDestination.LOGIN)
+                }
                 return@launch
             }
 
-            val profile =
+            val profileResult =
                 runCatching {
                     profileRepository.getMyProfile()
-                }.getOrNull()
-
-            _destination.update {
-                if (profile == null) {
-                    SplashDestination.TERMS_AGREEMENT
-                } else {
-                    SplashDestination.HOME
                 }
-            }
+            _uiState.update { profileResult.toSplashUiState() }
         }
     }
 
+    fun retry() {
+        checkSession()
+    }
+
     fun onDestinationHandled() {
-        _destination.update { null }
+        _uiState.update { SplashUiState.Loading }
     }
 
     class Factory(

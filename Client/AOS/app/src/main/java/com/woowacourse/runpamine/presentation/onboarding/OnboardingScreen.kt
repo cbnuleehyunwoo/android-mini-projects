@@ -63,9 +63,10 @@ private fun OnboardingContent(
     val pagerState = rememberPagerState(pageCount = { pages.size })
 
     LaunchedEffect(pagerState) {
-        snapshotFlow { pagerState.settledPage }
+        snapshotFlow { pagerState.currentPage to pagerState.isScrollInProgress }
             .distinctUntilChanged()
-            .collectLatest { currentPage ->
+            .collectLatest { (currentPage, isScrollInProgress) ->
+                if (isScrollInProgress) return@collectLatest
                 delay(AUTO_SCROLL_INTERVAL_MILLIS)
                 pagerState.animateScrollToPage((currentPage + 1) % pages.size)
             }

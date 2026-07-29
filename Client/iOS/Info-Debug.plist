@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Runpamine</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>runpamine</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.218936780568-amfro0n7bdqcrvp3cqsca1c4rdofm4mm</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>GIDClientID</key>
+	<string>218936780568-amfro0n7bdqcrvp3cqsca1c4rdofm4mm.apps.googleusercontent.com</string>
+	<key>GIDServerClientID</key>
+	<string>218936780568-gget6j62mchc2301fpnato1fqq71j6q7.apps.googleusercontent.com</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.healthcare-fitness</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>러닝 중 화면이 꺼지거나 앱이 백그라운드에 있어도 이동 경로, 거리, 페이스를 계속 기록하기 위해 위치를 사용합니다.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>러닝 시작 시 현재 위치를 지도에 표시하고 이동 경로, 거리, 페이스를 기록하기 위해 위치를 사용합니다.</string>
+	<key>NSLocationTemporaryUsageDescriptionDictionary</key>
+	<dict>
+		<key>RunningRoute</key>
+		<string>정확한 이동 경로, 거리, 페이스를 기록하기 위해 정밀한 위치가 필요합니다.</string>
+	</dict>
+	<key>APIBaseURL</key>
+	<string>$(RUNPAMINE_API_BASE_URL)</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>pretendard_black.otf</string>
+		<string>pretendard_bold.otf</string>
+		<string>pretendard_extra_bold.otf</string>
+		<string>pretendard_extra_light.otf</string>
+		<string>pretendard_light.otf</string>
+		<string>pretendard_medium.otf</string>
+		<string>pretendard_regular.otf</string>
+		<string>pretendard_semi_bold.otf</string>
+		<string>pretendard_thin.otf</string>
+		<string>kyobo_handwriting_2025_lyb.otf</string>
+	</array>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+	</dict>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
+	<key>UILaunchScreen</key>
+	<dict/>
+	<key>UIStatusBarStyle</key>
+	<string>UIStatusBarStyleDarkContent</string>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+</dict>
+</plist>

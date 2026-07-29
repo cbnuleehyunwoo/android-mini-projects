@@ -39,6 +39,7 @@ final class RunAPIService: RunServiceProtocol {
             path: "/runs",
             method: "POST",
             accessToken: accessToken,
+            idempotencyKey: "run-\(record.id.uuidString)",
             body: CreateRunPayload(record)
         )
         return response.data.domain
@@ -93,9 +94,13 @@ final class RunAPIService: RunServiceProtocol {
         path: String,
         method: String,
         accessToken: String,
+        idempotencyKey: String? = nil,
         body: Body
     ) async throws -> Response {
         var request = makeRequest(path: path, method: method, accessToken: accessToken)
+        if let idempotencyKey {
+            request.setValue(idempotencyKey, forHTTPHeaderField: "Idempotency-Key")
+        }
         request.httpBody = try encoder.encode(body)
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         return try await send(request: request)
@@ -226,6 +231,23 @@ private struct CreatedRunPayload: Decodable {
     let averagePaceSecondsPerKm: Int?
     let calories: Int
 
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case distanceMeters
+        case durationSeconds
+        case averagePaceSecondsPerKm
+        case calories
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        distanceMeters = try container.decodeLossyInt(forKey: .distanceMeters)
+        durationSeconds = try container.decodeLossyInt(forKey: .durationSeconds)
+        averagePaceSecondsPerKm = try container.decodeLossyIntIfPresent(forKey: .averagePaceSecondsPerKm)
+        calories = try container.decodeLossyInt(forKey: .calories)
+    }
+
     var domain: CreatedRun {
         CreatedRun(
             id: id,
@@ -242,6 +264,19 @@ private struct WeeklyRunsPayload: Decodable {
     let days: [RunDayPayload]
     let runs: [RunPayload]
 
+    private enum CodingKeys: String, CodingKey {
+        case totalDistanceMeters
+        case days
+        case runs
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        totalDistanceMeters = try container.decodeLossyInt(forKey: .totalDistanceMeters)
+        days = try container.decode([RunDayPayload].self, forKey: .days)
+        runs = try container.decode([RunPayload].self, forKey: .runs)
+    }
+
     var domain: RunPeriodSummary {
         RunPeriodSummary(
             totalDistanceMeters: totalDistanceMeters,
@@ -256,6 +291,19 @@ private struct MonthlyRunsPayload: Decodable {
     let days: [RunDayPayload]
     let runs: [RunPayload]
 
+    private enum CodingKeys: String, CodingKey {
+        case totalDistanceMeters
+        case days
+        case runs
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        totalDistanceMeters = try container.decodeLossyInt(forKey: .totalDistanceMeters)
+        days = try container.decode([RunDayPayload].self, forKey: .days)
+        runs = try container.decode([RunPayload].self, forKey: .runs)
+    }
+
     var domain: RunPeriodSummary {
         RunPeriodSummary(
             totalDistanceMeters: totalDistanceMeters,
@@ -269,6 +317,19 @@ private struct RunDayPayload: Decodable {
     let date: String
     let distanceMeters: Int
     let hasRun: Bool
+
+    private enum CodingKeys: String, CodingKey {
+        case date
+        case distanceMeters
+        case hasRun
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        date = try container.decode(String.self, forKey: .date)
+        distanceMeters = try container.decodeLossyInt(forKey: .distanceMeters)
+        hasRun = try container.decode(Bool.self, forKey: .hasRun)
+    }
 
     var domain: RunDaySummary? {
         guard let date = RunDateCoder.date(from: date) else { return nil }
@@ -286,6 +347,31 @@ private struct RunPayload: Decodable {
     let averagePaceSecondsPerKm: Int?
     let calories: Int
     let points: [RunPointPayload]?
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case date
+        case startedAt
+        case endedAt
+        case distanceMeters
+        case durationSeconds
+        case averagePaceSecondsPerKm
+        case calories
+        case points
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        date = try container.decodeIfPresent(String.self, forKey: .date)
+        startedAt = try container.decode(String.self, forKey: .startedAt)
+        endedAt = try container.decode(String.self, forKey: .endedAt)
+        distanceMeters = try container.decodeLossyInt(forKey: .distanceMeters)
+        durationSeconds = try container.decodeLossyInt(forKey: .durationSeconds)
+        averagePaceSecondsPerKm = try container.decodeLossyIntIfPresent(forKey: .averagePaceSecondsPerKm)
+        calories = try container.decodeLossyInt(forKey: .calories)
+        points = try container.decodeIfPresent([RunPointPayload].self, forKey: .points)
+    }
 
     var domain: RunningRecord? {
         guard
@@ -330,6 +416,7 @@ private struct RunPointPayload: Decodable {
     let sequence: Int
     let latitude: Double
     let longitude: Double
+    let horizontalAccuracyMeters: Double?
     let recordedAt: String
 
     var domain: RunningCoordinate? {
@@ -337,7 +424,7 @@ private struct RunPointPayload: Decodable {
         return RunningCoordinate(
             .init(latitude: latitude, longitude: longitude),
             recordedAt: recordedAt,
-            horizontalAccuracy: nil
+            horizontalAccuracy: horizontalAccuracyMeters
         )
     }
 }
@@ -346,12 +433,14 @@ private struct CreateRunPointPayload: Encodable {
     let sequence: Int
     let latitude: Double
     let longitude: Double
+    let horizontalAccuracyMeters: Double?
     let recordedAt: String
 
     init(_ point: CreateRunPoint) {
         sequence = point.sequence
         latitude = point.latitude
         longitude = point.longitude
+        horizontalAccuracyMeters = point.horizontalAccuracyMeters
         recordedAt = RunDateCoder.dateTimeString(from: point.recordedAt)
     }
 }
@@ -416,7 +505,7 @@ private extension Bundle {
             return nil
         }
 
-        return URL(string: baseURLString)
+        return URL(string: baseURLString)?.runpamineAPIBaseURL
     }
 }
 

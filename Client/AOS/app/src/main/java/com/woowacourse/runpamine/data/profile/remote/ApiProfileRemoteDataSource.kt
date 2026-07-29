@@ -1,5 +1,6 @@
 package com.woowacourse.runpamine.data.profile.remote
 
+import com.woowacourse.runpamine.data.network.toRunpamineApiBaseUrl
 import com.woowacourse.runpamine.domain.profile.HomeState
 import com.woowacourse.runpamine.domain.profile.TeamSummary
 import com.woowacourse.runpamine.domain.profile.UserProfile
@@ -12,7 +13,7 @@ import java.net.URL
 class ApiProfileRemoteDataSource(
     baseUrl: String,
 ) : ProfileRemoteDataSource {
-    private val apiBaseUrl = baseUrl.toApiBaseUrl()
+    private val apiBaseUrl = baseUrl.toRunpamineApiBaseUrl()
 
     override suspend fun getHomeState(accessToken: String): HomeState =
         withContext(Dispatchers.IO) {
@@ -160,15 +161,6 @@ private fun String.toApiErrorMessage(responseCode: Int): String =
             message
         }
     }.getOrDefault("프로필 요청에 실패했어요. ($responseCode)")
-
-private fun String.toApiBaseUrl(): String {
-    val normalized = trim().trimEnd('/')
-    return if (normalized.endsWith(".supabase.co")) {
-        "$normalized/functions/v1/api"
-    } else {
-        normalized
-    }
-}
 
 private const val CONNECT_TIMEOUT_MILLIS = 10_000
 private const val READ_TIMEOUT_MILLIS = 10_000

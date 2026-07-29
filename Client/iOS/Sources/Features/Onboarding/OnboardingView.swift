@@ -26,8 +26,8 @@ struct OnboardingView: View {
             .padding(.bottom, 14)
         }
         .background(Color.white)
-        .task {
-            await startAutoScroll()
+        .task(id: selectedPage) {
+            await advanceAfterDelay()
         }
     }
 
@@ -41,15 +41,13 @@ struct OnboardingView: View {
         }
     }
 
-    private func startAutoScroll() async {
-        while !Task.isCancelled {
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
-            guard !Task.isCancelled else { return }
+    private func advanceAfterDelay() async {
+        try? await Task.sleep(nanoseconds: 2_000_000_000)
+        guard !Task.isCancelled else { return }
 
-            await MainActor.run {
-                withAnimation(.easeInOut(duration: 0.28)) {
-                    selectedPage = (selectedPage + 1) % pages.count
-                }
+        await MainActor.run {
+            withAnimation(.easeInOut(duration: 0.28)) {
+                selectedPage = (selectedPage + 1) % pages.count
             }
         }
     }
