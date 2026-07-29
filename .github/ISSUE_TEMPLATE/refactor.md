@@ -1,7 +1,7 @@
 ---
 name: 리팩터링
 about: 동작 변경 없이 코드 구조를 개선할 때 사용해주세요.
-title: "[영역] refactor: "
+title: "refactor: "
 labels: refactor
 ---
 
