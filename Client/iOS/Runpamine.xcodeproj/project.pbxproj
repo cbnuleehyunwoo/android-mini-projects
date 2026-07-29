@@ -36,6 +36,7 @@
 		7A1000010000000000000019 /* NicknameValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000011A /* NicknameValidator.swift */; };
 		7A100001000000000000001A /* MyPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000011B /* MyPageView.swift */; };
 		7A100001000000000000001B /* MyNicknameChangeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000011C /* MyNicknameChangeView.swift */; };
+		7A9100010000000000000001 /* FeedbackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9100010000000000000101 /* FeedbackView.swift */; };
 		7A100001000000000000001C /* LocalAppStateStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000011D /* LocalAppStateStore.swift */; };
 		7A100001000000000000001D /* RunningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000011E /* RunningView.swift */; };
 		7A100001000000000000001E /* RunningMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000011F /* RunningMapView.swift */; };
@@ -116,6 +117,7 @@
 		7A100001000000000000011A /* NicknameValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NicknameValidator.swift; sourceTree = "<group>"; };
 		7A100001000000000000011B /* MyPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyPageView.swift; sourceTree = "<group>"; };
 		7A100001000000000000011C /* MyNicknameChangeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyNicknameChangeView.swift; sourceTree = "<group>"; };
+		7A9100010000000000000101 /* FeedbackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackView.swift; sourceTree = "<group>"; };
 		7A100001000000000000011D /* LocalAppStateStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalAppStateStore.swift; sourceTree = "<group>"; };
 		7A100001000000000000011E /* RunningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningView.swift; sourceTree = "<group>"; };
 		7A100001000000000000011F /* RunningMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningMapView.swift; sourceTree = "<group>"; };
@@ -357,6 +359,7 @@
 			children = (
 				7A100001000000000000011B /* MyPageView.swift */,
 				7A100001000000000000011C /* MyNicknameChangeView.swift */,
+				7A9100010000000000000101 /* FeedbackView.swift */,
 			);
 			path = MyPage;
 			sourceTree = "<group>";
@@ -608,6 +611,7 @@
 				7A1000010000000000000019 /* NicknameValidator.swift in Sources */,
 				7A100001000000000000001A /* MyPageView.swift in Sources */,
 				7A100001000000000000001B /* MyNicknameChangeView.swift in Sources */,
+				7A9100010000000000000001 /* FeedbackView.swift in Sources */,
 				7A100001000000000000001C /* LocalAppStateStore.swift in Sources */,
 				7A100001000000000000001D /* RunningView.swift in Sources */,
 				7A100001000000000000001E /* RunningMapView.swift in Sources */,

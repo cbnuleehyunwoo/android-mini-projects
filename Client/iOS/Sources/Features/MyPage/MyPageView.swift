@@ -8,6 +8,7 @@ struct MyPageView: View {
     @State private var isLoggingOut = false
     @State private var isShowingLogoutConfirmation = false
     @State private var isShowingDeleteAccountConfirmation = false
+    @State private var isShowingFeedback = false
     @State private var deleteAccountErrorMessage: String?
     @State private var logoutErrorMessage: String?
     @State private var nickname: String
@@ -126,6 +127,14 @@ struct MyPageView: View {
 
                             sectionTitle("기타")
                                 .padding(.top, 4)
+                            settingsRow(
+                                icon: "text.bubble",
+                                title: "피드백 보내기",
+                                subtitle: "런파민에 바라는 점을 알려주세요",
+                                isSystemIcon: true
+                            ) {
+                                isShowingFeedback = true
+                            }
                             appInfoRow()
                         }
                         .padding(.horizontal, AppTheme.Layout.horizontalPadding)
@@ -146,6 +155,10 @@ struct MyPageView: View {
                 }
                 .networkErrorOverlay()
                 .presentationDetents([.large])
+            }
+            .sheet(isPresented: $isShowingFeedback) {
+                FeedbackView()
+                    .presentationDetents([.large])
             }
 
             if isShowingLogoutConfirmation {
@@ -297,15 +310,25 @@ struct MyPageView: View {
         title: String,
         subtitle: String,
         isDestructive: Bool = false,
+        isSystemIcon: Bool = false,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
             HStack(spacing: 14) {
-                Image(icon)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 24, height: 24)
-                    .frame(width: 28)
+                Group {
+                    if isSystemIcon {
+                        Image(systemName: icon)
+                            .resizable()
+                            .scaledToFit()
+                            .foregroundStyle(AppTheme.Colors.primary)
+                    } else {
+                        Image(icon)
+                            .resizable()
+                            .scaledToFit()
+                    }
+                }
+                .frame(width: 24, height: 24)
+                .frame(width: 28)
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(title)
