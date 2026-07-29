@@ -42,8 +42,6 @@ import com.woowacourse.runpamine.presentation.cache.RankingCache
 import com.woowacourse.runpamine.presentation.cache.RecordCache
 import com.woowacourse.runpamine.presentation.cache.TeamDashboardCache
 import com.woowacourse.runpamine.service.RunTrackingService
-import com.woowacourse.runpamine.sound.AudioClipRunAnnouncer
-import com.woowacourse.runpamine.sound.RunAnnouncer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -164,7 +162,6 @@ class RunpamineContainer(
             localDataSource = runLocalDataSource,
             locationTracker = locationTracker,
             currentUserId = { authSessionStore.current()?.user?.id },
-            runAnnouncer = runAnnouncer,
         )
     }
 
@@ -181,9 +178,5 @@ class RunpamineContainer(
             localDataSource = runLocalDataSource,
             remoteDataSource = runRemoteDataSource,
         )
-    }
-
-    val runAnnouncer: RunAnnouncer by lazy {
-        AudioClipRunAnnouncer(context.applicationContext)
     }
 }
