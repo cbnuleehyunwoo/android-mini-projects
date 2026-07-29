@@ -83,6 +83,10 @@
 		7A1670010000000000000001 /* RunpamineConfirmationDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1670010000000000000101 /* RunpamineConfirmationDialog.swift */; };
 		7A2480010000000000000001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7A2480010000000000000101 /* PrivacyInfo.xcprivacy */; };
 		7A3100010000000000000040 /* kyobo_handwriting_2025_lyb.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A3100010000000000000140 /* kyobo_handwriting_2025_lyb.otf */; };
+		7A9000010000000000000001 /* run_start.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 7A9000010000000000000101 /* run_start.m4a */; };
+		7A9000010000000000000002 /* run_pause.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 7A9000010000000000000102 /* run_pause.m4a */; };
+		7A9000010000000000000003 /* run_resume.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 7A9000010000000000000103 /* run_resume.m4a */; };
+		7A9000010000000000000004 /* run_stop.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 7A9000010000000000000104 /* run_stop.m4a */; };
 		7A3190010000000000000001 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3190010000000000000101 /* OnboardingView.swift */; };
 /* End PBXBuildFile section */
 
@@ -140,6 +144,10 @@
 		7A1000010000000000000130 /* TeamDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamDashboardView.swift; sourceTree = "<group>"; };
 		7A1000010000000000000131 /* InviteMemberView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteMemberView.swift; sourceTree = "<group>"; };
 		7A1000010000000000000140 /* pretendard_black.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_black.otf; sourceTree = "<group>"; };
+		7A9000010000000000000101 /* run_start.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = run_start.m4a; sourceTree = "<group>"; };
+		7A9000010000000000000102 /* run_pause.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = run_pause.m4a; sourceTree = "<group>"; };
+		7A9000010000000000000103 /* run_resume.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = run_resume.m4a; sourceTree = "<group>"; };
+		7A9000010000000000000104 /* run_stop.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = run_stop.m4a; sourceTree = "<group>"; };
 		7A1000010000000000000141 /* pretendard_bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_bold.otf; sourceTree = "<group>"; };
 		7A1000010000000000000142 /* pretendard_extra_bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_extra_bold.otf; sourceTree = "<group>"; };
 		7A1000010000000000000143 /* pretendard_extra_light.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pretendard_extra_light.otf; sourceTree = "<group>"; };
@@ -428,6 +436,7 @@
 				7A1000010000000000000151 /* encho.png */,
 				7A1350010000000000000140 /* lottie */,
 				7A1000010000000000000321 /* Fonts */,
+				7A9000010000000000000200 /* Audio */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -447,6 +456,17 @@
 				7A3100010000000000000140 /* kyobo_handwriting_2025_lyb.otf */,
 			);
 			path = Fonts;
+			sourceTree = "<group>";
+		};
+		7A9000010000000000000200 /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				7A9000010000000000000101 /* run_start.m4a */,
+				7A9000010000000000000102 /* run_pause.m4a */,
+				7A9000010000000000000103 /* run_resume.m4a */,
+				7A9000010000000000000104 /* run_stop.m4a */,
+			);
+			path = Audio;
 			sourceTree = "<group>";
 		};
 		7A1040010000000000000301 /* Profile */ = {
@@ -573,6 +593,10 @@
 				7A100001000000000000004B /* encho.png in Resources */,
 				7A1350010000000000000040 /* lottie in Resources */,
 				7A2480010000000000000001 /* PrivacyInfo.xcprivacy in Resources */,
+				7A9000010000000000000001 /* run_start.m4a in Resources */,
+				7A9000010000000000000002 /* run_pause.m4a in Resources */,
+				7A9000010000000000000003 /* run_resume.m4a in Resources */,
+				7A9000010000000000000004 /* run_stop.m4a in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

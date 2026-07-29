@@ -37,7 +37,7 @@ final class RunningTracker: NSObject, ObservableObject {
     private let announcer: RunAnnouncing
 
     override convenience init() {
-        self.init(announcer: SpeechRunAnnouncer())
+        self.init(announcer: AudioClipRunAnnouncer())
     }
 
     init(announcer: RunAnnouncing) {
