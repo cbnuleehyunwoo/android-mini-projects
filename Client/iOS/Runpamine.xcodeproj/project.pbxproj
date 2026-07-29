@@ -44,7 +44,6 @@
 		7A1000010000000000000021 /* RunningRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000122 /* RunningRecord.swift */; };
 		7A1000010000000000000022 /* RunningMetricFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000123 /* RunningMetricFormatter.swift */; };
 		7A1000010000000000000023 /* RunningHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000124 /* RunningHistoryStore.swift */; };
-		7A1000010000000000000031 /* RunningUploadRetrier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000158 /* RunningUploadRetrier.swift */; };
 		7A1000010000000000000024 /* RunningSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000125 /* RunningSession.swift */; };
 		7A1000010000000000000025 /* RunningTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000126 /* RunningTracker.swift */; };
 		7A1000010000000000000026 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000127 /* HistoryView.swift */; };
@@ -56,6 +55,7 @@
 		7A100001000000000000002C /* TeamService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000012D /* TeamService.swift */; };
 		7A100001000000000000002D /* TeamDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000130 /* TeamDashboardView.swift */; };
 		7A100001000000000000002E /* InviteMemberView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000131 /* InviteMemberView.swift */; };
+		7A1000010000000000000031 /* RunningUploadRetrier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000158 /* RunningUploadRetrier.swift */; };
 		7A1000010000000000000040 /* pretendard_black.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000140 /* pretendard_black.otf */; };
 		7A1000010000000000000041 /* pretendard_bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000141 /* pretendard_bold.otf */; };
 		7A1000010000000000000042 /* pretendard_extra_bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000142 /* pretendard_extra_bold.otf */; };
@@ -126,7 +126,6 @@
 		7A1000010000000000000124 /* RunningHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningHistoryStore.swift; sourceTree = "<group>"; };
 		7A1000010000000000000125 /* RunningSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningSession.swift; sourceTree = "<group>"; };
 		7A1000010000000000000126 /* RunningTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningTracker.swift; sourceTree = "<group>"; };
-		7A1000010000000000000158 /* RunningUploadRetrier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningUploadRetrier.swift; sourceTree = "<group>"; };
 		7A1000010000000000000127 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
 		7A1000010000000000000128 /* TeamCreateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamCreateView.swift; sourceTree = "<group>"; };
 		7A1000010000000000000129 /* TeamCreateViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamCreateViewModel.swift; sourceTree = "<group>"; };
@@ -149,6 +148,7 @@
 		7A1000010000000000000149 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7A1000010000000000000150 /* bk.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = bk.png; sourceTree = SOURCE_ROOT; };
 		7A1000010000000000000151 /* encho.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = encho.png; sourceTree = SOURCE_ROOT; };
+		7A1000010000000000000158 /* RunningUploadRetrier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningUploadRetrier.swift; sourceTree = "<group>"; };
 		7A1040010000000000000101 /* ProfileModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileModels.swift; sourceTree = "<group>"; };
 		7A1040010000000000000102 /* ProfileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileService.swift; sourceTree = "<group>"; };
 		7A1070010000000000000101 /* RunModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunModels.swift; sourceTree = "<group>"; };
@@ -778,7 +778,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.runpamine.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -811,7 +811,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.runpamine.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
