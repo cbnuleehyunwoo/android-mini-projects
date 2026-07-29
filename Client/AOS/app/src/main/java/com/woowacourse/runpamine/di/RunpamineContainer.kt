@@ -42,6 +42,8 @@ import com.woowacourse.runpamine.presentation.cache.RankingCache
 import com.woowacourse.runpamine.presentation.cache.RecordCache
 import com.woowacourse.runpamine.presentation.cache.TeamDashboardCache
 import com.woowacourse.runpamine.service.RunTrackingService
+import com.woowacourse.runpamine.sound.RunAnnouncer
+import com.woowacourse.runpamine.sound.TtsRunAnnouncer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -178,5 +180,9 @@ class RunpamineContainer(
             localDataSource = runLocalDataSource,
             remoteDataSource = runRemoteDataSource,
         )
+    }
+
+    val runAnnouncer: RunAnnouncer by lazy {
+        TtsRunAnnouncer(context.applicationContext)
     }
 }

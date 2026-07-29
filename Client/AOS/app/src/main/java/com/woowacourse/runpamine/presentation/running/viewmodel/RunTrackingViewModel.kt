@@ -11,6 +11,8 @@ import com.woowacourse.runpamine.domain.run.RunSession
 import com.woowacourse.runpamine.domain.run.RunSyncRepository
 import com.woowacourse.runpamine.domain.run.RunTrackingRepository
 import com.woowacourse.runpamine.service.RunTrackingService
+import com.woowacourse.runpamine.sound.RunAnnouncement
+import com.woowacourse.runpamine.sound.RunAnnouncer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,8 +26,13 @@ class RunTrackingViewModel(
     application: Application,
     private val runTrackingRepository: RunTrackingRepository,
     private val runSyncRepository: RunSyncRepository,
+    private val runAnnouncer: RunAnnouncer,
 ) : AndroidViewModel(application) {
     private val errorMessage = MutableStateFlow<String?>(null)
+
+    init {
+        runAnnouncer.prepare()
+    }
 
     val currentRunState =
         combine(
@@ -50,6 +57,7 @@ class RunTrackingViewModel(
         )
 
     fun startRun() {
+        runAnnouncer.announce(RunAnnouncement.STARTED)
         val context = getApplication<Application>()
         ContextCompat.startForegroundService(
             context,
@@ -58,6 +66,7 @@ class RunTrackingViewModel(
     }
 
     fun stopRun(onStopped: (RunSession?) -> Unit = {}) {
+        runAnnouncer.announce(RunAnnouncement.ENDED)
         viewModelScope.launch {
             val context = getApplication<Application>()
             val finishedSession = runTrackingRepository.stopRun()
@@ -77,8 +86,10 @@ class RunTrackingViewModel(
         viewModelScope.launch {
             if (currentRunState.value.isPaused) {
                 runTrackingRepository.resumeRun()
+                runAnnouncer.announce(RunAnnouncement.RESUMED)
             } else {
                 runTrackingRepository.pauseRun()
+                runAnnouncer.announce(RunAnnouncement.PAUSED)
             }
         }
     }
@@ -87,6 +98,7 @@ class RunTrackingViewModel(
         private val application: Application,
         private val runTrackingRepository: RunTrackingRepository,
         private val runSyncRepository: RunSyncRepository,
+        private val runAnnouncer: RunAnnouncer,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -95,6 +107,7 @@ class RunTrackingViewModel(
                 application = application,
                 runTrackingRepository = runTrackingRepository,
                 runSyncRepository = runSyncRepository,
+                runAnnouncer = runAnnouncer,
             ) as T
         }
     }

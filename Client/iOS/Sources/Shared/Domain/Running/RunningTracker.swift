@@ -34,8 +34,14 @@ final class RunningTracker: NSObject, ObservableObject {
     private var automaticResumeTimer: Timer?
     private var automaticResumeBackgroundSession: CLBackgroundActivitySession?
     private var isRequestingFullAccuracy = false
+    private let announcer: RunAnnouncing
 
-    override init() {
+    override convenience init() {
+        self.init(announcer: SpeechRunAnnouncer())
+    }
+
+    init(announcer: RunAnnouncing) {
+        self.announcer = announcer
         authorizationStatus = manager.authorizationStatus
         super.init()
 
@@ -126,6 +132,7 @@ final class RunningTracker: NSObject, ObservableObject {
         resetStationaryLocationTracking()
         pauseReason = reason
         trackingState = .paused
+        announcer.announce(.paused)
     }
 
     func resume() {
@@ -158,6 +165,7 @@ final class RunningTracker: NSObject, ObservableObject {
         let record = session.makeRecord(endedAt: endedAt)
         lastRecord = record
         trackingState = .ended
+        announcer.announce(.ended)
         return record
     }
 
@@ -195,8 +203,10 @@ final class RunningTracker: NSObject, ObservableObject {
         session.markStartedIfNeeded()
         resetStationaryLocationTracking(at: Date())
         startElapsedTimer()
+        let wasPaused = trackingState == .paused
         trackingState = .tracking
         shouldStartAfterAuthorization = false
+        announcer.announce(wasPaused ? .resumed : .started)
     }
 
     private func startElapsedTimer() {
