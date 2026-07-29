@@ -6,6 +6,8 @@ import com.woowacourse.runpamine.domain.run.LocationTrackingMode
 import com.woowacourse.runpamine.domain.run.RunPoint
 import com.woowacourse.runpamine.domain.run.RunSession
 import com.woowacourse.runpamine.domain.run.RunSyncStatus
+import com.woowacourse.runpamine.sound.RunAnnouncement
+import com.woowacourse.runpamine.sound.RunAnnouncer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -32,11 +34,13 @@ class DefaultRunTrackingRepositoryTest {
             val clock = AtomicReference(STARTED_AT)
             val localDataSource = FakeRunLocalDataSource()
             val locationTracker = FakeLocationTracker()
+            val runAnnouncer = FakeRunAnnouncer()
             val repository =
                 repository(
                     localDataSource = localDataSource,
                     locationTracker = locationTracker,
                     clock = clock,
+                    runAnnouncer = runAnnouncer,
                 )
 
             repository.startRun()
@@ -46,6 +50,7 @@ class DefaultRunTrackingRepositoryTest {
 
             clock.set(STARTED_AT.plusSeconds(10))
             awaitCondition { repository.observePaused().latestValue() }
+            awaitCondition { runAnnouncer.announcements == listOf(RunAnnouncement.PAUSED) }
             awaitCondition {
                 locationTracker.requestedModes ==
                     listOf(LocationTrackingMode.RUNNING, LocationTrackingMode.AUTO_RESUME)
@@ -65,6 +70,10 @@ class DefaultRunTrackingRepositoryTest {
 
             locationTracker.emit(LocationTrackingMode.AUTO_RESUME, point(longitude = 127.0002, secondsAfterStart = 19))
             awaitCondition { !repository.observePaused().latestValue() }
+            awaitCondition {
+                runAnnouncer.announcements ==
+                    listOf(RunAnnouncement.PAUSED, RunAnnouncement.RESUMED)
+            }
             awaitCondition {
                 locationTracker.requestedModes ==
                     listOf(
@@ -133,6 +142,7 @@ class DefaultRunTrackingRepositoryTest {
         localDataSource: RunLocalDataSource,
         locationTracker: LocationTracker,
         clock: AtomicReference<Instant>,
+        runAnnouncer: RunAnnouncer = FakeRunAnnouncer(),
     ) = DefaultRunTrackingRepository(
         localDataSource = localDataSource,
         locationTracker = locationTracker,
@@ -144,6 +154,8 @@ class DefaultRunTrackingRepositoryTest {
             if (from.latitude == to.latitude && from.longitude == to.longitude) 0 else 5
         },
         isAutoResumePointPlausible = { _, _ -> true },
+        runAnnouncer = runAnnouncer,
+        announcementDispatcher = Dispatchers.Unconfined,
     )
 
     private suspend fun awaitCondition(condition: suspend () -> Boolean) {
@@ -191,6 +203,18 @@ class DefaultRunTrackingRepositoryTest {
             }
             stream.emit(point)
         }
+    }
+
+    private class FakeRunAnnouncer : RunAnnouncer {
+        val announcements = CopyOnWriteArrayList<RunAnnouncement>()
+
+        override fun prepare() = Unit
+
+        override fun announce(announcement: RunAnnouncement) {
+            announcements += announcement
+        }
+
+        override fun shutdown() = Unit
     }
 
     private class FakeRunLocalDataSource : RunLocalDataSource {

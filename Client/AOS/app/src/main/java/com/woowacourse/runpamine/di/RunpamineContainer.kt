@@ -164,6 +164,7 @@ class RunpamineContainer(
             localDataSource = runLocalDataSource,
             locationTracker = locationTracker,
             currentUserId = { authSessionStore.current()?.user?.id },
+            runAnnouncer = runAnnouncer,
         )
     }
 
