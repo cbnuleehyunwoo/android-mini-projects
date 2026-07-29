@@ -22,7 +22,7 @@ import com.woowacourse.runpamine.ui.theme.RunpamineTypography
 
 @Composable
 fun ScreenTopBar(
-    title: String,
+    title: String?,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
     showBackButton: Boolean = true,
@@ -34,11 +34,13 @@ fun ScreenTopBar(
                 .height(RunpamineLayout.NavigationHeight),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = title,
-            style = RunpamineTypography.NavigationTitle,
-            color = Color.Black,
-        )
+        title?.let {
+            Text(
+                text = it,
+                style = RunpamineTypography.NavigationTitle,
+                color = Color.Black,
+            )
+        }
         if (showBackButton) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,

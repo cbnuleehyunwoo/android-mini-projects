@@ -13,6 +13,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.dp
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
@@ -32,6 +34,7 @@ private val DEFAULT_LOCATION = LatLng(37.5663, 126.9779)
 private const val DEFAULT_ZOOM = 15f
 private const val ROUTE_PADDING = 110
 private const val SINGLE_POINT_ZOOM = 17f
+private const val DEFAULT_MAX_ZOOM = 21f
 
 @Composable
 fun RunningRouteMap(
@@ -41,7 +44,26 @@ fun RunningRouteMap(
     isInteractive: Boolean = true,
     routePadding: Int = ROUTE_PADDING,
     animateCamera: Boolean = true,
+    shape: Shape = RoundedCornerShape(18.dp),
+    maxZoom: Float = DEFAULT_MAX_ZOOM,
 ) {
+    if (LocalInspectionMode.current) {
+        Box(
+            modifier =
+                modifier
+                    .clip(shape)
+                    .background(Color(0xFFF3F4F6)),
+        ) {
+            Text(
+                text = "경로 정보가 없어요",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFF6B7280),
+                modifier = Modifier.align(Alignment.Center),
+            )
+        }
+        return
+    }
+
     val route = remember(points) { points.sortedBy { it.sequence }.map { LatLng(it.latitude, it.longitude) } }
     val cameraPositionState =
         rememberCameraPositionState {
@@ -68,13 +90,17 @@ fun RunningRouteMap(
     Box(
         modifier =
             modifier
-                .clip(RoundedCornerShape(18.dp))
+                .clip(shape)
                 .background(Color(0xFFF3F4F6)),
     ) {
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = cameraPositionState,
-            properties = MapProperties(isMyLocationEnabled = false),
+            properties =
+                MapProperties(
+                    isMyLocationEnabled = false,
+                    maxZoomPreference = maxZoom,
+                ),
             uiSettings =
                 MapUiSettings(
                     compassEnabled = false,

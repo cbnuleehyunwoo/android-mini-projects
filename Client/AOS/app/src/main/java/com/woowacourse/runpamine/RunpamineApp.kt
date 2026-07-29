@@ -117,7 +117,12 @@ fun RunpamineApp(
                     navController = navController,
                     onOpenMyPage = { isShowingMyPage = true },
                     onTeamMemberClick = { member -> selectedTeamMember = member },
-                    modifier = Modifier.padding(innerPadding),
+                    modifier =
+                        if (currentRoute == AppRoute.History.route) {
+                            Modifier
+                        } else {
+                            Modifier.padding(innerPadding)
+                        },
                 )
             }
         }
