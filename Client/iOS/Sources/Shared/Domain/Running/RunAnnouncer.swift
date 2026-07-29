@@ -7,12 +7,13 @@ enum RunAnnouncement {
     case resumed
     case ended
 
-    var text: String {
+    /// 번들에 포함된 안내 음성 클립의 리소스 이름(확장자 제외).
+    var resourceName: String {
         switch self {
-        case .started: return "러닝을 시작합니다."
-        case .paused: return "러닝을 일시 중지합니다."
-        case .resumed: return "러닝을 재개합니다."
-        case .ended: return "러닝을 종료합니다."
+        case .started: return "run_start"
+        case .paused: return "run_pause"
+        case .resumed: return "run_resume"
+        case .ended: return "run_stop"
         }
     }
 }
@@ -22,23 +23,32 @@ protocol RunAnnouncing {
     func announce(_ announcement: RunAnnouncement)
 }
 
-/// 온디바이스 TTS(`AVSpeechSynthesizer`)로 러닝 상태 전이를 한국어 여성 음성으로 안내한다.
+/// 앱에 번들된 사전 녹음 오디오 클립(`AVAudioPlayer`)으로 러닝 상태 전이를 안내한다.
+/// 시스템 TTS와 달리 모든 기기에서 동일한 목소리로 재생된다.
 @MainActor
-final class SpeechRunAnnouncer: NSObject, RunAnnouncing {
-    private let synthesizer = AVSpeechSynthesizer()
+final class AudioClipRunAnnouncer: NSObject, RunAnnouncing {
+    private let bundle: Bundle
+    private var player: AVAudioPlayer?
 
-    override init() {
+    init(bundle: Bundle = .main) {
+        self.bundle = bundle
         super.init()
-        synthesizer.delegate = self
         configureAudioSession()
     }
 
     func announce(_ announcement: RunAnnouncement) {
-        let utterance = AVSpeechUtterance(string: announcement.text)
-        utterance.voice = AVSpeechSynthesisVoice(language: "ko-KR")
-        utterance.rate = AVSpeechUtteranceDefaultSpeechRate
-        activateAudioSession()
-        synthesizer.speak(utterance)
+        guard let url = bundle.url(forResource: announcement.resourceName, withExtension: clipFileExtension) else {
+            return
+        }
+        do {
+            let player = try AVAudioPlayer(contentsOf: url)
+            player.delegate = self
+            self.player = player
+            activateAudioSession()
+            player.play()
+        } catch {
+            deactivateAudioSession()
+        }
     }
 
     private func configureAudioSession() {
@@ -64,18 +74,14 @@ final class SpeechRunAnnouncer: NSObject, RunAnnouncing {
     }
 }
 
-extension SpeechRunAnnouncer: AVSpeechSynthesizerDelegate {
-    nonisolated func speechSynthesizer(
-        _ synthesizer: AVSpeechSynthesizer,
-        didFinish utterance: AVSpeechUtterance
-    ) {
+extension AudioClipRunAnnouncer: AVAudioPlayerDelegate {
+    nonisolated func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
         Task { @MainActor in self.deactivateAudioSession() }
     }
 
-    nonisolated func speechSynthesizer(
-        _ synthesizer: AVSpeechSynthesizer,
-        didCancel utterance: AVSpeechUtterance
-    ) {
+    nonisolated func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
         Task { @MainActor in self.deactivateAudioSession() }
     }
 }
+
+private let clipFileExtension = "m4a"
