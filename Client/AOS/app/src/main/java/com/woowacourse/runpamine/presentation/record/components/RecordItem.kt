@@ -69,6 +69,7 @@ fun RecordItem(
                         isInteractive = false,
                         routePadding = MINI_MAP_ROUTE_PADDING,
                         animateCamera = false,
+                        maxZoom = RECORD_MAP_MAX_ZOOM,
                     )
                 }
             }
@@ -150,6 +151,7 @@ private fun DayOfWeek.toKoreanFull(): String =
     }
 
 private const val MINI_MAP_ROUTE_PADDING = 24
+private const val RECORD_MAP_MAX_ZOOM = 18f
 
 @Preview(showBackground = true, widthDp = 400)
 @Composable
