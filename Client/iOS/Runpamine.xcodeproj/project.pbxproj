@@ -83,6 +83,7 @@
 		7A2480010000000000000001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7A2480010000000000000101 /* PrivacyInfo.xcprivacy */; };
 		7A3100010000000000000040 /* kyobo_handwriting_2025_lyb.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A3100010000000000000140 /* kyobo_handwriting_2025_lyb.otf */; };
 		7A3190010000000000000001 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3190010000000000000101 /* OnboardingView.swift */; };
+		7A4860010000000000000001 /* AppStoreUpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4860010000000000000101 /* AppStoreUpdateChecker.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -164,6 +165,7 @@
 		7A2480010000000000000101 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		7A3100010000000000000140 /* kyobo_handwriting_2025_lyb.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = kyobo_handwriting_2025_lyb.otf; sourceTree = "<group>"; };
 		7A3190010000000000000101 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		7A4860010000000000000101 /* AppStoreUpdateChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreUpdateChecker.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -300,6 +302,7 @@
 				7A100001000000000000031A /* Running */,
 				7A1000010000000000000315 /* Team */,
 				7A1420010000000000000301 /* Ranking */,
+				7A4860010000000000000301 /* Update */,
 			);
 			path = Domain;
 			sourceTree = "<group>";
@@ -367,6 +370,14 @@
 				7A100001000000000000011D /* LocalAppStateStore.swift */,
 			);
 			path = Persistence;
+			sourceTree = "<group>";
+		};
+		7A4860010000000000000301 /* Update */ = {
+			isa = PBXGroup;
+			children = (
+				7A4860010000000000000101 /* AppStoreUpdateChecker.swift */,
+			);
+			path = Update;
 			sourceTree = "<group>";
 		};
 		7A1000010000000000000319 /* Running */ = {
@@ -637,6 +648,7 @@
 				7A1350010000000000000001 /* RunpamineLottieView.swift in Sources */,
 				7A1670010000000000000001 /* RunpamineConfirmationDialog.swift in Sources */,
 				7A3190010000000000000001 /* OnboardingView.swift in Sources */,
+				7A4860010000000000000001 /* AppStoreUpdateChecker.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
