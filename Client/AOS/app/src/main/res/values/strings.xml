@@ -118,6 +118,8 @@
     <string name="feedback_option_custom">직접 입력</string>
     <string name="feedback_custom_label">추가하시고 싶은 기능을 알려주세요 (선택)</string>
     <string name="feedback_custom_placeholder">추가하시고 싶은 기능을 입력해주세요.</string>
+    <string name="feedback_inconvenience_question">혹시 최근 런파민을 사용하면서 불편하셨던 점이 있으신가요?</string>
+    <string name="feedback_inconvenience_placeholder">불편을 드려 죄송해요, 어떤 불편이 있으셨는지 알려주시면 빠르게 수정할게요!</string>
     <string name="feedback_submit">피드백 보내기</string>
     <string name="feedback_complete_title">피드백이 전송됐어요!</string>
     <string name="feedback_complete_message">소중한 의견 정말 감사해요 🙏\n더 좋은 런파민이 되도록 노력할게요!</string>

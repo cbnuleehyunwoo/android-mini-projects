@@ -88,6 +88,7 @@ private fun FeedbackWritingContent(
 ) {
     val selectedOptions = remember { mutableStateOf(emptySet<FeedbackOption>()) }
     var customText by remember { mutableStateOf("") }
+    var inconvenienceText by remember { mutableStateOf("") }
 
     Column(
         modifier =
@@ -143,30 +144,25 @@ private fun FeedbackWritingContent(
                     fontWeight = FontWeight.Bold,
                     color = textPrimaryColor,
                 )
-                TextField(
+                FeedbackTextField(
                     value = customText,
                     onValueChange = { customText = it },
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .height(140.dp),
-                    placeholder = {
-                        Text(
-                            text = stringResource(R.string.feedback_custom_placeholder),
-                            color = textSecondaryColor,
-                        )
-                    },
-                    keyboardOptions = KeyboardOptions.Default,
-                    shape = RoundedCornerShape(8.dp),
-                    colors =
-                        TextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFFF5F6F8),
-                            unfocusedContainerColor = Color(0xFFF5F6F8),
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                        ),
+                    placeholder = stringResource(R.string.feedback_custom_placeholder),
                 )
             }
+
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = stringResource(R.string.feedback_inconvenience_question),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = textPrimaryColor,
+            )
+            FeedbackTextField(
+                value = inconvenienceText,
+                onValueChange = { inconvenienceText = it },
+                placeholder = stringResource(R.string.feedback_inconvenience_placeholder),
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
         }
@@ -239,6 +235,38 @@ private fun FeedbackOptionRow(
 }
 
 @Composable
+private fun FeedbackTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    modifier: Modifier = Modifier,
+) {
+    TextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(140.dp),
+        placeholder = {
+            Text(
+                text = placeholder,
+                color = textSecondaryColor,
+            )
+        },
+        keyboardOptions = KeyboardOptions.Default,
+        shape = RoundedCornerShape(8.dp),
+        colors =
+            TextFieldDefaults.colors(
+                focusedContainerColor = Color(0xFFF5F6F8),
+                unfocusedContainerColor = Color(0xFFF5F6F8),
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+            ),
+    )
+}
+
+@Composable
 private fun FeedbackCompleteContent(
     onConfirm: () -> Unit,
     modifier: Modifier = Modifier,
@@ -254,7 +282,7 @@ private fun FeedbackCompleteContent(
         Spacer(modifier = Modifier.weight(1f))
 
         Image(
-            painter = painterResource(R.drawable.img_onboarding_4),
+            painter = painterResource(R.drawable.img_feedback_complete),
             contentDescription = null,
             modifier = Modifier.size(240.dp),
         )
