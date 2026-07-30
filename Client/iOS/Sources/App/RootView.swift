@@ -123,6 +123,7 @@ struct RootView: View {
                     message: "새로운 버전이 출시되었습니다. 원활한 이용을 위해 업데이트해주세요.",
                     dismissText: "나중에",
                     confirmText: "업데이트",
+                    appearance: .android,
                     onDismiss: dismissAvailableUpdate,
                     onConfirm: openAppStore
                 )
