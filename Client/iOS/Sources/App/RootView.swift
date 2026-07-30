@@ -3,6 +3,7 @@ import SwiftUI
 import UIKit
 
 struct RootView: View {
+    @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var networkMonitor: NetworkMonitor
     @State private var route: OnboardingRoute = .splash
@@ -10,6 +11,9 @@ struct RootView: View {
     @State private var currentSession: AuthSession?
     @State private var currentProfileID: String?
     @State private var isResolvingProfile = false
+    @State private var availableUpdate: AppUpdate?
+    @State private var dismissedUpdateVersion: String?
+    @State private var isCheckingForUpdate = false
     private let authService: AuthServiceProtocol
     private let profileService: ProfileServiceProtocol
     private let runService: RunServiceProtocol
@@ -18,6 +22,7 @@ struct RootView: View {
     private let rankingService: RankingServiceProtocol
     private let store: LocalAppStateStore
     private let runningHistoryStore: RunningHistoryStore
+    private let appUpdateChecker: AppUpdateChecking
 
     init(
         authService: AuthServiceProtocol,
@@ -27,7 +32,8 @@ struct RootView: View {
         teamService: TeamServiceProtocol = MockTeamService(),
         rankingService: RankingServiceProtocol = MockRankingService(),
         store: LocalAppStateStore,
-        runningHistoryStore: RunningHistoryStore = RunningHistoryStore()
+        runningHistoryStore: RunningHistoryStore = RunningHistoryStore(),
+        appUpdateChecker: AppUpdateChecking = AppStoreUpdateChecker()
     ) {
         self.authService = authService
         self.profileService = profileService
@@ -37,6 +43,7 @@ struct RootView: View {
         self.rankingService = rankingService
         self.store = store
         self.runningHistoryStore = runningHistoryStore
+        self.appUpdateChecker = appUpdateChecker
     }
 
     var body: some View {
@@ -109,9 +116,26 @@ struct RootView: View {
             }
         }
         .tint(AppTheme.Colors.primary)
+        .overlay {
+            if availableUpdate != nil {
+                RunpamineConfirmationDialog(
+                    title: "업데이트가 필요해요",
+                    message: "새로운 버전이 출시되었습니다. 원활한 이용을 위해 업데이트해주세요.",
+                    dismissText: "나중에",
+                    confirmText: "업데이트",
+                    appearance: .android,
+                    onDismiss: dismissAvailableUpdate,
+                    onConfirm: openAppStore
+                )
+            }
+        }
+        .task {
+            await checkForUpdateIfNeeded()
+        }
         .onChange(of: scenePhase) { _, nextPhase in
             guard nextPhase == .active else { return }
             Task {
+                await checkForUpdateIfNeeded()
                 await refreshRestoredSession()
                 await retryPendingRunsIfPossible()
             }
@@ -119,6 +143,7 @@ struct RootView: View {
         .onChange(of: networkMonitor.isConnected) { _, isConnected in
             guard isConnected else { return }
             Task {
+                await checkForUpdateIfNeeded()
                 await retryPendingRunsIfPossible()
             }
         }
@@ -225,6 +250,35 @@ struct RootView: View {
             accessToken: accessToken,
             currentUserID: currentProfileID ?? currentSession?.userID
         )
+    }
+
+    @MainActor
+    private func checkForUpdateIfNeeded() async {
+        guard networkMonitor.isConnected, !isCheckingForUpdate else { return }
+
+        isCheckingForUpdate = true
+        defer { isCheckingForUpdate = false }
+
+        do {
+            let update = try await appUpdateChecker.availableUpdate()
+            guard update?.version != dismissedUpdateVersion else { return }
+            availableUpdate = update
+        } catch {
+            return
+        }
+    }
+
+    @MainActor
+    private func dismissAvailableUpdate() {
+        dismissedUpdateVersion = availableUpdate?.version
+        availableUpdate = nil
+    }
+
+    @MainActor
+    private func openAppStore() {
+        guard let storeURL = availableUpdate?.storeURL else { return }
+        dismissAvailableUpdate()
+        openURL(storeURL)
     }
 
     private func mainOrOnboardingRoute() -> OnboardingRoute {
