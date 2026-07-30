@@ -26,6 +26,7 @@ struct FeedbackView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var selectedOptions: Set<FeedbackOption> = []
     @State private var customText: String = ""
+    @State private var inconvenienceText: String = ""
     @State private var isSubmitted: Bool = false
 
     var body: some View {
@@ -84,8 +85,18 @@ struct FeedbackView: View {
                             .foregroundStyle(AppTheme.Colors.textPrimary)
                             .padding(.top, 8)
 
-                        customTextEditor
+                        feedbackTextEditor($customText, placeholder: "추가하시고 싶은 기능을 입력해주세요.")
                     }
+
+                    Text("혹시 최근 런파민을 사용하면서 불편하셨던 점이 있으신가요?")
+                        .font(AppTheme.Typography.font(size: 16, weight: .bold))
+                        .foregroundStyle(AppTheme.Colors.textPrimary)
+                        .padding(.top, 8)
+
+                    feedbackTextEditor(
+                        $inconvenienceText,
+                        placeholder: "불편을 드려 죄송해요, 어떤 불편이 있으셨는지 알려주시면 빠르게 수정할게요!"
+                    )
                 }
                 .padding(.horizontal, AppTheme.Layout.horizontalPadding)
                 .padding(.top, 12)
@@ -100,13 +111,13 @@ struct FeedbackView: View {
         }
     }
 
-    private var customTextEditor: some View {
+    private func feedbackTextEditor(_ text: Binding<String>, placeholder: String) -> some View {
         ZStack(alignment: .topLeading) {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .fill(AppTheme.Colors.surface)
 
-            if customText.isEmpty {
-                Text("추가하시고 싶은 기능을 입력해주세요.")
+            if text.wrappedValue.isEmpty {
+                Text(placeholder)
                     .font(AppTheme.Typography.font(size: 15, weight: .regular))
                     .foregroundStyle(AppTheme.Colors.textSecondary)
                     .padding(.horizontal, 16)
@@ -114,7 +125,7 @@ struct FeedbackView: View {
                     .allowsHitTesting(false)
             }
 
-            TextEditor(text: $customText)
+            TextEditor(text: text)
                 .font(AppTheme.Typography.font(size: 15, weight: .regular))
                 .foregroundStyle(AppTheme.Colors.textPrimary)
                 .scrollContentBackground(.hidden)
@@ -128,7 +139,7 @@ struct FeedbackView: View {
         VStack(spacing: 0) {
             Spacer()
 
-            Image("onboarding_feedback")
+            Image("feedback_complete")
                 .resizable()
                 .scaledToFit()
                 .frame(width: 240, height: 240)
