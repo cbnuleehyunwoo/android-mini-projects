@@ -1,5 +1,6 @@
 import AVFoundation
 import ImageIO
+import MapKit
 import Photos
 import PhotosUI
 import SwiftUI
@@ -237,6 +238,7 @@ private struct RunShareEditorView: View {
     @State private var selectedTab: RunShareEditorTab = .layout
     @State private var selectedStickers: Set<RunShareSticker> = []
     @State private var dataOffset: CGSize = .zero
+    @State private var routeOffset: CGSize = .zero
     @State private var stickerOffsets: [RunShareSticker: CGSize] = [:]
     @State private var renderedImage: UIImage?
     @State private var isShowingShareSheet = false
@@ -257,6 +259,7 @@ private struct RunShareEditorView: View {
                             layout: selectedLayout,
                             visibleStickers: selectedStickers,
                             dataOffset: $dataOffset,
+                            routeOffset: $routeOffset,
                             stickerOffsets: $stickerOffsets
                         )
                         .aspectRatio(9.0 / 16.0, contentMode: .fit)
@@ -324,7 +327,7 @@ private struct RunShareEditorView: View {
                     .foregroundStyle(.white.opacity(0.75))
             }
 
-            Text("러닝 데이터와 스티커는 카드에서 드래그해 이동할 수 있어요.")
+            Text("러닝 데이터·경로·스티커는 카드에서 드래그해 이동할 수 있어요.")
                 .font(AppTheme.Typography.font(size: 12, weight: .medium))
                 .foregroundStyle(.white.opacity(0.58))
                 .padding(.horizontal, 18)
@@ -449,6 +452,7 @@ private struct RunShareEditorView: View {
             layout: selectedLayout,
             visibleStickers: selectedStickers,
             dataOffset: .constant(dataOffset),
+            routeOffset: .constant(routeOffset),
             stickerOffsets: .constant(stickerOffsets)
         )
         let renderer = ImageRenderer(content: canvas.frame(width: 1080, height: 1920))
@@ -463,8 +467,10 @@ private struct RunShareCanvas: View {
     let layout: RunShareLayout
     let visibleStickers: Set<RunShareSticker>
     @Binding var dataOffset: CGSize
+    @Binding var routeOffset: CGSize
     @Binding var stickerOffsets: [RunShareSticker: CGSize]
     @GestureState private var dataDragTranslation: CGSize = .zero
+    @GestureState private var routeDragTranslation: CGSize = .zero
 
     var body: some View {
         GeometryReader { geometry in
@@ -481,23 +487,56 @@ private struct RunShareCanvas: View {
                     endPoint: .bottom
                 )
 
-                shareContent(in: geometry.size)
-                    .offset(
-                        x: dataOffset.width + dataDragTranslation.width,
-                        y: dataOffset.height + dataDragTranslation.height
-                    )
-                    .highPriorityGesture(
-                        DragGesture(minimumDistance: 4)
-                            .updating($dataDragTranslation) { value, state, _ in
-                                state = value.translation
-                            }
-                            .onEnded { value in
-                                dataOffset = CGSize(
-                                    width: dataOffset.width + value.translation.width,
-                                    height: dataOffset.height + value.translation.height
-                                )
-                            }
-                    )
+                ZStack(alignment: .bottomLeading) {
+                    shareDataContent
+                        .padding(30)
+                        .offset(
+                            x: dataOffset.width + dataDragTranslation.width,
+                            y: dataOffset.height + dataDragTranslation.height
+                        )
+                        .highPriorityGesture(
+                            DragGesture(minimumDistance: 4)
+                                .updating($dataDragTranslation) { value, state, _ in
+                                    state = value.translation
+                                }
+                                .onEnded { value in
+                                    dataOffset = CGSize(
+                                        width: dataOffset.width + value.translation.width,
+                                        height: dataOffset.height + value.translation.height
+                                    )
+                                }
+                        )
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                if layout.includesRoute {
+                    ZStack(alignment: .top) {
+                        RunShareRouteMap(route: record.route)
+                            .frame(
+                                width: max(1, geometry.size.width - 60),
+                                height: geometry.size.height * layout.routeHeightRatio
+                            )
+                            .contentShape(Rectangle())
+                            .offset(
+                                x: routeOffset.width + routeDragTranslation.width,
+                                y: routeOffset.height + routeDragTranslation.height
+                            )
+                            .highPriorityGesture(
+                                DragGesture(minimumDistance: 4)
+                                    .updating($routeDragTranslation) { value, state, _ in
+                                        state = value.translation
+                                    }
+                                    .onEnded { value in
+                                        routeOffset = CGSize(
+                                            width: routeOffset.width + value.translation.width,
+                                            height: routeOffset.height + value.translation.height
+                                        )
+                                    }
+                            )
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .padding(.top, 30)
+                }
 
                 ForEach(RunShareSticker.allCases.filter(visibleStickers.contains)) { sticker in
                     RunShareStickerView(
@@ -539,36 +578,12 @@ private struct RunShareCanvas: View {
     }
 
     @ViewBuilder
-    private func shareContent(in size: CGSize) -> some View {
+    private var shareDataContent: some View {
         switch layout {
-        case .distance:
-            VStack(alignment: .leading, spacing: 0) {
-                Spacer()
-                distanceContent
-            }
-            .padding(30)
-        case .current:
-            VStack(alignment: .leading, spacing: 0) {
-                Spacer()
-                currentLayoutContent
-            }
-            .padding(30)
-        case .routeDistance:
-            VStack(alignment: .leading, spacing: 0) {
-                RunShareRouteMap(route: record.route)
-                    .frame(height: size.height * 0.42)
-                Spacer()
-                distanceContent
-            }
-            .padding(30)
-        case .routeCurrent:
-            VStack(alignment: .leading, spacing: 0) {
-                RunShareRouteMap(route: record.route)
-                    .frame(height: size.height * 0.38)
-                Spacer()
-                currentLayoutContent
-            }
-            .padding(30)
+        case .distance, .routeDistance:
+            distanceContent
+        case .current, .routeCurrent:
+            currentLayoutContent
         }
     }
 
@@ -633,22 +648,29 @@ private struct RunShareRouteMap: View {
     }
 
     private func routePath(in size: CGSize) -> Path {
-        let latitudes = route.map(\.latitude)
-        let longitudes = route.map(\.longitude)
-        let minLatitude = latitudes.min() ?? 0
-        let maxLatitude = latitudes.max() ?? 1
-        let minLongitude = longitudes.min() ?? 0
-        let maxLongitude = longitudes.max() ?? 1
-        let latitudeSpan = max(maxLatitude - minLatitude, 0.000001)
-        let longitudeSpan = max(maxLongitude - minLongitude, 0.000001)
+        let projectedRoute = route.map { MKMapPoint($0.coordinate) }
+        let minX = projectedRoute.map(\.x).min() ?? 0
+        let maxX = projectedRoute.map(\.x).max() ?? 1
+        let minY = projectedRoute.map(\.y).min() ?? 0
+        let maxY = projectedRoute.map(\.y).max() ?? 1
+        let routeWidth = CGFloat(max(maxX - minX, 1))
+        let routeHeight = CGFloat(max(maxY - minY, 1))
         let inset: CGFloat = 24
-        let drawableSize = CGSize(width: max(1, size.width - inset * 2), height: max(1, size.height - inset * 2))
+        let drawableSize = CGSize(
+            width: max(1, size.width - inset * 2),
+            height: max(1, size.height - inset * 2)
+        )
+        let scale = min(drawableSize.width / routeWidth, drawableSize.height / routeHeight)
+        let fittedWidth = routeWidth * scale
+        let fittedHeight = routeHeight * scale
+        let originX = (size.width - fittedWidth) / 2
+        let originY = (size.height - fittedHeight) / 2
 
         var path = Path()
-        for (index, coordinate) in route.enumerated() {
+        for (index, projectedPoint) in projectedRoute.enumerated() {
             let point = CGPoint(
-                x: inset + ((coordinate.longitude - minLongitude) / longitudeSpan) * drawableSize.width,
-                y: inset + (1 - ((coordinate.latitude - minLatitude) / latitudeSpan)) * drawableSize.height
+                x: originX + CGFloat(projectedPoint.x - minX) * scale,
+                y: originY + CGFloat(maxY - projectedPoint.y) * scale
             )
 
             if index == 0 {
@@ -731,11 +753,29 @@ private enum RunShareLayout: String, CaseIterable, Identifiable {
         case .routeCurrent: "map.fill"
         }
     }
+
+    var includesRoute: Bool {
+        switch self {
+        case .distance, .current: false
+        case .routeDistance, .routeCurrent: true
+        }
+    }
+
+    var routeHeightRatio: CGFloat {
+        switch self {
+        case .routeDistance: 0.42
+        case .routeCurrent: 0.38
+        case .distance, .current: 0
+        }
+    }
 }
 
 private enum RunShareSticker: String, CaseIterable, Hashable, Identifiable {
     case pamin
     case cheetahPamin
+    case surprisedPamin
+    case hamburgerPamin
+    case handstandPamin
 
     var id: String { rawValue }
 
@@ -743,6 +783,9 @@ private enum RunShareSticker: String, CaseIterable, Hashable, Identifiable {
         switch self {
         case .pamin: "파민"
         case .cheetahPamin: "치타파민"
+        case .surprisedPamin: "놀란 파민"
+        case .hamburgerPamin: "햄버거 파민"
+        case .handstandPamin: "물구나무 파민"
         }
     }
 
@@ -750,6 +793,9 @@ private enum RunShareSticker: String, CaseIterable, Hashable, Identifiable {
         switch self {
         case .pamin: "pamin_sticker"
         case .cheetahPamin: "cheetah_pamin_sticker"
+        case .surprisedPamin: "surprised_pamin_sticker"
+        case .hamburgerPamin: "hamburger_pamin_sticker"
+        case .handstandPamin: "handstand_pamin_sticker"
         }
     }
 
@@ -757,6 +803,9 @@ private enum RunShareSticker: String, CaseIterable, Hashable, Identifiable {
         switch self {
         case .pamin: 0.24
         case .cheetahPamin: 0.44
+        case .surprisedPamin: 0.26
+        case .hamburgerPamin: 0.40
+        case .handstandPamin: 0.46
         }
     }
 
@@ -764,6 +813,9 @@ private enum RunShareSticker: String, CaseIterable, Hashable, Identifiable {
         switch self {
         case .pamin: 0.84
         case .cheetahPamin: 0.76
+        case .surprisedPamin: 0.84
+        case .hamburgerPamin: 0.78
+        case .handstandPamin: 0.72
         }
     }
 
@@ -771,13 +823,16 @@ private enum RunShareSticker: String, CaseIterable, Hashable, Identifiable {
         switch self {
         case .pamin: 0.77
         case .cheetahPamin: 0.75
+        case .surprisedPamin: 0.73
+        case .hamburgerPamin: 0.76
+        case .handstandPamin: 0.73
         }
     }
 
     var rotationDegrees: Double {
         switch self {
         case .pamin: 8
-        case .cheetahPamin: 0
+        case .cheetahPamin, .surprisedPamin, .hamburgerPamin, .handstandPamin: 0
         }
     }
 }
