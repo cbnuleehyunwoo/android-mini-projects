@@ -1,3 +1,5 @@
+import AVFoundation
+import ImageIO
 import Photos
 import PhotosUI
 import SwiftUI
@@ -7,159 +9,221 @@ struct RunShareCameraView: View {
     let record: RunningRecord
 
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var cameraController = RunShareCameraController()
     @State private var selectedImage: UIImage?
     @State private var photoItem: PhotosPickerItem?
-    @State private var isPresentingCamera = false
     @State private var isPresentingEditor = false
+    @State private var isLoadingPhoto = false
     @State private var errorMessage: String?
 
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            CameraPreview(session: cameraController.session)
+                .ignoresSafeArea()
+                .opacity(cameraController.isPreviewAvailable ? 1 : 0)
 
-            VStack(spacing: 0) {
-                HStack {
-                    Button(action: dismiss.callAsFunction) {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .frame(width: 44, height: 44)
-                    }
-                    .accessibilityLabel("닫기")
-
-                    Spacer()
-
-                    Text("사진 선택")
-                        .font(AppTheme.Typography.title2)
-                        .foregroundStyle(.white)
-
-                    Spacer()
-
-                    Color.clear
-                        .frame(width: 44, height: 44)
-                }
-                .padding(.horizontal, 12)
-                .padding(.top, 8)
-
-                Spacer()
-
-                Image(systemName: "camera.fill")
-                    .font(.system(size: 44, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.9))
-                Text("러닝 사진을 선택해주세요")
-                    .font(AppTheme.Typography.font(size: 18, weight: .bold))
-                    .foregroundStyle(.white)
-                    .padding(.top, 20)
-                Text("사진 위에 러닝 데이터를 꾸며 공유할 수 있어요.")
-                    .font(AppTheme.Typography.font(size: 14, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.65))
-                    .padding(.top, 8)
-
-                if let errorMessage {
-                    Text(errorMessage)
-                        .font(AppTheme.Typography.font(size: 13, weight: .medium))
-                        .foregroundStyle(Color(red: 1, green: 0.45, blue: 0.45))
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 24)
-                        .padding(.top, 20)
-                }
-
-                Spacer()
-
-                HStack(spacing: 14) {
-                    if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                        actionButton(title: "카메라", systemImage: "camera") {
-                            isPresentingCamera = true
-                        }
-                    }
-
-                    PhotosPicker(
-                        selection: $photoItem,
-                        matching: .images,
-                        photoLibrary: .shared()
-                    ) {
-                        actionButtonLabel(title: "앨범", systemImage: "photo.on.rectangle")
-                    }
-                    .buttonStyle(.plain)
-                }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 28)
-            }
-        }
-        .onAppear {
-            if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                isPresentingCamera = true
-            }
-        }
-        .fullScreenCover(isPresented: $isPresentingCamera) {
-            CameraImagePicker(
-                onImagePicked: { image in
-                    selectedImage = image
-                    isPresentingCamera = false
-                    presentEditorOnNextRunLoop()
-                },
-                onCancel: {
-                    isPresentingCamera = false
-                }
+            LinearGradient(
+                colors: [Color.black.opacity(0.48), .clear, Color.black.opacity(0.82)],
+                startPoint: .top,
+                endPoint: .bottom
             )
             .ignoresSafeArea()
+
+            cameraControls
         }
-        .fullScreenCover(isPresented: $isPresentingEditor) {
+        .onAppear {
+            cameraController.start()
+        }
+        .onDisappear {
+            cameraController.stop()
+        }
+        .onChange(of: cameraController.capturedImage) { _, image in
+            guard let image else { return }
+            selectedImage = image
+            cameraController.consumeCapturedImage()
+            isPresentingEditor = true
+        }
+        .onChange(of: photoItem) { _, item in
+            loadPhoto(item)
+        }
+        .onChange(of: isPresentingEditor) { _, isPresented in
+            if !isPresented {
+                cameraController.start()
+            }
+        }
+        .fullScreenCover(isPresented: $isPresentingEditor, onDismiss: {
+            selectedImage = nil
+        }) {
             if let selectedImage {
                 RunShareEditorView(
                     record: record,
                     photo: selectedImage,
                     onRetake: {
                         isPresentingEditor = false
-                        isPresentingCamera = UIImagePickerController.isSourceTypeAvailable(.camera)
+                        cameraController.start()
                     }
                 )
             }
         }
-        .onChange(of: photoItem) { _, item in
-            guard let item else { return }
-            Task {
-                do {
-                    guard let data = try await item.loadTransferable(type: Data.self),
-                          let image = UIImage(data: data)
-                    else {
-                        throw RunShareImageError.invalidImage
-                    }
-                    await MainActor.run {
-                        selectedImage = image
-                        presentEditorOnNextRunLoop()
-                    }
-                } catch {
-                    await MainActor.run {
-                        errorMessage = "사진을 불러오지 못했어요. 다시 선택해주세요."
-                    }
+    }
+
+    private var cameraControls: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                Button(action: dismiss.callAsFunction) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 44, height: 44)
                 }
+                .accessibilityLabel("닫기")
+
+                Spacer()
+
+                Text("사진 촬영")
+                    .font(AppTheme.Typography.title2)
+                    .foregroundStyle(.white)
+
+                Spacer()
+
+                HStack(spacing: 8) {
+                    Button(action: cameraController.toggleFlash) {
+                        Image(systemName: cameraController.isFlashEnabled ? "bolt.fill" : "bolt.slash")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .frame(width: 36, height: 44)
+                    }
+                    .disabled(!cameraController.isPreviewAvailable)
+                    .accessibilityLabel(cameraController.isFlashEnabled ? "플래시 끄기" : "플래시 켜기")
+
+                    Button(action: cameraController.switchCamera) {
+                        Image(systemName: "camera.rotate")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .frame(width: 36, height: 44)
+                    }
+                    .disabled(!cameraController.isPreviewAvailable)
+                    .accessibilityLabel("카메라 전환")
+                }
+                .frame(width: 80)
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
+
+            Spacer()
+
+            if !cameraController.isPreviewAvailable {
+                VStack(spacing: 12) {
+                    Image(systemName: "camera.slash")
+                        .font(.system(size: 42, weight: .medium))
+                    Text(cameraController.statusMessage)
+                        .font(AppTheme.Typography.font(size: 16, weight: .bold))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
+                }
+                .foregroundStyle(.white.opacity(0.9))
+            }
+
+            if let errorMessage = errorMessage ?? cameraController.captureErrorMessage {
+                Text(errorMessage)
+                    .font(AppTheme.Typography.font(size: 13, weight: .medium))
+                    .foregroundStyle(Color(red: 1, green: 0.45, blue: 0.45))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 18)
+            }
+
+            Spacer()
+
+            if isLoadingPhoto {
+                ProgressView()
+                    .tint(.white)
+                    .padding(.bottom, 18)
+            }
+
+            HStack(alignment: .center, spacing: 0) {
+                PhotosPicker(
+                    selection: $photoItem,
+                    matching: .images,
+                    photoLibrary: .shared()
+                ) {
+                    cameraControlLabel(title: "앨범", systemImage: "photo.on.rectangle")
+                }
+                .buttonStyle(.plain)
+                .disabled(isLoadingPhoto)
+
+                Spacer()
+
+                Button(action: cameraController.capturePhoto) {
+                    Circle()
+                        .fill(.white)
+                        .frame(width: 68, height: 68)
+                        .overlay {
+                            Circle()
+                                .stroke(.black.opacity(0.22), lineWidth: 3)
+                        }
+                        .frame(width: 82, height: 82)
+                        .overlay {
+                            Circle()
+                                .stroke(.white, lineWidth: 4)
+                        }
+                }
+                .disabled(!cameraController.isPreviewAvailable || isLoadingPhoto)
+                .accessibilityLabel("사진 촬영")
+
+                Spacer()
+
+                Button(action: cameraController.switchCamera) {
+                    cameraControlLabel(title: "전환", systemImage: "camera.rotate")
+                }
+                .buttonStyle(.plain)
+                .disabled(!cameraController.isPreviewAvailable)
+            }
+            .padding(.horizontal, 28)
+            .padding(.bottom, 28)
+        }
+    }
+
+    private func cameraControlLabel(title: String, systemImage: String) -> some View {
+        VStack(spacing: 6) {
+            Image(systemName: systemImage)
+                .font(.system(size: 22, weight: .semibold))
+            Text(title)
+                .font(AppTheme.Typography.font(size: 12, weight: .bold))
+        }
+        .foregroundStyle(.white)
+        .frame(width: 64, height: 64)
+    }
+
+    private func loadPhoto(_ item: PhotosPickerItem?) {
+        guard let item else { return }
+
+        errorMessage = nil
+        isLoadingPhoto = true
+
+        Task { @MainActor in
+            do {
+                guard let data = try await item.loadTransferable(type: Data.self) else {
+                    throw RunShareImageError.invalidImage
+                }
+
+                let image = try await RunShareImageDecoder.decodeAsync(data)
+                guard !Task.isCancelled else { return }
+
+                selectedImage = image
+                photoItem = nil
+                isLoadingPhoto = false
+
+                // Let PhotosPicker finish dismissing before presenting the editor cover.
+                DispatchQueue.main.async {
+                    isPresentingEditor = true
+                }
+            } catch {
+                photoItem = nil
+                isLoadingPhoto = false
+                errorMessage = "사진을 불러오지 못했어요. 다시 선택해주세요."
             }
         }
-    }
-
-    private func presentEditorOnNextRunLoop() {
-        DispatchQueue.main.async {
-            isPresentingEditor = selectedImage != nil
-        }
-    }
-
-    @ViewBuilder
-    private func actionButton(title: String, systemImage: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            actionButtonLabel(title: title, systemImage: systemImage)
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func actionButtonLabel(title: String, systemImage: String) -> some View {
-        Label(title, systemImage: systemImage)
-            .font(AppTheme.Typography.font(size: 16, weight: .bold))
-            .foregroundStyle(.black)
-            .frame(maxWidth: .infinity)
-            .frame(height: 56)
-            .background(Color.white)
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }
 
@@ -531,47 +595,253 @@ private enum RunShareTheme: String, CaseIterable, Identifiable {
     }
 }
 
-private struct CameraImagePicker: UIViewControllerRepresentable {
-    let onImagePicked: (UIImage) -> Void
-    let onCancel: () -> Void
+private struct CameraPreview: UIViewRepresentable {
+    let session: AVCaptureSession
 
-    func makeCoordinator() -> Coordinator {
-        Coordinator(onImagePicked: onImagePicked, onCancel: onCancel)
+    func makeUIView(context: Context) -> CameraPreviewView {
+        CameraPreviewView(session: session)
     }
 
-    func makeUIViewController(context: Context) -> UIImagePickerController {
-        let controller = UIImagePickerController()
-        controller.sourceType = .camera
-        controller.mediaTypes = ["public.image"]
-        controller.allowsEditing = false
-        controller.delegate = context.coordinator
-        return controller
+    func updateUIView(_ uiView: CameraPreviewView, context: Context) {
+        uiView.previewLayer.session = session
+    }
+}
+
+private final class CameraPreviewView: UIView {
+    override class var layerClass: AnyClass {
+        AVCaptureVideoPreviewLayer.self
     }
 
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+    var previewLayer: AVCaptureVideoPreviewLayer {
+        layer as! AVCaptureVideoPreviewLayer
+    }
 
-    final class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
-        let onImagePicked: (UIImage) -> Void
-        let onCancel: () -> Void
+    init(session: AVCaptureSession) {
+        super.init(frame: .zero)
+        previewLayer.session = session
+        previewLayer.videoGravity = .resizeAspectFill
+    }
 
-        init(onImagePicked: @escaping (UIImage) -> Void, onCancel: @escaping () -> Void) {
-            self.onImagePicked = onImagePicked
-            self.onCancel = onCancel
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+private final class RunShareCameraController: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate {
+    let session = AVCaptureSession()
+
+    @Published private(set) var isPreviewAvailable = false
+    @Published private(set) var statusMessage = "카메라를 준비하고 있어요."
+    @Published private(set) var captureErrorMessage: String?
+    @Published private(set) var capturedImage: UIImage?
+    @Published private(set) var isFlashEnabled = false
+
+    private let sessionQueue = DispatchQueue(label: "com.runpamine.run-share-camera")
+    private let photoOutput = AVCapturePhotoOutput()
+    private var videoInput: AVCaptureDeviceInput?
+    private var currentPosition: AVCaptureDevice.Position = .back
+    private var isConfigured = false
+
+    func start() {
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .authorized:
+            configureAndStart()
+        case .notDetermined:
+            DispatchQueue.main.async {
+                self.statusMessage = "카메라 권한을 확인하고 있어요."
+            }
+            AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
+                guard let self else { return }
+                if granted {
+                    self.configureAndStart()
+                } else {
+                    self.publishUnavailable("카메라 권한이 없어 촬영할 수 없어요.\n앨범에서 사진을 선택해주세요.")
+                }
+            }
+        case .denied, .restricted:
+            publishUnavailable("카메라 권한이 없어 촬영할 수 없어요.\n앨범에서 사진을 선택해주세요.")
+        @unknown default:
+            publishUnavailable("카메라를 사용할 수 없어요.\n앨범에서 사진을 선택해주세요.")
+        }
+    }
+
+    func stop() {
+        sessionQueue.async { [weak self] in
+            guard let self, self.session.isRunning else { return }
+            self.session.stopRunning()
+        }
+    }
+
+    func toggleFlash() {
+        guard isPreviewAvailable else { return }
+        isFlashEnabled.toggle()
+    }
+
+    func switchCamera() {
+        sessionQueue.async { [weak self] in
+            guard let self,
+                  self.isConfigured,
+                  let currentInput = self.videoInput
+            else { return }
+
+            let nextPosition: AVCaptureDevice.Position = self.currentPosition == .back ? .front : .back
+            guard let device = AVCaptureDevice.default(
+                .builtInWideAngleCamera,
+                for: .video,
+                position: nextPosition
+            ),
+                  let nextInput = try? AVCaptureDeviceInput(device: device)
+            else { return }
+
+            self.session.beginConfiguration()
+            self.session.removeInput(currentInput)
+
+            if self.session.canAddInput(nextInput) {
+                self.session.addInput(nextInput)
+                self.videoInput = nextInput
+                self.currentPosition = nextPosition
+                self.session.commitConfiguration()
+                DispatchQueue.main.async {
+                    self.isFlashEnabled = false
+                }
+            } else {
+                self.session.addInput(currentInput)
+                self.session.commitConfiguration()
+            }
+        }
+    }
+
+    func capturePhoto() {
+        sessionQueue.async { [weak self] in
+            guard let self, self.isConfigured, self.session.isRunning else { return }
+
+            let settings = AVCapturePhotoSettings()
+            if self.isFlashEnabled,
+               self.currentPosition == .back,
+               self.photoOutput.supportedFlashModes.contains(.on) {
+                settings.flashMode = .on
+            } else {
+                settings.flashMode = .off
+            }
+
+            DispatchQueue.main.async {
+                self.captureErrorMessage = nil
+            }
+            self.photoOutput.capturePhoto(with: settings, delegate: self)
+        }
+    }
+
+    func consumeCapturedImage() {
+        capturedImage = nil
+    }
+
+    func photoOutput(
+        _ output: AVCapturePhotoOutput,
+        didFinishProcessingPhoto photo: AVCapturePhoto,
+        error: Error?
+    ) {
+        guard error == nil,
+              let data = photo.fileDataRepresentation(),
+              let image = RunShareImageDecoder.decode(data)
+        else {
+            DispatchQueue.main.async {
+                self.captureErrorMessage = "사진을 촬영하지 못했어요. 다시 시도해주세요."
+            }
+            return
         }
 
-        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-            onCancel()
+        DispatchQueue.main.async {
+            self.capturedImage = image
         }
+    }
 
-        func imagePickerController(
-            _ picker: UIImagePickerController,
-            didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]
-        ) {
-            guard let image = info[.originalImage] as? UIImage else {
-                onCancel()
+    private func configureAndStart() {
+        sessionQueue.async { [weak self] in
+            guard let self else { return }
+
+            if self.isConfigured {
+                if !self.session.isRunning {
+                    self.session.startRunning()
+                }
+                self.publishAvailable()
                 return
             }
-            onImagePicked(image)
+
+            guard let device = AVCaptureDevice.default(
+                .builtInWideAngleCamera,
+                for: .video,
+                position: self.currentPosition
+            ),
+                  let input = try? AVCaptureDeviceInput(device: device)
+            else {
+                self.publishUnavailable("이 시뮬레이터에서는 카메라를 사용할 수 없어요.\n앨범에서 사진을 선택해주세요.")
+                return
+            }
+
+            self.session.beginConfiguration()
+            self.session.sessionPreset = .photo
+
+            guard self.session.canAddInput(input), self.session.canAddOutput(self.photoOutput) else {
+                self.session.commitConfiguration()
+                self.publishUnavailable("카메라를 준비하지 못했어요.\n앨범에서 사진을 선택해주세요.")
+                return
+            }
+
+            self.session.addInput(input)
+            self.session.addOutput(self.photoOutput)
+            self.session.commitConfiguration()
+            self.videoInput = input
+            self.isConfigured = true
+            self.session.startRunning()
+            self.publishAvailable()
+        }
+    }
+
+    private func publishAvailable() {
+        DispatchQueue.main.async {
+            self.isPreviewAvailable = true
+            self.statusMessage = ""
+        }
+    }
+
+    private func publishUnavailable(_ message: String) {
+        DispatchQueue.main.async {
+            self.isPreviewAvailable = false
+            self.statusMessage = message
+        }
+    }
+}
+
+private enum RunShareImageDecoder {
+    static func decode(_ data: Data) -> UIImage? {
+        autoreleasepool {
+            guard let source = CGImageSourceCreateWithData(data as CFData, nil) else {
+                return nil
+            }
+
+            let options: [CFString: Any] = [
+                kCGImageSourceCreateThumbnailFromImageAlways: true,
+                kCGImageSourceCreateThumbnailWithTransform: true,
+                kCGImageSourceThumbnailMaxPixelSize: 2048,
+            ]
+
+            guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
+                return nil
+            }
+            return UIImage(cgImage: image)
+        }
+    }
+
+    static func decodeAsync(_ data: Data) async throws -> UIImage {
+        try await withCheckedThrowingContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                guard let image = decode(data) else {
+                    continuation.resume(throwing: RunShareImageError.invalidImage)
+                    return
+                }
+                continuation.resume(returning: image)
+            }
         }
     }
 }
