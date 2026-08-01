@@ -13,6 +13,7 @@ struct RunShareCameraView: View {
     @State private var selectedImage: UIImage?
     @State private var photoItem: PhotosPickerItem?
     @State private var isPresentingEditor = false
+    @State private var shouldReturnToRecord = false
     @State private var isLoadingPhoto = false
     @State private var errorMessage: String?
 
@@ -55,11 +56,19 @@ struct RunShareCameraView: View {
         }
         .fullScreenCover(isPresented: $isPresentingEditor, onDismiss: {
             selectedImage = nil
+            if shouldReturnToRecord {
+                shouldReturnToRecord = false
+                dismiss()
+            }
         }) {
             if let selectedImage {
                 RunShareEditorView(
                     record: record,
-                    photo: selectedImage
+                    photo: selectedImage,
+                    onDone: {
+                        shouldReturnToRecord = true
+                        isPresentingEditor = false
+                    }
                 )
             }
         }
@@ -228,6 +237,7 @@ struct RunShareCameraView: View {
 private struct RunShareEditorView: View {
     let record: RunningRecord
     let photo: UIImage
+    let onDone: () -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var selectedLayout: RunShareLayout = .current
@@ -294,6 +304,16 @@ private struct RunShareEditorView: View {
             .accessibilityLabel("닫기")
 
             Spacer()
+
+            Button(action: onDone) {
+                Text("완료")
+                    .font(AppTheme.Typography.font(size: 16, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(minWidth: 56, minHeight: 56)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("편집 완료")
         }
         .padding(.horizontal, 10)
         .padding(.top, 14)
