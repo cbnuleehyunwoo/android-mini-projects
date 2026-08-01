@@ -11,6 +11,7 @@ struct MainTabView: View {
     @State private var isShowingInvite = false
     @State private var runDataRefreshRevision = 0
     @State private var selectedTeamMemberDetail: TeamMemberStatsDetail?
+    @State private var selectedHistoryRecord: RunningRecord?
     @State private var homeTeamProgress: HomeTeamProgress?
     @State private var nickname: String
     @State private var currentUserID: String?
@@ -117,7 +118,10 @@ struct MainTabView: View {
                         currentUserID: currentUserID,
                         cache: historyCache,
                         refreshRevision: runDataRefreshRevision,
-                        onRetryPendingRuns: retryPendingRuns
+                        onRetryPendingRuns: retryPendingRuns,
+                        onOpenRecord: { record in
+                            selectedHistoryRecord = record
+                        }
                     )
                 }
             }
@@ -190,6 +194,15 @@ struct MainTabView: View {
         .runpamineFullScreenCover(isPresented: $isShowingInvite) {
             InviteMemberView(inviteCode: team?.inviteCode ?? "", onDismiss: { isShowingInvite = false })
                 .networkErrorOverlay()
+        }
+        .runpamineFullScreenCover(item: $selectedHistoryRecord) { record in
+            RunningSummaryView(record: record) {
+                selectedHistoryRecord = nil
+            }
+            .runpamineBackSwipe {
+                selectedHistoryRecord = nil
+            }
+            .networkErrorOverlay()
         }
         .task(id: accessToken) {
             await retryPendingRuns()

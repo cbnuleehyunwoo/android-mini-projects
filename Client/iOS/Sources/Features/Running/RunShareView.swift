@@ -1,9 +1,14 @@
 import AVFoundation
 import ImageIO
 import MapKit
+import Photos
 import PhotosUI
 import SwiftUI
 import UIKit
+
+private enum RunShareCanvasMetrics {
+    static let aspectRatio: CGFloat = 9.0 / 16.15
+}
 
 struct RunShareCameraView: View {
     let record: RunningRecord
@@ -16,6 +21,7 @@ struct RunShareCameraView: View {
     @State private var shouldReturnToRecord = false
     @State private var isLoadingPhoto = false
     @State private var errorMessage: String?
+    @State private var lastZoomScale: CGFloat = 1
 
     var body: some View {
         ZStack {
@@ -34,10 +40,12 @@ struct RunShareCameraView: View {
                 .safeAreaPadding(.top)
                 .safeAreaPadding(.bottom)
         }
+        .simultaneousGesture(cameraZoomGesture)
         .onAppear {
             cameraController.start()
         }
         .onDisappear {
+            lastZoomScale = 1
             cameraController.stop()
         }
         .onChange(of: cameraController.capturedImage) { _, image in
@@ -65,13 +73,24 @@ struct RunShareCameraView: View {
                 RunShareEditorView(
                     record: record,
                     photo: selectedImage,
-                    onDone: {
+                    onSaved: {
                         shouldReturnToRecord = true
                         isPresentingEditor = false
                     }
                 )
             }
         }
+    }
+
+    private var cameraZoomGesture: some Gesture {
+        MagnificationGesture()
+            .onChanged { scale in
+                cameraController.zoom(by: scale / lastZoomScale)
+                lastZoomScale = scale
+            }
+            .onEnded { _ in
+                lastZoomScale = 1
+            }
     }
 
     private var cameraControls: some View {
@@ -84,12 +103,6 @@ struct RunShareCameraView: View {
                         .frame(width: 44, height: 44)
                 }
                 .accessibilityLabel("닫기")
-
-                Spacer()
-
-                Text("사진 촬영")
-                    .font(AppTheme.Typography.title2)
-                    .foregroundStyle(.white)
 
                 Spacer()
 
@@ -115,7 +128,6 @@ struct RunShareCameraView: View {
                 .frame(width: 80)
             }
             .padding(.horizontal, 16)
-            .padding(.top, 8)
 
             Spacer()
 
@@ -237,7 +249,7 @@ struct RunShareCameraView: View {
 private struct RunShareEditorView: View {
     let record: RunningRecord
     let photo: UIImage
-    let onDone: () -> Void
+    let onSaved: () -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var selectedLayout: RunShareLayout = .current
@@ -246,48 +258,59 @@ private struct RunShareEditorView: View {
     @State private var selectedSticker: RunShareSticker?
     @State private var dataOffset: CGSize = .zero
     @State private var routeOffset: CGSize = .zero
+    @State private var isDataDark = false
+    @State private var isRouteDark = false
     @State private var stickerTransforms: [RunShareSticker: RunShareStickerTransform] = [:]
     @State private var canvasSize = CGSize(width: 360, height: 640)
     @State private var renderedImage: UIImage?
     @State private var isShowingShareSheet = false
+    @State private var isSaving = false
+    @State private var saveErrorMessage: String?
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .top) {
             Color.black.ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                editorToolbar
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 18) {
+                    RunShareCanvas(
+                        record: record,
+                        photo: photo,
+                        layout: selectedLayout,
+                        visibleStickers: selectedStickers,
+                        dataOffset: $dataOffset,
+                        routeOffset: $routeOffset,
+                        isDataDark: $isDataDark,
+                        isRouteDark: $isRouteDark,
+                        stickerTransforms: $stickerTransforms,
+                        selectedSticker: $selectedSticker,
+                        showsEditingControls: true,
+                        onDeleteSticker: removeSticker,
+                        onSizeChange: { canvasSize = $0 }
+                    )
+                    .aspectRatio(RunShareCanvasMetrics.aspectRatio, contentMode: .fit)
+                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
 
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 18) {
-                        RunShareCanvas(
-                            record: record,
-                            photo: photo,
-                            layout: selectedLayout,
-                            visibleStickers: selectedStickers,
-                            dataOffset: $dataOffset,
-                            routeOffset: $routeOffset,
-                            stickerTransforms: $stickerTransforms,
-                            selectedSticker: $selectedSticker,
-                            showsEditingControls: true,
-                            onDeleteSticker: removeSticker,
-                            onSizeChange: { canvasSize = $0 }
-                        )
-                        .aspectRatio(9.0 / 16.0, contentMode: .fit)
-                        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-                        .padding(.horizontal, 18)
-
-                        editorPanel
-                    }
-                    .padding(.bottom, 20)
+                    editorPanel
                 }
+                .padding(.bottom, 20)
             }
+            .safeAreaPadding(.top)
+
+            editorToolbar
+                .safeAreaPadding(.top)
+                .zIndex(30)
         }
         .sheet(isPresented: $isShowingShareSheet) {
             if let renderedImage {
                 RunShareActivityView(image: renderedImage)
                     .presentationDetents([.medium, .large])
             }
+        }
+        .alert("사진을 저장하지 못했어요", isPresented: saveErrorIsPresented) {
+            Button("확인", role: .cancel) {}
+        } message: {
+            Text(saveErrorMessage ?? "잠시 후 다시 시도해주세요.")
         }
     }
 
@@ -297,7 +320,7 @@ private struct RunShareEditorView: View {
                 Image(systemName: "xmark")
                     .font(.system(size: 20, weight: .semibold))
                     .foregroundStyle(.white)
-                    .frame(width: 56, height: 56)
+                    .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -305,20 +328,25 @@ private struct RunShareEditorView: View {
 
             Spacer()
 
-            Button(action: onDone) {
-                Text("완료")
-                    .font(AppTheme.Typography.font(size: 16, weight: .bold))
-                    .foregroundStyle(.white)
-                    .frame(minWidth: 56, minHeight: 56)
-                    .contentShape(Rectangle())
+            Button(action: save) {
+                Group {
+                    if isSaving {
+                        ProgressView()
+                            .tint(.white)
+                    } else {
+                        Text("저장")
+                            .font(AppTheme.Typography.font(size: 17, weight: .bold))
+                            .foregroundStyle(.white)
+                    }
+                }
+                .frame(minWidth: 56, minHeight: 44)
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("편집 완료")
+            .disabled(isSaving)
+            .accessibilityLabel(isSaving ? "사진 저장 중" : "사진 저장")
         }
-        .padding(.horizontal, 10)
-        .padding(.top, 14)
-        .padding(.bottom, 8)
-        .safeAreaPadding(.top)
+        .padding(.horizontal, 16)
     }
 
     private var editorPanel: some View {
@@ -444,6 +472,41 @@ private struct RunShareEditorView: View {
     }
 
     @MainActor
+    private func save() {
+        guard !isSaving else { return }
+        guard let image = renderImage() else {
+            saveErrorMessage = "편집한 사진을 만들지 못했어요."
+            return
+        }
+
+        isSaving = true
+        Task {
+            do {
+                try await RunSharePhotoLibrary.save(image)
+                isSaving = false
+                onSaved()
+            } catch RunSharePhotoLibraryError.accessDenied {
+                isSaving = false
+                saveErrorMessage = "사진 보관함 추가 권한을 허용한 뒤 다시 시도해주세요."
+            } catch {
+                isSaving = false
+                saveErrorMessage = "갤러리에 저장하지 못했어요. 잠시 후 다시 시도해주세요."
+            }
+        }
+    }
+
+    private var saveErrorIsPresented: Binding<Bool> {
+        Binding(
+            get: { saveErrorMessage != nil },
+            set: { isPresented in
+                if !isPresented {
+                    saveErrorMessage = nil
+                }
+            }
+        )
+    }
+
+    @MainActor
     private func renderImage() -> UIImage? {
         let canvas = RunShareCanvas(
             record: record,
@@ -452,6 +515,8 @@ private struct RunShareEditorView: View {
             visibleStickers: selectedStickers,
             dataOffset: .constant(dataOffset),
             routeOffset: .constant(routeOffset),
+            isDataDark: .constant(isDataDark),
+            isRouteDark: .constant(isRouteDark),
             stickerTransforms: .constant(stickerTransforms),
             selectedSticker: .constant(selectedSticker),
             showsEditingControls: false,
@@ -485,6 +550,31 @@ private struct RunShareEditorView: View {
     }
 }
 
+private enum RunSharePhotoLibrary {
+    static func save(_ image: UIImage) async throws {
+        let currentStatus = PHPhotoLibrary.authorizationStatus(for: .addOnly)
+        let authorizationStatus: PHAuthorizationStatus
+
+        if currentStatus == .notDetermined {
+            authorizationStatus = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
+        } else {
+            authorizationStatus = currentStatus
+        }
+
+        guard authorizationStatus == .authorized || authorizationStatus == .limited else {
+            throw RunSharePhotoLibraryError.accessDenied
+        }
+
+        try await PHPhotoLibrary.shared().performChanges {
+            PHAssetChangeRequest.creationRequestForAsset(from: image)
+        }
+    }
+}
+
+private enum RunSharePhotoLibraryError: Error {
+    case accessDenied
+}
+
 private struct RunShareCanvas: View {
     let record: RunningRecord
     let photo: UIImage
@@ -492,6 +582,8 @@ private struct RunShareCanvas: View {
     let visibleStickers: Set<RunShareSticker>
     @Binding var dataOffset: CGSize
     @Binding var routeOffset: CGSize
+    @Binding var isDataDark: Bool
+    @Binding var isRouteDark: Bool
     @Binding var stickerTransforms: [RunShareSticker: RunShareStickerTransform]
     @Binding var selectedSticker: RunShareSticker?
     let showsEditingControls: Bool
@@ -534,6 +626,10 @@ private struct RunShareCanvas: View {
                             x: dataOffset.width + dataDragTranslation.width,
                             y: dataOffset.height + dataDragTranslation.height
                         )
+                        .onTapGesture {
+                            guard showsEditingControls else { return }
+                            isDataDark.toggle()
+                        }
                         .highPriorityGesture(
                             DragGesture(
                                 minimumDistance: 4,
@@ -554,16 +650,22 @@ private struct RunShareCanvas: View {
 
                 if layout.includesRoute {
                     ZStack(alignment: .top) {
-                        RunShareRouteMap(route: record.route)
+                        RunShareRouteMap(
+                            route: record.route,
+                            color: isRouteDark ? .black : .white
+                        )
                             .frame(
                                 width: max(1, geometry.size.width - 60),
                                 height: geometry.size.height * layout.routeHeightRatio
                             )
-                            .contentShape(Rectangle())
                             .offset(
                                 x: routeOffset.width + routeDragTranslation.width,
                                 y: routeOffset.height + routeDragTranslation.height
                             )
+                            .onTapGesture {
+                                guard showsEditingControls else { return }
+                                isRouteDark.toggle()
+                            }
                             .highPriorityGesture(
                                 DragGesture(
                                     minimumDistance: 4,
@@ -622,7 +724,7 @@ private struct RunShareCanvas: View {
                 .zIndex(20)
             }
         }
-        .aspectRatio(9.0 / 16.0, contentMode: .fit)
+        .aspectRatio(RunShareCanvasMetrics.aspectRatio, contentMode: .fit)
         .background(Color.black)
         .coordinateSpace(name: RunShareCoordinateSpace.canvas)
     }
@@ -639,15 +741,18 @@ private struct RunShareCanvas: View {
     }
 
     private var distanceContent: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
             Text(record.distanceKilometers.formatted(.number.precision(.fractionLength(2))))
                 .font(AppTheme.Typography.font(size: 66, weight: .black))
-                .foregroundStyle(.white)
-            Text("KILOMETERS")
-                .font(AppTheme.Typography.font(size: 18, weight: .bold))
-                .tracking(2)
-                .foregroundStyle(.white.opacity(0.9))
+                .foregroundStyle(dataColor)
+            Text("KM")
+                .font(AppTheme.Typography.font(size: 22, weight: .bold))
+                .foregroundStyle(dataColor.opacity(0.88))
         }
+    }
+
+    private var dataColor: Color {
+        isDataDark ? .black : .white
     }
 
     private var currentLayoutContent: some View {
@@ -659,7 +764,7 @@ private struct RunShareCanvas: View {
                 shareMetric(title: "PACE", value: RunningMetricFormatter.pace(record.averagePaceSecondsPerKilometer))
                 shareMetric(title: "KCAL", value: "\(record.estimatedCalories)")
             }
-            .padding(.top, 22)
+            .padding(.top, 11)
             .opacity(layout.showsDetails ? 1 : 0)
             .accessibilityHidden(!layout.showsDetails)
         }
@@ -670,23 +775,33 @@ private struct RunShareCanvas: View {
             Text(title)
                 .font(AppTheme.Typography.font(size: 12, weight: .medium))
                 .tracking(1)
-                .foregroundStyle(.white.opacity(0.7))
+                .foregroundStyle(dataColor.opacity(0.7))
             Text(value)
                 .font(AppTheme.Typography.font(size: 21, weight: .bold))
-                .foregroundStyle(.white)
+                .foregroundStyle(dataColor)
         }
     }
 }
 
 private struct RunShareRouteMap: View {
     let route: [RunningCoordinate]
+    let color: Color
 
     var body: some View {
         GeometryReader { geometry in
             ZStack {
                 if route.count >= 2 {
                     routePath(in: geometry.size)
-                        .stroke(.white, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
+                        .stroke(
+                            Color.clear,
+                            style: StrokeStyle(lineWidth: 18, lineCap: .round, lineJoin: .round)
+                        )
+
+                    routePath(in: geometry.size)
+                        .stroke(
+                            color,
+                            style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round)
+                        )
                 } else {
                     VStack(spacing: 8) {
                         Image(systemName: "map")
@@ -694,7 +809,7 @@ private struct RunShareRouteMap: View {
                         Text("러닝 루트 없음")
                             .font(AppTheme.Typography.font(size: 13, weight: .bold))
                     }
-                    .foregroundStyle(.white.opacity(0.72))
+                    .foregroundStyle(color.opacity(0.72))
                 }
             }
         }
@@ -1223,6 +1338,28 @@ private final class RunShareCameraController: NSObject, ObservableObject, AVCapt
     func toggleFlash() {
         guard isPreviewAvailable else { return }
         isFlashEnabled.toggle()
+    }
+
+    func zoom(by scale: CGFloat) {
+        guard isPreviewAvailable, scale.isFinite, scale > 0 else { return }
+
+        sessionQueue.async { [weak self] in
+            guard let device = self?.videoInput?.device else { return }
+
+            do {
+                try device.lockForConfiguration()
+                defer { device.unlockForConfiguration() }
+
+                let maximumZoomFactor = min(device.maxAvailableVideoZoomFactor, 5)
+                let zoomFactor = device.videoZoomFactor * scale
+                device.videoZoomFactor = min(
+                    max(zoomFactor, device.minAvailableVideoZoomFactor),
+                    maximumZoomFactor
+                )
+            } catch {
+                return
+            }
+        }
     }
 
     func switchCamera() {
