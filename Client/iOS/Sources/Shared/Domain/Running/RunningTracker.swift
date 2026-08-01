@@ -34,8 +34,10 @@ final class RunningTracker: NSObject, ObservableObject {
     private var automaticResumeTimer: Timer?
     private var automaticResumeBackgroundSession: CLBackgroundActivitySession?
     private var isRequestingFullAccuracy = false
+    private let voiceCuePlayer: RunningVoiceCuePlaying
 
-    override init() {
+    init(voiceCuePlayer: RunningVoiceCuePlaying? = nil) {
+        self.voiceCuePlayer = voiceCuePlayer ?? RunningVoiceCuePlayer.shared
         authorizationStatus = manager.authorizationStatus
         super.init()
 
@@ -126,6 +128,7 @@ final class RunningTracker: NSObject, ObservableObject {
         resetStationaryLocationTracking()
         pauseReason = reason
         trackingState = .paused
+        voiceCuePlayer.play(.pause)
     }
 
     func resume() {
@@ -146,6 +149,7 @@ final class RunningTracker: NSObject, ObservableObject {
     @discardableResult
     func end() -> RunningRecord? {
         let endedAt = Date()
+        let previousTrackingState = trackingState
         shouldStartAfterAuthorization = false
         pauseReason = nil
         automaticResumeMonitor = nil
@@ -158,6 +162,9 @@ final class RunningTracker: NSObject, ObservableObject {
         let record = session.makeRecord(endedAt: endedAt)
         lastRecord = record
         trackingState = .ended
+        if previousTrackingState == .tracking || previousTrackingState == .paused {
+            voiceCuePlayer.play(.stop)
+        }
         return record
     }
 
@@ -178,6 +185,7 @@ final class RunningTracker: NSObject, ObservableObject {
             Task { @MainActor in
                 guard let self else { return }
                 self.isRequestingFullAccuracy = false
+                guard self.shouldStartAfterAuthorization else { return }
                 self.beginLocationUpdates()
             }
         }
@@ -190,6 +198,7 @@ final class RunningTracker: NSObject, ObservableObject {
             return
         }
 
+        let previousTrackingState = trackingState
         manager.allowsBackgroundLocationUpdates = true
         manager.startUpdatingLocation()
         session.markStartedIfNeeded()
@@ -197,6 +206,15 @@ final class RunningTracker: NSObject, ObservableObject {
         startElapsedTimer()
         trackingState = .tracking
         shouldStartAfterAuthorization = false
+
+        switch previousTrackingState {
+        case .paused:
+            voiceCuePlayer.play(.resume)
+        case .tracking:
+            break
+        default:
+            voiceCuePlayer.play(.start)
+        }
     }
 
     private func startElapsedTimer() {

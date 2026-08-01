@@ -3,9 +3,12 @@ package com.woowacourse.runpamine.data.run.repository
 import com.woowacourse.runpamine.data.run.local.RunLocalDataSource
 import com.woowacourse.runpamine.domain.run.LocationTracker
 import com.woowacourse.runpamine.domain.run.LocationTrackingMode
+import com.woowacourse.runpamine.domain.run.NoOpRunVoicePlayer
 import com.woowacourse.runpamine.domain.run.RunPoint
 import com.woowacourse.runpamine.domain.run.RunSession
 import com.woowacourse.runpamine.domain.run.RunTrackingRepository
+import com.woowacourse.runpamine.domain.run.RunVoiceCue
+import com.woowacourse.runpamine.domain.run.RunVoicePlayer
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -37,6 +40,7 @@ class DefaultRunTrackingRepository(
     private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
     private val now: () -> Instant = Instant::now,
     private val currentUserId: suspend () -> String? = { null },
+    private val runVoicePlayer: RunVoicePlayer = NoOpRunVoicePlayer,
     private val autoPauseInactivitySeconds: Long = AUTO_PAUSE_INACTIVITY_SECONDS,
     private val inactivityCheckIntervalMillis: Long = INACTIVITY_CHECK_INTERVAL_MILLIS,
     private val movementDistanceMeters: (RunPoint, RunPoint) -> Int = metricCalculator::distanceBetweenMeters,
@@ -70,9 +74,10 @@ class DefaultRunTrackingRepository(
 
     override suspend fun startRun(): RunSession =
         mutex.withLock {
+            val activeSession = localDataSource.findActiveSession()
+            val isNewSession = activeSession == null
             val session =
-                localDataSource
-                    .findActiveSession()
+                activeSession
                     ?.withCurrentUserId()
                     ?: RunSession(
                         id = UUID.randomUUID().toString(),
@@ -90,6 +95,9 @@ class DefaultRunTrackingRepository(
                 isAutoPaused = false
             }
             startCollectingIfNeeded(session, resetLastPoint = false)
+            if (isNewSession) {
+                runVoicePlayer.play(RunVoiceCue.START)
+            }
             session
         }
 
@@ -104,6 +112,7 @@ class DefaultRunTrackingRepository(
             isAutoPaused = false
             cancelTrackingJobs()
             saveCurrentMetrics(activeSession, accumulatedDurationSeconds)
+            runVoicePlayer.play(RunVoiceCue.PAUSE)
         }
     }
 
@@ -119,6 +128,7 @@ class DefaultRunTrackingRepository(
             autoResumeJob?.cancel()
             autoResumeJob = null
             startCollectingIfNeeded(activeSession, resetLastPoint = true)
+            runVoicePlayer.play(RunVoiceCue.RESUME)
         }
     }
 
@@ -148,6 +158,7 @@ class DefaultRunTrackingRepository(
             latestAcceptedPoint = null
             isPaused.value = false
             isAutoPaused = false
+            runVoicePlayer.play(RunVoiceCue.STOP)
             localDataSource.findSession(finishedSession.id)
         }
 
@@ -236,6 +247,7 @@ class DefaultRunTrackingRepository(
             inactivityJob = null
             saveCurrentMetrics(activeSession, accumulatedDurationSeconds)
             startAutoResumeMonitoringIfNeeded()
+            runVoicePlayer.play(RunVoiceCue.PAUSE)
         }
     }
 
@@ -304,6 +316,7 @@ class DefaultRunTrackingRepository(
             isAutoPaused = false
             autoResumeJob = null
             startCollectingIfNeeded(activeSession, resetLastPoint = true)
+            runVoicePlayer.play(RunVoiceCue.RESUME)
         }
     }
 

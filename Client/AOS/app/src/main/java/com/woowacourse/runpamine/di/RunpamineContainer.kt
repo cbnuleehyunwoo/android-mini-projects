@@ -18,6 +18,7 @@ import com.woowacourse.runpamine.data.profile.repository.DefaultProfileRepositor
 import com.woowacourse.runpamine.data.ranking.remote.ApiRankingRemoteDataSource
 import com.woowacourse.runpamine.data.ranking.remote.RankingRemoteDataSource
 import com.woowacourse.runpamine.data.ranking.repository.DefaultRankingRepository
+import com.woowacourse.runpamine.data.run.audio.AndroidRunVoicePlayer
 import com.woowacourse.runpamine.data.run.local.RoomRunLocalDataSource
 import com.woowacourse.runpamine.data.run.local.RunDatabase
 import com.woowacourse.runpamine.data.run.local.RunLocalDataSource
@@ -162,6 +163,7 @@ class RunpamineContainer(
             localDataSource = runLocalDataSource,
             locationTracker = locationTracker,
             currentUserId = { authSessionStore.current()?.user?.id },
+            runVoicePlayer = AndroidRunVoicePlayer(context),
         )
     }
 

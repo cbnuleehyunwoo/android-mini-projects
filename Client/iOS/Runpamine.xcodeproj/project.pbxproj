@@ -56,6 +56,11 @@
 		7A100001000000000000002D /* TeamDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000130 /* TeamDashboardView.swift */; };
 		7A100001000000000000002E /* InviteMemberView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000131 /* InviteMemberView.swift */; };
 		7A1000010000000000000031 /* RunningUploadRetrier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000158 /* RunningUploadRetrier.swift */; };
+		7A5A00010000000000000001 /* RunningVoiceCuePlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5A00010000000000000101 /* RunningVoiceCuePlayer.swift */; };
+		7A5A00010000000000000002 /* running_start.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 7A5A00010000000000000102 /* running_start.mp3 */; };
+		7A5A00010000000000000003 /* running_pause.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 7A5A00010000000000000103 /* running_pause.mp3 */; };
+		7A5A00010000000000000004 /* running_resume.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 7A5A00010000000000000104 /* running_resume.mp3 */; };
+		7A5A00010000000000000005 /* running_stop.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 7A5A00010000000000000105 /* running_stop.mp3 */; };
 		7A1000010000000000000040 /* pretendard_black.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000140 /* pretendard_black.otf */; };
 		7A1000010000000000000041 /* pretendard_bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000141 /* pretendard_bold.otf */; };
 		7A1000010000000000000042 /* pretendard_extra_bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000142 /* pretendard_extra_bold.otf */; };
@@ -150,6 +155,11 @@
 		7A1000010000000000000150 /* bk.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = bk.png; sourceTree = SOURCE_ROOT; };
 		7A1000010000000000000151 /* encho.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = encho.png; sourceTree = SOURCE_ROOT; };
 		7A1000010000000000000158 /* RunningUploadRetrier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningUploadRetrier.swift; sourceTree = "<group>"; };
+		7A5A00010000000000000101 /* RunningVoiceCuePlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningVoiceCuePlayer.swift; sourceTree = "<group>"; };
+		7A5A00010000000000000102 /* running_start.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = running_start.mp3; sourceTree = "<group>"; };
+		7A5A00010000000000000103 /* running_pause.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = running_pause.mp3; sourceTree = "<group>"; };
+		7A5A00010000000000000104 /* running_resume.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = running_resume.mp3; sourceTree = "<group>"; };
+		7A5A00010000000000000105 /* running_stop.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = running_stop.mp3; sourceTree = "<group>"; };
 		7A1040010000000000000101 /* ProfileModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileModels.swift; sourceTree = "<group>"; };
 		7A1040010000000000000102 /* ProfileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileService.swift; sourceTree = "<group>"; };
 		7A1070010000000000000101 /* RunModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunModels.swift; sourceTree = "<group>"; };
@@ -399,6 +409,7 @@
 				7A1000010000000000000158 /* RunningUploadRetrier.swift */,
 				7A1000010000000000000125 /* RunningSession.swift */,
 				7A1000010000000000000126 /* RunningTracker.swift */,
+				7A5A00010000000000000101 /* RunningVoiceCuePlayer.swift */,
 				7A1070010000000000000101 /* RunModels.swift */,
 				7A1070010000000000000102 /* RunService.swift */,
 			);
@@ -434,10 +445,22 @@
 				7A1000010000000000000149 /* Assets.xcassets */,
 				7A1000010000000000000150 /* bk.png */,
 				7A1000010000000000000151 /* encho.png */,
+				7A5A00010000000000000301 /* Audio */,
 				7A1350010000000000000140 /* lottie */,
 				7A1000010000000000000321 /* Fonts */,
 			);
 			path = Resources;
+			sourceTree = "<group>";
+		};
+		7A5A00010000000000000301 /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				7A5A00010000000000000102 /* running_start.mp3 */,
+				7A5A00010000000000000103 /* running_pause.mp3 */,
+				7A5A00010000000000000104 /* running_resume.mp3 */,
+				7A5A00010000000000000105 /* running_stop.mp3 */,
+			);
+			path = Audio;
 			sourceTree = "<group>";
 		};
 		7A1000010000000000000321 /* Fonts */ = {
@@ -579,6 +602,10 @@
 				7A100001000000000000004A /* bk.png in Resources */,
 				64AA17802FDE905F00FC0B91 /* error.png in Resources */,
 				7A100001000000000000004B /* encho.png in Resources */,
+				7A5A00010000000000000002 /* running_start.mp3 in Resources */,
+				7A5A00010000000000000003 /* running_pause.mp3 in Resources */,
+				7A5A00010000000000000004 /* running_resume.mp3 in Resources */,
+				7A5A00010000000000000005 /* running_stop.mp3 in Resources */,
 				7A1350010000000000000040 /* lottie in Resources */,
 				7A2480010000000000000001 /* PrivacyInfo.xcprivacy in Resources */,
 			);
@@ -630,6 +657,7 @@
 				7A1000010000000000000031 /* RunningUploadRetrier.swift in Sources */,
 				7A1000010000000000000024 /* RunningSession.swift in Sources */,
 				7A1000010000000000000025 /* RunningTracker.swift in Sources */,
+				7A5A00010000000000000001 /* RunningVoiceCuePlayer.swift in Sources */,
 				7A1000010000000000000026 /* HistoryView.swift in Sources */,
 				7A1000010000000000000027 /* TeamCreateView.swift in Sources */,
 				7A1000010000000000000028 /* TeamCreateViewModel.swift in Sources */,

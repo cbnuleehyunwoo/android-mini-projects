@@ -6,6 +6,8 @@ import com.woowacourse.runpamine.domain.run.LocationTrackingMode
 import com.woowacourse.runpamine.domain.run.RunPoint
 import com.woowacourse.runpamine.domain.run.RunSession
 import com.woowacourse.runpamine.domain.run.RunSyncStatus
+import com.woowacourse.runpamine.domain.run.RunVoiceCue
+import com.woowacourse.runpamine.domain.run.RunVoicePlayer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -32,20 +34,26 @@ class DefaultRunTrackingRepositoryTest {
             val clock = AtomicReference(STARTED_AT)
             val localDataSource = FakeRunLocalDataSource()
             val locationTracker = FakeLocationTracker()
+            val runVoicePlayer = FakeRunVoicePlayer()
             val repository =
                 repository(
                     localDataSource = localDataSource,
                     locationTracker = locationTracker,
                     clock = clock,
+                    runVoicePlayer = runVoicePlayer,
                 )
 
             repository.startRun()
+            assertEquals(listOf(RunVoiceCue.START), runVoicePlayer.playedCues)
             awaitCondition { locationTracker.requestedModes == listOf(LocationTrackingMode.RUNNING) }
             locationTracker.emit(LocationTrackingMode.RUNNING, point(longitude = 127.0, secondsAfterStart = 0))
             awaitCondition { localDataSource.points.size == 1 }
 
             clock.set(STARTED_AT.plusSeconds(10))
             awaitCondition { repository.observePaused().latestValue() }
+            awaitCondition {
+                runVoicePlayer.playedCues == listOf(RunVoiceCue.START, RunVoiceCue.PAUSE)
+            }
             awaitCondition {
                 locationTracker.requestedModes ==
                     listOf(LocationTrackingMode.RUNNING, LocationTrackingMode.AUTO_RESUME)
@@ -65,6 +73,10 @@ class DefaultRunTrackingRepositoryTest {
 
             locationTracker.emit(LocationTrackingMode.AUTO_RESUME, point(longitude = 127.0002, secondsAfterStart = 19))
             awaitCondition { !repository.observePaused().latestValue() }
+            awaitCondition {
+                runVoicePlayer.playedCues ==
+                    listOf(RunVoiceCue.START, RunVoiceCue.PAUSE, RunVoiceCue.RESUME)
+            }
             awaitCondition {
                 locationTracker.requestedModes ==
                     listOf(
@@ -88,11 +100,13 @@ class DefaultRunTrackingRepositoryTest {
         runBlocking {
             val localDataSource = FakeRunLocalDataSource()
             val locationTracker = FakeLocationTracker()
+            val runVoicePlayer = FakeRunVoicePlayer()
             val repository =
                 repository(
                     localDataSource = localDataSource,
                     locationTracker = locationTracker,
                     clock = AtomicReference(STARTED_AT),
+                    runVoicePlayer = runVoicePlayer,
                 )
 
             repository.startRun()
@@ -103,8 +117,41 @@ class DefaultRunTrackingRepositoryTest {
 
             assertTrue(repository.observePaused().latestValue())
             assertFalse(locationTracker.requestedModes.contains(LocationTrackingMode.AUTO_RESUME))
+            assertEquals(listOf(RunVoiceCue.START, RunVoiceCue.PAUSE), runVoicePlayer.playedCues)
+
+            repository.resumeRun()
+            awaitCondition { !repository.observePaused().latestValue() }
+            assertEquals(
+                listOf(RunVoiceCue.START, RunVoiceCue.PAUSE, RunVoiceCue.RESUME),
+                runVoicePlayer.playedCues,
+            )
 
             repository.discardActiveRun()
+        }
+
+    @Test
+    fun `같은 러닝 세션의 시작 안내는 중복 재생하지 않고 종료 안내는 한 번 재생한다`() =
+        runBlocking {
+            val runVoicePlayer = FakeRunVoicePlayer()
+            val repository =
+                repository(
+                    localDataSource = FakeRunLocalDataSource(),
+                    locationTracker = FakeLocationTracker(),
+                    clock = AtomicReference(STARTED_AT),
+                    runVoicePlayer = runVoicePlayer,
+                )
+
+            repository.startRun()
+            repository.startRun()
+
+            assertEquals(listOf(RunVoiceCue.START), runVoicePlayer.playedCues)
+
+            repository.stopRun()
+
+            assertEquals(
+                listOf(RunVoiceCue.START, RunVoiceCue.STOP),
+                runVoicePlayer.playedCues,
+            )
         }
 
     @Test
@@ -133,11 +180,13 @@ class DefaultRunTrackingRepositoryTest {
         localDataSource: RunLocalDataSource,
         locationTracker: LocationTracker,
         clock: AtomicReference<Instant>,
+        runVoicePlayer: RunVoicePlayer = FakeRunVoicePlayer(),
     ) = DefaultRunTrackingRepository(
         localDataSource = localDataSource,
         locationTracker = locationTracker,
         dispatcher = Dispatchers.Default,
         now = clock::get,
+        runVoicePlayer = runVoicePlayer,
         autoPauseInactivitySeconds = 10,
         inactivityCheckIntervalMillis = 1,
         movementDistanceMeters = { from, to ->
@@ -190,6 +239,14 @@ class DefaultRunTrackingRepositoryTest {
                 }
             }
             stream.emit(point)
+        }
+    }
+
+    private class FakeRunVoicePlayer : RunVoicePlayer {
+        val playedCues = CopyOnWriteArrayList<RunVoiceCue>()
+
+        override fun play(cue: RunVoiceCue) {
+            playedCues += cue
         }
     }
 
