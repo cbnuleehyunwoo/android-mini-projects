@@ -6,64 +6,111 @@ struct RunningSummaryView: View {
     var saveErrorMessage: String?
     var onRetry: (() -> Void)?
     let onDone: () -> Void
+    var onShare: (() -> Void)?
+
+    @State private var isShowingShareFlow = false
 
     var body: some View {
         VStack(spacing: 0) {
-            RunningMapView(route: record.routeCoordinates, latestLocation: nil)
-                .frame(height: 330)
-                .clipped()
+            navigationBar
 
-            VStack(spacing: 20) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(Self.dateFormatter.string(from: record.startedAt))
-                        .font(AppTheme.Typography.font(size: 20, weight: .bold))
-                        .foregroundStyle(.black)
+            ScrollView(showsIndicators: false) {
+                RunningMapView(route: record.routeCoordinates, latestLocation: nil)
+                    .frame(height: 330)
+                    .clipped()
 
-                    Text("\(Self.timeFormatter.string(from: record.startedAt)) ~ \(Self.timeFormatter.string(from: record.endedAt))")
-                        .font(AppTheme.Typography.font(size: 16, weight: .regular))
-                        .foregroundStyle(AppTheme.Colors.textPrimary)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 30)
-                .padding(.top, 28)
+                VStack(spacing: 20) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(Self.dateFormatter.string(from: record.startedAt))
+                            .font(AppTheme.Typography.font(size: 20, weight: .bold))
+                            .foregroundStyle(.black)
 
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                    SummaryMetric(title: "시간", value: RunningMetricFormatter.duration(record.elapsedTime), suffix: "")
-                    SummaryMetric(title: "거리", value: RunningMetricFormatter.distanceKilometers(record.distanceMeters), suffix: "km")
-                    SummaryMetric(title: "페이스", value: RunningMetricFormatter.pace(record.averagePaceSecondsPerKilometer), suffix: "/km")
-                    SummaryMetric(title: "칼로리", value: "\(record.estimatedCalories)", suffix: "kcal")
-                }
-                .padding(.horizontal, 22)
-
-                Spacer()
-
-                if !isSaving, let saveErrorMessage {
-                    VStack(spacing: 8) {
-                        Text(saveErrorMessage)
-                            .font(AppTheme.Typography.font(size: 13, weight: .semibold))
-                            .foregroundStyle(AppTheme.Colors.danger)
-                            .multilineTextAlignment(.center)
-
-                        if let onRetry {
-                            Button("다시 저장") {
-                                onRetry()
-                            }
-                            .font(AppTheme.Typography.font(size: 14, weight: .bold))
-                            .foregroundStyle(AppTheme.Colors.primary)
-                        }
+                        Text("\(Self.timeFormatter.string(from: record.startedAt)) ~ \(Self.timeFormatter.string(from: record.endedAt))")
+                            .font(AppTheme.Typography.font(size: 16, weight: .regular))
+                            .foregroundStyle(AppTheme.Colors.textPrimary)
                     }
-                    .padding(.horizontal, 24)
-                }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 30)
+                    .padding(.top, 28)
 
-                PrimaryButton(title: "완료", isLoading: isSaving, isDisabled: isSaving) {
-                    onDone()
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                        SummaryMetric(title: "시간", value: RunningMetricFormatter.duration(record.elapsedTime), suffix: "")
+                        SummaryMetric(title: "거리", value: RunningMetricFormatter.distanceKilometers(record.distanceMeters), suffix: "km")
+                        SummaryMetric(title: "페이스", value: RunningMetricFormatter.pace(record.averagePaceSecondsPerKilometer), suffix: "/km")
+                        SummaryMetric(title: "칼로리", value: "\(record.estimatedCalories)", suffix: "kcal")
+                    }
+                    .padding(.horizontal, 22)
+
+                    if !isSaving, let saveErrorMessage {
+                        VStack(spacing: 8) {
+                            Text(saveErrorMessage)
+                                .font(AppTheme.Typography.font(size: 13, weight: .semibold))
+                                .foregroundStyle(AppTheme.Colors.danger)
+                                .multilineTextAlignment(.center)
+
+                            if let onRetry {
+                                Button("다시 저장") {
+                                    onRetry()
+                                }
+                                .font(AppTheme.Typography.font(size: 14, weight: .bold))
+                                .foregroundStyle(AppTheme.Colors.primary)
+                            }
+                        }
+                        .padding(.horizontal, 24)
+                    }
+
+                    PrimaryButton(title: "완료", isLoading: isSaving, isDisabled: isSaving) {
+                        onDone()
+                    }
+                    .padding(.horizontal, AppTheme.Layout.horizontalPadding)
+                    .padding(.bottom, 34)
                 }
-                .padding(.horizontal, AppTheme.Layout.horizontalPadding)
-                .padding(.bottom, 34)
+                .background(Color.white)
             }
-            .background(Color.white)
         }
-        .ignoresSafeArea(edges: .top)
+        .background(Color.white)
+        .fullScreenCover(isPresented: $isShowingShareFlow) {
+            RunShareCameraView(record: record)
+        }
+    }
+
+    private var navigationBar: some View {
+        HStack(spacing: 0) {
+            Button(action: onDone) {
+                Image(systemName: "arrow.left")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(AppTheme.Colors.textPrimary)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .accessibilityLabel("뒤로가기")
+
+            Spacer()
+
+            Text("기록")
+                .font(AppTheme.Typography.title2)
+                .foregroundStyle(AppTheme.Colors.textPrimary)
+
+            Spacer()
+
+            Button {
+                if let onShare {
+                    onShare()
+                } else {
+                    isShowingShareFlow = true
+                }
+            } label: {
+                Image(systemName: "square.and.arrow.up")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(AppTheme.Colors.textPrimary)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .accessibilityLabel("러닝 기록 공유")
+        }
+        .padding(.horizontal, 12)
+        .frame(height: 60)
+        .background(Color.white)
     }
 
     private static let dateFormatter: DateFormatter = {
