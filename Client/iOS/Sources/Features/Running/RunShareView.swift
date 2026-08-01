@@ -316,7 +316,7 @@ private struct RunShareEditorView: View {
                 stickerOptions
             }
 
-            Text("러닝 데이터·경로·스티커는 드래그해 이동하고, 선택한 스티커는 네 꼭지점 핸들로 크기를 조절할 수 있어요.")
+            Text("러닝 데이터·경로·스티커는 드래그해 이동하고, 스티커는 꼭지점 핸들로 크기를, 상단 핸들로 각도를 조절할 수 있어요.")
                 .font(AppTheme.Typography.font(size: 12, weight: .medium))
                 .foregroundStyle(.white.opacity(0.58))
                 .padding(.horizontal, 18)
@@ -498,7 +498,8 @@ private struct RunShareCanvas: View {
 
                 ZStack(alignment: .bottomLeading) {
                     shareDataContent
-                        .padding(30)
+                        .padding(.leading, 20)
+                        .padding(.bottom, 30)
                         .offset(
                             x: dataOffset.width + dataDragTranslation.width,
                             y: dataOffset.height + dataDragTranslation.height
@@ -557,12 +558,15 @@ private struct RunShareCanvas: View {
                     RunShareStickerView(
                         sticker: sticker,
                         width: geometry.size.width * sticker.widthRatio,
+                        center: CGPoint(
+                            x: geometry.size.width * sticker.defaultX,
+                            y: geometry.size.height * sticker.defaultY
+                        ),
                         transform: stickerTransformBinding(for: sticker),
                         isSelected: selectedSticker == sticker,
                         showsEditingControls: showsEditingControls,
                         onSelect: { selectedSticker = sticker }
                     )
-                    .rotationEffect(.degrees(sticker.rotationDegrees))
                     .position(
                         x: geometry.size.width * sticker.defaultX,
                         y: geometry.size.height * sticker.defaultY
@@ -599,14 +603,8 @@ private struct RunShareCanvas: View {
         )
     }
 
-    @ViewBuilder
     private var shareDataContent: some View {
-        switch layout {
-        case .distance, .routeDistance:
-            distanceContent
-        case .current, .routeCurrent:
-            currentLayoutContent
-        }
+        currentLayoutContent
     }
 
     private var distanceContent: some View {
@@ -631,6 +629,8 @@ private struct RunShareCanvas: View {
                 shareMetric(title: "KCAL", value: "\(record.estimatedCalories)")
             }
             .padding(.top, 22)
+            .opacity(layout.showsDetails ? 1 : 0)
+            .accessibilityHidden(!layout.showsDetails)
         }
     }
 
@@ -708,12 +708,14 @@ private struct RunShareRouteMap: View {
 private struct RunShareStickerView: View {
     let sticker: RunShareSticker
     let width: CGFloat
+    let center: CGPoint
     @Binding var transform: RunShareStickerTransform
     let isSelected: Bool
     let showsEditingControls: Bool
     let onSelect: () -> Void
     @GestureState private var dragTranslation: CGSize = .zero
     @GestureState private var resizeState: RunShareStickerResizeState?
+    @GestureState private var rotationDeltaDegrees: Double = 0
 
     var body: some View {
         Image(sticker.assetName)
@@ -741,10 +743,14 @@ private struct RunShareStickerView: View {
             .overlay(alignment: .bottomTrailing) {
                 resizeHandle(for: .bottomTrailing)
             }
-        .offset(
-            x: transform.offset.width + dragTranslation.width,
-            y: transform.offset.height + dragTranslation.height
-        )
+            .overlay(alignment: .top) {
+                rotationHandle
+            }
+            .rotationEffect(.degrees(displayedRotationDegrees))
+            .offset(
+                x: transform.offset.width + dragTranslation.width,
+                y: transform.offset.height + dragTranslation.height
+            )
     }
 
     private var displayedScale: CGFloat {
@@ -752,6 +758,40 @@ private struct RunShareStickerView: View {
             scaleDelta(for: $0.translation, corner: $0.corner)
         } ?? 0
         return min(max(transform.scale + resizeDelta, 0.4), 2.5)
+    }
+
+    private var displayedRotationDegrees: Double {
+        transform.rotationDegrees + rotationDeltaDegrees
+    }
+
+    @ViewBuilder
+    private var rotationHandle: some View {
+        if showsEditingControls && isSelected {
+            VStack(spacing: 0) {
+                ZStack {
+                    Color.clear
+                        .frame(width: 34, height: 34)
+
+                    Circle()
+                        .fill(.white)
+                        .frame(width: 18, height: 18)
+                        .overlay {
+                            Image(systemName: "arrow.clockwise")
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundStyle(.black.opacity(0.72))
+                        }
+                }
+
+                Rectangle()
+                    .fill(.white.opacity(0.9))
+                    .frame(width: 1.5, height: 10)
+                    .allowsHitTesting(false)
+            }
+            .contentShape(Rectangle())
+            .offset(y: -44)
+            .highPriorityGesture(rotationGesture)
+            .accessibilityLabel("스티커 회전")
+        }
     }
 
     @ViewBuilder
@@ -821,6 +861,23 @@ private struct RunShareStickerView: View {
             }
     }
 
+    private var rotationGesture: some Gesture {
+        DragGesture(
+            minimumDistance: 0,
+            coordinateSpace: .named(RunShareCoordinateSpace.canvas)
+        )
+            .updating($rotationDeltaDegrees) { value, state, _ in
+                state = rotationDelta(for: value)
+            }
+            .onEnded { value in
+                var updatedTransform = transform
+                updatedTransform.rotationDegrees = normalizedDegrees(
+                    updatedTransform.rotationDegrees + rotationDelta(for: value)
+                )
+                transform = updatedTransform
+            }
+    }
+
     private func scaleDelta(
         for translation: CGSize,
         corner: RunShareStickerResizeCorner
@@ -830,11 +887,38 @@ private struct RunShareStickerView: View {
             translation.height * corner.verticalDirection
         return directionalTranslation / max(width * 2, 1)
     }
+
+    private func rotationDelta(for value: DragGesture.Value) -> Double {
+        let rotationCenter = CGPoint(
+            x: center.x + transform.offset.width,
+            y: center.y + transform.offset.height
+        )
+        let startAngle = atan2(
+            value.startLocation.y - rotationCenter.y,
+            value.startLocation.x - rotationCenter.x
+        )
+        let currentAngle = atan2(
+            value.location.y - rotationCenter.y,
+            value.location.x - rotationCenter.x
+        )
+        return normalizedDegrees((currentAngle - startAngle) * 180 / .pi)
+    }
+
+    private func normalizedDegrees(_ degrees: Double) -> Double {
+        var normalized = degrees.truncatingRemainder(dividingBy: 360)
+        if normalized > 180 {
+            normalized -= 360
+        } else if normalized < -180 {
+            normalized += 360
+        }
+        return normalized
+    }
 }
 
 private struct RunShareStickerTransform: Equatable {
     var offset: CGSize = .zero
     var scale: CGFloat = 1
+    var rotationDegrees: Double = 0
 }
 
 private struct RunShareStickerResizeState {
@@ -921,6 +1005,13 @@ private enum RunShareLayout: String, CaseIterable, Identifiable {
         case .distance, .current: 0
         }
     }
+
+    var showsDetails: Bool {
+        switch self {
+        case .distance, .routeDistance: false
+        case .current, .routeCurrent: true
+        }
+    }
 }
 
 private enum RunShareSticker: String, CaseIterable, Hashable, Identifiable {
@@ -982,12 +1073,6 @@ private enum RunShareSticker: String, CaseIterable, Hashable, Identifiable {
         }
     }
 
-    var rotationDegrees: Double {
-        switch self {
-        case .pamin: 8
-        case .cheetahPamin, .surprisedPamin, .hamburgerPamin, .handstandPamin: 0
-        }
-    }
 }
 
 private struct CameraPreview: UIViewRepresentable {
