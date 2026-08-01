@@ -239,9 +239,11 @@ private struct RunShareEditorView: View {
     @State private var selectedLayout: RunShareLayout = .current
     @State private var selectedTab: RunShareEditorTab = .layout
     @State private var selectedStickers: Set<RunShareSticker> = []
+    @State private var selectedSticker: RunShareSticker?
     @State private var dataOffset: CGSize = .zero
     @State private var routeOffset: CGSize = .zero
-    @State private var stickerOffsets: [RunShareSticker: CGSize] = [:]
+    @State private var stickerTransforms: [RunShareSticker: RunShareStickerTransform] = [:]
+    @State private var canvasSize = CGSize(width: 360, height: 640)
     @State private var renderedImage: UIImage?
     @State private var isShowingShareSheet = false
     @State private var saveMessage: String?
@@ -262,7 +264,10 @@ private struct RunShareEditorView: View {
                             visibleStickers: selectedStickers,
                             dataOffset: $dataOffset,
                             routeOffset: $routeOffset,
-                            stickerOffsets: $stickerOffsets
+                            stickerTransforms: $stickerTransforms,
+                            selectedSticker: $selectedSticker,
+                            showsEditingControls: true,
+                            onSizeChange: { canvasSize = $0 }
                         )
                         .aspectRatio(9.0 / 16.0, contentMode: .fit)
                         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
@@ -330,7 +335,7 @@ private struct RunShareEditorView: View {
                     .foregroundStyle(.white.opacity(0.75))
             }
 
-            Text("러닝 데이터·경로·스티커는 카드에서 드래그해 이동할 수 있어요.")
+            Text("러닝 데이터·경로·스티커는 드래그해 이동하고, 선택한 스티커는 우하단 핸들로 크기를 조절할 수 있어요.")
                 .font(AppTheme.Typography.font(size: 12, weight: .medium))
                 .foregroundStyle(.white.opacity(0.58))
                 .padding(.horizontal, 18)
@@ -391,9 +396,15 @@ private struct RunShareEditorView: View {
                 ForEach(RunShareSticker.allCases) { sticker in
                     Button {
                         if selectedStickers.contains(sticker) {
-                            selectedStickers.remove(sticker)
+                            if selectedSticker == sticker {
+                                selectedStickers.remove(sticker)
+                                selectedSticker = nil
+                            } else {
+                                selectedSticker = sticker
+                            }
                         } else {
                             selectedStickers.insert(sticker)
+                            selectedSticker = sticker
                         }
                     } label: {
                         VStack(spacing: 8) {
@@ -464,10 +475,16 @@ private struct RunShareEditorView: View {
             visibleStickers: selectedStickers,
             dataOffset: .constant(dataOffset),
             routeOffset: .constant(routeOffset),
-            stickerOffsets: .constant(stickerOffsets)
+            stickerTransforms: .constant(stickerTransforms),
+            selectedSticker: .constant(nil),
+            showsEditingControls: false,
+            onSizeChange: nil
         )
-        let renderer = ImageRenderer(content: canvas.frame(width: 1080, height: 1920))
-        renderer.scale = 1
+        let logicalSize = canvasSize.width > 0 ? canvasSize : CGSize(width: 360, height: 640)
+        let renderer = ImageRenderer(
+            content: canvas.frame(width: logicalSize.width, height: logicalSize.height)
+        )
+        renderer.scale = 1080 / logicalSize.width
         guard let image = renderer.uiImage else { return nil }
         return Self.makeOpaqueImage(image)
     }
@@ -490,7 +507,10 @@ private struct RunShareCanvas: View {
     let visibleStickers: Set<RunShareSticker>
     @Binding var dataOffset: CGSize
     @Binding var routeOffset: CGSize
-    @Binding var stickerOffsets: [RunShareSticker: CGSize]
+    @Binding var stickerTransforms: [RunShareSticker: RunShareStickerTransform]
+    @Binding var selectedSticker: RunShareSticker?
+    let showsEditingControls: Bool
+    let onSizeChange: ((CGSize) -> Void)?
     @GestureState private var dataDragTranslation: CGSize = .zero
     @GestureState private var routeDragTranslation: CGSize = .zero
 
@@ -502,6 +522,17 @@ private struct RunShareCanvas: View {
                     .scaledToFill()
                     .frame(width: geometry.size.width, height: geometry.size.height)
                     .clipped()
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        guard showsEditingControls else { return }
+                        selectedSticker = nil
+                    }
+                    .onAppear {
+                        onSizeChange?(geometry.size)
+                    }
+                    .onChange(of: geometry.size) { _, size in
+                        onSizeChange?(size)
+                    }
 
                 LinearGradient(
                     colors: [Color.black.opacity(0.72), Color.black.opacity(0.08), Color.black.opacity(0.78)],
@@ -564,13 +595,17 @@ private struct RunShareCanvas: View {
                     RunShareStickerView(
                         sticker: sticker,
                         width: geometry.size.width * sticker.widthRatio,
-                        offset: stickerOffsetBinding(for: sticker)
+                        transform: stickerTransformBinding(for: sticker),
+                        isSelected: selectedSticker == sticker,
+                        showsEditingControls: showsEditingControls,
+                        onSelect: { selectedSticker = sticker }
                     )
                     .rotationEffect(.degrees(sticker.rotationDegrees))
                     .position(
                         x: geometry.size.width * sticker.defaultX,
                         y: geometry.size.height * sticker.defaultY
                     )
+                    .zIndex(selectedSticker == sticker ? 10 : 1)
                 }
 
                 VStack {
@@ -586,16 +621,18 @@ private struct RunShareCanvas: View {
                             .padding(.bottom, 12)
                     }
                 }
+                .allowsHitTesting(false)
+                .zIndex(20)
             }
         }
         .aspectRatio(9.0 / 16.0, contentMode: .fit)
         .background(Color.black)
     }
 
-    private func stickerOffsetBinding(for sticker: RunShareSticker) -> Binding<CGSize> {
+    private func stickerTransformBinding(for sticker: RunShareSticker) -> Binding<RunShareStickerTransform> {
         Binding(
-            get: { stickerOffsets[sticker] ?? .zero },
-            set: { stickerOffsets[sticker] = $0 }
+            get: { stickerTransforms[sticker] ?? RunShareStickerTransform() },
+            set: { stickerTransforms[sticker] = $0 }
         )
     }
 
@@ -708,32 +745,89 @@ private struct RunShareRouteMap: View {
 private struct RunShareStickerView: View {
     let sticker: RunShareSticker
     let width: CGFloat
-    @Binding var offset: CGSize
+    @Binding var transform: RunShareStickerTransform
+    let isSelected: Bool
+    let showsEditingControls: Bool
+    let onSelect: () -> Void
     @GestureState private var dragTranslation: CGSize = .zero
+    @GestureState private var resizeTranslation: CGSize = .zero
 
     var body: some View {
-        Image(sticker.assetName)
-            .resizable()
-            .scaledToFit()
-            .frame(width: width)
-            .offset(
-                x: offset.width + dragTranslation.width,
-                y: offset.height + dragTranslation.height
-            )
-            .contentShape(Rectangle())
-            .highPriorityGesture(
-                DragGesture(minimumDistance: 4)
-                    .updating($dragTranslation) { value, state, _ in
-                        state = value.translation
+        ZStack(alignment: .bottomTrailing) {
+            Image(sticker.assetName)
+                .resizable()
+                .scaledToFit()
+                .frame(width: width * displayedScale)
+                .contentShape(Rectangle())
+                .overlay {
+                    if showsEditingControls && isSelected {
+                        Rectangle()
+                            .stroke(.white, style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
+                            .allowsHitTesting(false)
                     }
-                    .onEnded { value in
-                        offset = CGSize(
-                            width: offset.width + value.translation.width,
-                            height: offset.height + value.translation.height
-                        )
+                }
+                .onTapGesture(perform: onSelect)
+                .highPriorityGesture(moveGesture)
+
+            if showsEditingControls && isSelected {
+                Circle()
+                    .fill(.white)
+                    .frame(width: 24, height: 24)
+                    .overlay {
+                        Circle()
+                            .stroke(Color.black.opacity(0.5), lineWidth: 1)
                     }
-            )
+                    .contentShape(Circle())
+                    .highPriorityGesture(resizeGesture)
+                    .accessibilityLabel("스티커 크기 조절")
+            }
+        }
+        .offset(
+            x: transform.offset.width + dragTranslation.width,
+            y: transform.offset.height + dragTranslation.height
+        )
     }
+
+    private var displayedScale: CGFloat {
+        let resizeDelta = (resizeTranslation.width + resizeTranslation.height) / max(width * 2, 1)
+        return min(max(transform.scale + resizeDelta, 0.4), 2.5)
+    }
+
+    private var moveGesture: some Gesture {
+        DragGesture(minimumDistance: 4)
+            .updating($dragTranslation) { value, state, _ in
+                state = value.translation
+            }
+            .onChanged { _ in
+                onSelect()
+            }
+            .onEnded { value in
+                var updatedTransform = transform
+                updatedTransform.offset = CGSize(
+                    width: updatedTransform.offset.width + value.translation.width,
+                    height: updatedTransform.offset.height + value.translation.height
+                )
+                transform = updatedTransform
+            }
+    }
+
+    private var resizeGesture: some Gesture {
+        DragGesture(minimumDistance: 0)
+            .updating($resizeTranslation) { value, state, _ in
+                state = value.translation
+            }
+            .onEnded { value in
+                let resizeDelta = (value.translation.width + value.translation.height) / max(width * 2, 1)
+                var updatedTransform = transform
+                updatedTransform.scale = min(max(updatedTransform.scale + resizeDelta, 0.4), 2.5)
+                transform = updatedTransform
+            }
+    }
+}
+
+private struct RunShareStickerTransform: Equatable {
+    var offset: CGSize = .zero
+    var scale: CGFloat = 1
 }
 
 private enum RunShareEditorTab: String, CaseIterable, Identifiable {
