@@ -233,8 +233,8 @@ private struct RunShareEditorView: View {
     let onRetake: () -> Void
 
     @Environment(\.dismiss) private var dismiss
-    @State private var selectedTheme: RunShareTheme = .midnight
-    @State private var selectedTab: RunShareEditorTab = .theme
+    @State private var selectedLayout: RunShareLayout = .current
+    @State private var selectedTab: RunShareEditorTab = .layout
     @State private var showsCharacterSticker = false
     @State private var renderedImage: UIImage?
     @State private var isShowingShareSheet = false
@@ -252,7 +252,7 @@ private struct RunShareEditorView: View {
                         RunShareCanvas(
                             record: record,
                             photo: photo,
-                            theme: selectedTheme,
+                            layout: selectedLayout,
                             showsCharacterSticker: showsCharacterSticker
                         )
                         .aspectRatio(9.0 / 16.0, contentMode: .fit)
@@ -308,8 +308,8 @@ private struct RunShareEditorView: View {
             .pickerStyle(.segmented)
             .padding(.horizontal, 18)
 
-            if selectedTab == .theme {
-                themeOptions
+            if selectedTab == .layout {
+                layoutOptions
             } else {
                 stickerOptions
             }
@@ -335,30 +335,30 @@ private struct RunShareEditorView: View {
         .background(Color(red: 0.08, green: 0.08, blue: 0.08))
     }
 
-    private var themeOptions: some View {
+    private var layoutOptions: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
-                ForEach(RunShareTheme.allCases) { theme in
+                ForEach(RunShareLayout.allCases) { layout in
                     Button {
-                        selectedTheme = theme
+                        selectedLayout = layout
                     } label: {
                         VStack(spacing: 8) {
                             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(theme.background)
+                                .fill(Color.black.opacity(0.82))
                                 .frame(width: 86, height: 86)
                                 .overlay {
-                                    Text("5.20")
-                                        .font(AppTheme.Typography.font(size: 16, weight: .black))
-                                        .foregroundStyle(theme.foreground)
+                                    Image(systemName: layout.systemImage)
+                                        .font(.system(size: 24, weight: .semibold))
+                                        .foregroundStyle(.white)
                                 }
                                 .overlay {
                                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                                         .stroke(
-                                            selectedTheme == theme ? AppTheme.Colors.primary : Color.clear,
+                                            selectedLayout == layout ? AppTheme.Colors.primary : Color.clear,
                                             lineWidth: 2
                                         )
                                 }
-                            Text(theme.title)
+                            Text(layout.title)
                                 .font(AppTheme.Typography.font(size: 12, weight: .medium))
                                 .foregroundStyle(.white.opacity(0.75))
                         }
@@ -431,7 +431,7 @@ private struct RunShareEditorView: View {
         let canvas = RunShareCanvas(
             record: record,
             photo: photo,
-            theme: selectedTheme,
+            layout: selectedLayout,
             showsCharacterSticker: showsCharacterSticker
         )
         let renderer = ImageRenderer(content: canvas.frame(width: 1080, height: 1920))
@@ -443,12 +443,12 @@ private struct RunShareEditorView: View {
 private struct RunShareCanvas: View {
     let record: RunningRecord
     let photo: UIImage
-    let theme: RunShareTheme
+    let layout: RunShareLayout
     let showsCharacterSticker: Bool
 
     var body: some View {
         GeometryReader { geometry in
-            ZStack(alignment: .topLeading) {
+            ZStack {
                 Image(uiImage: photo)
                     .resizable()
                     .scaledToFill()
@@ -461,48 +461,7 @@ private struct RunShareCanvas: View {
                     endPoint: .bottom
                 )
 
-                theme.tint.opacity(0.16)
-
-                VStack(alignment: .leading, spacing: 0) {
-                    HStack(alignment: .top) {
-                        Text("개인 최고 기록")
-                            .font(AppTheme.Typography.font(size: 19, weight: .bold))
-                            .foregroundStyle(theme.foreground)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 9)
-                            .background(theme.accent)
-                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-
-                        Spacer()
-
-                        Text("\(record.estimatedCalories)\nKCAL")
-                            .font(AppTheme.Typography.font(size: 15, weight: .bold))
-                            .multilineTextAlignment(.center)
-                            .foregroundStyle(theme.foreground)
-                            .frame(width: 72, height: 72)
-                            .overlay {
-                                Circle().stroke(theme.foreground, lineWidth: 2)
-                            }
-                    }
-
-                    Spacer()
-
-                    Text(record.distanceKilometers.formatted(.number.precision(.fractionLength(2))))
-                        .font(AppTheme.Typography.font(size: 66, weight: .black))
-                        .foregroundStyle(theme.foreground)
-                    Text("KILOMETERS")
-                        .font(AppTheme.Typography.font(size: 18, weight: .bold))
-                        .tracking(2)
-                        .foregroundStyle(theme.foreground.opacity(0.9))
-
-                    HStack(spacing: 28) {
-                        shareMetric(title: "TIME", value: RunningMetricFormatter.duration(record.elapsedTime))
-                        shareMetric(title: "PACE", value: RunningMetricFormatter.pace(record.averagePaceSecondsPerKilometer))
-                        shareMetric(title: "KCAL", value: "\(record.estimatedCalories)")
-                    }
-                    .padding(.top, 22)
-                }
-                .padding(30)
+                shareContent(in: geometry.size)
 
                 if showsCharacterSticker {
                     Image("character_no_bg")
@@ -511,14 +470,87 @@ private struct RunShareCanvas: View {
                         .frame(width: geometry.size.width * 0.32)
                         .rotationEffect(.degrees(10))
                         .position(
-                            x: geometry.size.width * 0.82,
-                            y: geometry.size.height * 0.72
+                            x: geometry.size.width * 0.78,
+                            y: geometry.size.height * 0.68
                         )
+                }
+
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Image("runpamine_share_logo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: geometry.size.width * 0.34)
+                            .shadow(color: .black.opacity(0.35), radius: 5, y: 2)
+                            .padding(.trailing, 24)
+                            .padding(.bottom, 24)
+                    }
                 }
             }
         }
         .aspectRatio(9.0 / 16.0, contentMode: .fit)
-        .background(theme.background)
+        .background(Color.black)
+    }
+
+    @ViewBuilder
+    private func shareContent(in size: CGSize) -> some View {
+        switch layout {
+        case .distance:
+            VStack(alignment: .leading, spacing: 0) {
+                Spacer()
+                distanceContent
+            }
+            .padding(30)
+        case .current:
+            VStack(alignment: .leading, spacing: 0) {
+                Spacer()
+                currentLayoutContent
+            }
+            .padding(30)
+        case .routeDistance:
+            VStack(alignment: .leading, spacing: 0) {
+                RunShareRouteMap(route: record.route)
+                    .frame(height: size.height * 0.42)
+                Spacer()
+                distanceContent
+            }
+            .padding(30)
+        case .routeCurrent:
+            VStack(alignment: .leading, spacing: 0) {
+                RunShareRouteMap(route: record.route)
+                    .frame(height: size.height * 0.38)
+                Spacer()
+                currentLayoutContent
+            }
+            .padding(30)
+        }
+    }
+
+    private var distanceContent: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(record.distanceKilometers.formatted(.number.precision(.fractionLength(2))))
+                .font(AppTheme.Typography.font(size: 66, weight: .black))
+                .foregroundStyle(.white)
+            Text("KILOMETERS")
+                .font(AppTheme.Typography.font(size: 18, weight: .bold))
+                .tracking(2)
+                .foregroundStyle(.white.opacity(0.9))
+        }
+    }
+
+    private var currentLayoutContent: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            distanceContent
+
+            HStack(spacing: 28) {
+                shareMetric(title: "TIME", value: RunningMetricFormatter.duration(record.elapsedTime))
+                shareMetric(title: "PACE", value: RunningMetricFormatter.pace(record.averagePaceSecondsPerKilometer))
+                shareMetric(title: "KCAL", value: "\(record.estimatedCalories)")
+            }
+            .padding(.top, 22)
+        }
     }
 
     private func shareMetric(title: String, value: String) -> some View {
@@ -526,71 +558,111 @@ private struct RunShareCanvas: View {
             Text(title)
                 .font(AppTheme.Typography.font(size: 12, weight: .medium))
                 .tracking(1)
-                .foregroundStyle(theme.foreground.opacity(0.7))
+                .foregroundStyle(.white.opacity(0.7))
             Text(value)
                 .font(AppTheme.Typography.font(size: 21, weight: .bold))
-                .foregroundStyle(theme.foreground)
+                .foregroundStyle(.white)
         }
     }
 }
 
+private struct RunShareRouteMap: View {
+    let route: [RunningCoordinate]
+
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(Color.black.opacity(0.3))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .stroke(.white.opacity(0.22), lineWidth: 1)
+                    }
+
+                if route.count >= 2 {
+                    routePath(in: geometry.size)
+                        .stroke(AppTheme.Colors.primary, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
+                        .shadow(color: .black.opacity(0.35), radius: 4)
+                } else {
+                    VStack(spacing: 8) {
+                        Image(systemName: "map")
+                            .font(.system(size: 24, weight: .semibold))
+                        Text("러닝 루트 없음")
+                            .font(AppTheme.Typography.font(size: 13, weight: .bold))
+                    }
+                    .foregroundStyle(.white.opacity(0.72))
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        }
+    }
+
+    private func routePath(in size: CGSize) -> Path {
+        let latitudes = route.map(\.latitude)
+        let longitudes = route.map(\.longitude)
+        let minLatitude = latitudes.min() ?? 0
+        let maxLatitude = latitudes.max() ?? 1
+        let minLongitude = longitudes.min() ?? 0
+        let maxLongitude = longitudes.max() ?? 1
+        let latitudeSpan = max(maxLatitude - minLatitude, 0.000001)
+        let longitudeSpan = max(maxLongitude - minLongitude, 0.000001)
+        let inset: CGFloat = 24
+        let drawableSize = CGSize(width: max(1, size.width - inset * 2), height: max(1, size.height - inset * 2))
+
+        var path = Path()
+        for (index, coordinate) in route.enumerated() {
+            let point = CGPoint(
+                x: inset + ((coordinate.longitude - minLongitude) / longitudeSpan) * drawableSize.width,
+                y: inset + (1 - ((coordinate.latitude - minLatitude) / latitudeSpan)) * drawableSize.height
+            )
+
+            if index == 0 {
+                path.move(to: point)
+            } else {
+                path.addLine(to: point)
+            }
+        }
+        return path
+    }
+}
+
 private enum RunShareEditorTab: String, CaseIterable, Identifiable {
-    case theme
+    case layout
     case sticker
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
-        case .theme: "러닝 데이터 테마"
+        case .layout: "러닝 데이터 레이아웃"
         case .sticker: "스티커"
         }
     }
 }
 
-private enum RunShareTheme: String, CaseIterable, Identifiable {
-    case midnight
-    case ocean
-    case paper
+private enum RunShareLayout: String, CaseIterable, Identifiable {
+    case distance
+    case current
+    case routeDistance
+    case routeCurrent
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
-        case .midnight: "기본"
-        case .ocean: "블루"
-        case .paper: "화이트"
+        case .distance: "러닝 거리"
+        case .current: "현재 레이아웃"
+        case .routeDistance: "러닝 루트 + 러닝 거리"
+        case .routeCurrent: "러닝 루트 + 현재 레이아웃"
         }
     }
 
-    var background: Color {
+    var systemImage: String {
         switch self {
-        case .midnight: Color(red: 0.06, green: 0.06, blue: 0.06)
-        case .ocean: Color(red: 0.02, green: 0.19, blue: 0.45)
-        case .paper: Color.white
-        }
-    }
-
-    var foreground: Color {
-        switch self {
-        case .midnight, .ocean: .white
-        case .paper: AppTheme.Colors.textPrimary
-        }
-    }
-
-    var accent: Color {
-        switch self {
-        case .midnight: AppTheme.Colors.primary
-        case .ocean: Color(red: 0.30, green: 0.70, blue: 1.0)
-        case .paper: AppTheme.Colors.primary
-        }
-    }
-
-    var tint: Color {
-        switch self {
-        case .midnight: .black
-        case .ocean: AppTheme.Colors.primary
-        case .paper: .white
+        case .distance: "textformat.size.larger"
+        case .current: "rectangle.3.group"
+        case .routeDistance: "map"
+        case .routeCurrent: "map.fill"
         }
     }
 }
