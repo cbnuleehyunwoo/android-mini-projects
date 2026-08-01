@@ -10,6 +10,18 @@ private enum RunShareCanvasMetrics {
     static let aspectRatio: CGFloat = 9.0 / 16.15
 }
 
+private enum RunShareScreenInsets {
+    @MainActor
+    static var top: CGFloat {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .filter { $0.activationState == .foregroundActive }
+            .flatMap(\.windows)
+            .first(where: \.isKeyWindow)?
+            .safeAreaInsets.top ?? 0
+    }
+}
+
 struct RunShareCameraView: View {
     let record: RunningRecord
 
@@ -17,7 +29,10 @@ struct RunShareCameraView: View {
     @StateObject private var cameraController = RunShareCameraController()
     @State private var selectedImage: UIImage?
     @State private var photoItem: PhotosPickerItem?
+    @State private var isShowingPhotoPicker = false
     @State private var isPresentingEditor = false
+    @State private var editorPresentationTask: Task<Void, Never>?
+    @State private var editorTopSafeAreaInset: CGFloat = 0
     @State private var shouldReturnToRecord = false
     @State private var isLoadingPhoto = false
     @State private var errorMessage: String?
@@ -42,6 +57,7 @@ struct RunShareCameraView: View {
         }
         .simultaneousGesture(cameraZoomGesture)
         .onAppear {
+            cacheEditorTopSafeAreaInset()
             cameraController.start()
         }
         .onDisappear {
@@ -50,6 +66,7 @@ struct RunShareCameraView: View {
         }
         .onChange(of: cameraController.capturedImage) { _, image in
             guard let image else { return }
+            cacheEditorTopSafeAreaInset()
             selectedImage = image
             cameraController.consumeCapturedImage()
             isPresentingEditor = true
@@ -57,12 +74,18 @@ struct RunShareCameraView: View {
         .onChange(of: photoItem) { _, item in
             loadPhoto(item)
         }
+        .onChange(of: isShowingPhotoPicker) { _, isPresented in
+            guard !isPresented else { return }
+            scheduleEditorPresentationIfReady()
+        }
         .onChange(of: isPresentingEditor) { _, isPresented in
             if !isPresented {
                 cameraController.start()
             }
         }
         .fullScreenCover(isPresented: $isPresentingEditor, onDismiss: {
+            editorPresentationTask?.cancel()
+            editorPresentationTask = nil
             selectedImage = nil
             if shouldReturnToRecord {
                 shouldReturnToRecord = false
@@ -73,6 +96,7 @@ struct RunShareCameraView: View {
                 RunShareEditorView(
                     record: record,
                     photo: selectedImage,
+                    topSafeAreaInset: editorTopSafeAreaInset,
                     onSaved: {
                         shouldReturnToRecord = true
                         isPresentingEditor = false
@@ -161,15 +185,20 @@ struct RunShareCameraView: View {
             }
 
             HStack(alignment: .center, spacing: 0) {
-                PhotosPicker(
-                    selection: $photoItem,
-                    matching: .images,
-                    photoLibrary: .shared()
-                ) {
+                Button {
+                    cacheEditorTopSafeAreaInset()
+                    isShowingPhotoPicker = true
+                } label: {
                     cameraControlLabel(title: "앨범", systemImage: "photo.on.rectangle")
                 }
                 .buttonStyle(.plain)
                 .disabled(isLoadingPhoto)
+                .photosPicker(
+                    isPresented: $isShowingPhotoPicker,
+                    selection: $photoItem,
+                    matching: .images,
+                    photoLibrary: .shared()
+                )
 
                 Spacer()
 
@@ -232,11 +261,7 @@ struct RunShareCameraView: View {
                 selectedImage = image
                 photoItem = nil
                 isLoadingPhoto = false
-
-                // Let PhotosPicker finish dismissing before presenting the editor cover.
-                DispatchQueue.main.async {
-                    isPresentingEditor = true
-                }
+                scheduleEditorPresentationIfReady()
             } catch {
                 photoItem = nil
                 isLoadingPhoto = false
@@ -244,11 +269,35 @@ struct RunShareCameraView: View {
             }
         }
     }
+
+    @MainActor
+    private func scheduleEditorPresentationIfReady() {
+        guard selectedImage != nil, !isShowingPhotoPicker else { return }
+
+        editorPresentationTask?.cancel()
+        editorPresentationTask = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(350))
+            guard !Task.isCancelled,
+                  selectedImage != nil,
+                  !isShowingPhotoPicker else { return }
+
+            isPresentingEditor = true
+            editorPresentationTask = nil
+        }
+    }
+
+    @MainActor
+    private func cacheEditorTopSafeAreaInset() {
+        let inset = RunShareScreenInsets.top
+        guard inset > 0 else { return }
+        editorTopSafeAreaInset = inset
+    }
 }
 
 private struct RunShareEditorView: View {
     let record: RunningRecord
     let photo: UIImage
+    let topSafeAreaInset: CGFloat
     let onSaved: () -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -295,12 +344,13 @@ private struct RunShareEditorView: View {
                 }
                 .padding(.bottom, 20)
             }
-            .safeAreaPadding(.top)
+            .padding(.top, topSafeAreaInset)
 
             editorToolbar
-                .safeAreaPadding(.top)
+                .padding(.top, topSafeAreaInset)
                 .zIndex(30)
         }
+        .ignoresSafeArea(.container, edges: .top)
         .sheet(isPresented: $isShowingShareSheet) {
             if let renderedImage {
                 RunShareActivityView(image: renderedImage)
