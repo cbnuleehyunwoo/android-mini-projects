@@ -260,6 +260,7 @@ private struct RunShareEditorView: View {
                             stickerTransforms: $stickerTransforms,
                             selectedSticker: $selectedSticker,
                             showsEditingControls: true,
+                            onDeleteSticker: removeSticker,
                             onSizeChange: { canvasSize = $0 }
                         )
                         .aspectRatio(9.0 / 16.0, contentMode: .fit)
@@ -316,11 +317,6 @@ private struct RunShareEditorView: View {
                 stickerOptions
             }
 
-            Text("러닝 데이터·경로·스티커는 드래그해 이동하고, 스티커는 꼭지점 핸들로 크기를, 상단 핸들로 각도를 조절할 수 있어요.")
-                .font(AppTheme.Typography.font(size: 12, weight: .medium))
-                .foregroundStyle(.white.opacity(0.58))
-                .padding(.horizontal, 18)
-
             Button(action: share) {
                 Text("공유하기")
                     .font(AppTheme.Typography.font(size: 17, weight: .bold))
@@ -348,9 +344,15 @@ private struct RunShareEditorView: View {
                                 .fill(Color.black.opacity(0.82))
                                 .frame(width: 86, height: 86)
                                 .overlay {
-                                    Image(systemName: layout.systemImage)
-                                        .font(.system(size: 24, weight: .semibold))
-                                        .foregroundStyle(.white)
+                                    if let iconText = layout.iconText {
+                                        Text(iconText)
+                                            .font(AppTheme.Typography.font(size: 22, weight: .black))
+                                            .foregroundStyle(.white)
+                                    } else {
+                                        Image(systemName: layout.systemImage)
+                                            .font(.system(size: 24, weight: .semibold))
+                                            .foregroundStyle(.white)
+                                    }
                                 }
                                 .overlay {
                                     RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -378,8 +380,7 @@ private struct RunShareEditorView: View {
                     Button {
                         if selectedStickers.contains(sticker) {
                             if selectedSticker == sticker {
-                                selectedStickers.remove(sticker)
-                                selectedSticker = nil
+                                removeSticker(sticker)
                             } else {
                                 selectedSticker = sticker
                             }
@@ -434,6 +435,7 @@ private struct RunShareEditorView: View {
             stickerTransforms: .constant(stickerTransforms),
             selectedSticker: .constant(selectedSticker),
             showsEditingControls: false,
+            onDeleteSticker: nil,
             onSizeChange: nil
         )
         let logicalSize = canvasSize.width > 0 ? canvasSize : CGSize(width: 360, height: 640)
@@ -454,6 +456,13 @@ private struct RunShareEditorView: View {
             image.draw(in: CGRect(origin: .zero, size: image.size))
         }
     }
+
+    private func removeSticker(_ sticker: RunShareSticker) {
+        selectedStickers.remove(sticker)
+        if selectedSticker == sticker {
+            selectedSticker = nil
+        }
+    }
 }
 
 private struct RunShareCanvas: View {
@@ -466,6 +475,7 @@ private struct RunShareCanvas: View {
     @Binding var stickerTransforms: [RunShareSticker: RunShareStickerTransform]
     @Binding var selectedSticker: RunShareSticker?
     let showsEditingControls: Bool
+    let onDeleteSticker: ((RunShareSticker) -> Void)?
     let onSizeChange: ((CGSize) -> Void)?
     @GestureState private var dataDragTranslation: CGSize = .zero
     @GestureState private var routeDragTranslation: CGSize = .zero
@@ -520,7 +530,7 @@ private struct RunShareCanvas: View {
                                 }
                         )
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
 
                 if layout.includesRoute {
                     ZStack(alignment: .top) {
@@ -565,7 +575,8 @@ private struct RunShareCanvas: View {
                         transform: stickerTransformBinding(for: sticker),
                         isSelected: selectedSticker == sticker,
                         showsEditingControls: showsEditingControls,
-                        onSelect: { selectedSticker = sticker }
+                        onSelect: { selectedSticker = sticker },
+                        onDelete: { onDeleteSticker?(sticker) }
                     )
                     .position(
                         x: geometry.size.width * sticker.defaultX,
@@ -713,6 +724,7 @@ private struct RunShareStickerView: View {
     let isSelected: Bool
     let showsEditingControls: Bool
     let onSelect: () -> Void
+    let onDelete: () -> Void
     @GestureState private var dragTranslation: CGSize = .zero
     @GestureState private var resizeState: RunShareStickerResizeState?
     @GestureState private var rotationDeltaDegrees: Double = 0
@@ -746,6 +758,9 @@ private struct RunShareStickerView: View {
             .overlay(alignment: .top) {
                 rotationHandle
             }
+            .overlay(alignment: .topTrailing) {
+                deleteButton
+            }
             .rotationEffect(.degrees(displayedRotationDegrees))
             .offset(
                 x: transform.offset.width + dragTranslation.width,
@@ -762,6 +777,31 @@ private struct RunShareStickerView: View {
 
     private var displayedRotationDegrees: Double {
         transform.rotationDegrees + rotationDeltaDegrees
+    }
+
+    @ViewBuilder
+    private var deleteButton: some View {
+        if showsEditingControls && isSelected {
+            Button(action: onDelete) {
+                ZStack {
+                    Color.clear
+                        .frame(width: 36, height: 36)
+
+                    Circle()
+                        .fill(Color(red: 0.92, green: 0.20, blue: 0.24))
+                        .frame(width: 22, height: 22)
+                        .overlay {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(.white)
+                        }
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .offset(x: 36, y: -36)
+            .accessibilityLabel("스티커 삭제")
+        }
     }
 
     @ViewBuilder
@@ -976,15 +1016,22 @@ private enum RunShareLayout: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .distance: "러닝 거리"
-        case .current: "현재 레이아웃"
-        case .routeDistance: "러닝 루트 + 러닝 거리"
-        case .routeCurrent: "러닝 루트 + 현재 레이아웃"
+        case .current: "러닝 데이터"
+        case .routeDistance: "러닝 거리 + 러닝 루트"
+        case .routeCurrent: "러닝 데이터 + 러닝 루트"
+        }
+    }
+
+    var iconText: String? {
+        switch self {
+        case .distance: "KM"
+        case .current, .routeDistance, .routeCurrent: nil
         }
     }
 
     var systemImage: String {
         switch self {
-        case .distance: "textformat.size.larger"
+        case .distance: "ruler"
         case .current: "rectangle.3.group"
         case .routeDistance: "map"
         case .routeCurrent: "map.fill"
