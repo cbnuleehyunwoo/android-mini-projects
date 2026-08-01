@@ -235,7 +235,9 @@ private struct RunShareEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var selectedLayout: RunShareLayout = .current
     @State private var selectedTab: RunShareEditorTab = .layout
-    @State private var showsCharacterSticker = false
+    @State private var selectedStickers: Set<RunShareSticker> = []
+    @State private var dataOffset: CGSize = .zero
+    @State private var stickerOffsets: [RunShareSticker: CGSize] = [:]
     @State private var renderedImage: UIImage?
     @State private var isShowingShareSheet = false
     @State private var saveMessage: String?
@@ -253,7 +255,9 @@ private struct RunShareEditorView: View {
                             record: record,
                             photo: photo,
                             layout: selectedLayout,
-                            showsCharacterSticker: showsCharacterSticker
+                            visibleStickers: selectedStickers,
+                            dataOffset: $dataOffset,
+                            stickerOffsets: $stickerOffsets
                         )
                         .aspectRatio(9.0 / 16.0, contentMode: .fit)
                         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
@@ -320,6 +324,11 @@ private struct RunShareEditorView: View {
                     .foregroundStyle(.white.opacity(0.75))
             }
 
+            Text("러닝 데이터와 스티커는 카드에서 드래그해 이동할 수 있어요.")
+                .font(AppTheme.Typography.font(size: 12, weight: .medium))
+                .foregroundStyle(.white.opacity(0.58))
+                .padding(.horizontal, 18)
+
             Button(action: share) {
                 Text("공유하기")
                     .font(AppTheme.Typography.font(size: 17, weight: .bold))
@@ -371,35 +380,41 @@ private struct RunShareEditorView: View {
     }
 
     private var stickerOptions: some View {
-        HStack {
-            Button {
-                showsCharacterSticker.toggle()
-            } label: {
-                VStack(spacing: 8) {
-                    Image("character_no_bg")
-                        .resizable()
-                        .scaledToFit()
-                        .padding(8)
-                        .frame(width: 86, height: 86)
-                        .background(Color.white.opacity(0.08))
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .stroke(
-                                    showsCharacterSticker ? AppTheme.Colors.primary : Color.clear,
-                                    lineWidth: 2
-                                )
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 12) {
+                ForEach(RunShareSticker.allCases) { sticker in
+                    Button {
+                        if selectedStickers.contains(sticker) {
+                            selectedStickers.remove(sticker)
+                        } else {
+                            selectedStickers.insert(sticker)
                         }
-                    Text("캐릭터")
-                        .font(AppTheme.Typography.font(size: 12, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.75))
+                    } label: {
+                        VStack(spacing: 8) {
+                            Image(sticker.assetName)
+                                .resizable()
+                                .scaledToFit()
+                                .padding(8)
+                                .frame(width: 86, height: 86)
+                                .background(Color.white.opacity(0.08))
+                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        .stroke(
+                                            selectedStickers.contains(sticker) ? AppTheme.Colors.primary : Color.clear,
+                                            lineWidth: 2
+                                        )
+                                }
+                            Text(sticker.title)
+                                .font(AppTheme.Typography.font(size: 12, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.75))
+                        }
+                    }
+                    .buttonStyle(.plain)
                 }
             }
-            .buttonStyle(.plain)
-
-            Spacer()
+            .padding(.horizontal, 18)
         }
-        .padding(.horizontal, 18)
     }
 
     @MainActor
@@ -432,7 +447,9 @@ private struct RunShareEditorView: View {
             record: record,
             photo: photo,
             layout: selectedLayout,
-            showsCharacterSticker: showsCharacterSticker
+            visibleStickers: selectedStickers,
+            dataOffset: .constant(dataOffset),
+            stickerOffsets: .constant(stickerOffsets)
         )
         let renderer = ImageRenderer(content: canvas.frame(width: 1080, height: 1920))
         renderer.scale = 1
@@ -444,7 +461,10 @@ private struct RunShareCanvas: View {
     let record: RunningRecord
     let photo: UIImage
     let layout: RunShareLayout
-    let showsCharacterSticker: Bool
+    let visibleStickers: Set<RunShareSticker>
+    @Binding var dataOffset: CGSize
+    @Binding var stickerOffsets: [RunShareSticker: CGSize]
+    @GestureState private var dataDragTranslation: CGSize = .zero
 
     var body: some View {
         GeometryReader { geometry in
@@ -462,17 +482,34 @@ private struct RunShareCanvas: View {
                 )
 
                 shareContent(in: geometry.size)
+                    .offset(
+                        x: dataOffset.width + dataDragTranslation.width,
+                        y: dataOffset.height + dataDragTranslation.height
+                    )
+                    .highPriorityGesture(
+                        DragGesture(minimumDistance: 4)
+                            .updating($dataDragTranslation) { value, state, _ in
+                                state = value.translation
+                            }
+                            .onEnded { value in
+                                dataOffset = CGSize(
+                                    width: dataOffset.width + value.translation.width,
+                                    height: dataOffset.height + value.translation.height
+                                )
+                            }
+                    )
 
-                if showsCharacterSticker {
-                    Image("character_no_bg")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: geometry.size.width * 0.32)
-                        .rotationEffect(.degrees(10))
-                        .position(
-                            x: geometry.size.width * 0.78,
-                            y: geometry.size.height * 0.68
-                        )
+                ForEach(RunShareSticker.allCases.filter(visibleStickers.contains)) { sticker in
+                    RunShareStickerView(
+                        sticker: sticker,
+                        width: geometry.size.width * sticker.widthRatio,
+                        offset: stickerOffsetBinding(for: sticker)
+                    )
+                    .rotationEffect(.degrees(sticker.rotationDegrees))
+                    .position(
+                        x: geometry.size.width * sticker.defaultX,
+                        y: geometry.size.height * sticker.defaultY
+                    )
                 }
 
                 VStack {
@@ -484,14 +521,21 @@ private struct RunShareCanvas: View {
                             .scaledToFit()
                             .frame(width: geometry.size.width * 0.34)
                             .shadow(color: .black.opacity(0.35), radius: 5, y: 2)
-                            .padding(.trailing, 24)
-                            .padding(.bottom, 24)
+                            .padding(.trailing, 12)
+                            .padding(.bottom, 12)
                     }
                 }
             }
         }
         .aspectRatio(9.0 / 16.0, contentMode: .fit)
         .background(Color.black)
+    }
+
+    private func stickerOffsetBinding(for sticker: RunShareSticker) -> Binding<CGSize> {
+        Binding(
+            get: { stickerOffsets[sticker] ?? .zero },
+            set: { stickerOffsets[sticker] = $0 }
+        )
     }
 
     @ViewBuilder
@@ -572,17 +616,9 @@ private struct RunShareRouteMap: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color.black.opacity(0.3))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .stroke(.white.opacity(0.22), lineWidth: 1)
-                    }
-
                 if route.count >= 2 {
                     routePath(in: geometry.size)
-                        .stroke(AppTheme.Colors.primary, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
-                        .shadow(color: .black.opacity(0.35), radius: 4)
+                        .stroke(.white, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
                 } else {
                     VStack(spacing: 8) {
                         Image(systemName: "map")
@@ -593,7 +629,6 @@ private struct RunShareRouteMap: View {
                     .foregroundStyle(.white.opacity(0.72))
                 }
             }
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
     }
 
@@ -623,6 +658,37 @@ private struct RunShareRouteMap: View {
             }
         }
         return path
+    }
+}
+
+private struct RunShareStickerView: View {
+    let sticker: RunShareSticker
+    let width: CGFloat
+    @Binding var offset: CGSize
+    @GestureState private var dragTranslation: CGSize = .zero
+
+    var body: some View {
+        Image(sticker.assetName)
+            .resizable()
+            .scaledToFit()
+            .frame(width: width)
+            .offset(
+                x: offset.width + dragTranslation.width,
+                y: offset.height + dragTranslation.height
+            )
+            .contentShape(Rectangle())
+            .highPriorityGesture(
+                DragGesture(minimumDistance: 4)
+                    .updating($dragTranslation) { value, state, _ in
+                        state = value.translation
+                    }
+                    .onEnded { value in
+                        offset = CGSize(
+                            width: offset.width + value.translation.width,
+                            height: offset.height + value.translation.height
+                        )
+                    }
+            )
     }
 }
 
@@ -663,6 +729,55 @@ private enum RunShareLayout: String, CaseIterable, Identifiable {
         case .current: "rectangle.3.group"
         case .routeDistance: "map"
         case .routeCurrent: "map.fill"
+        }
+    }
+}
+
+private enum RunShareSticker: String, CaseIterable, Hashable, Identifiable {
+    case pamin
+    case cheetahPamin
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .pamin: "파민"
+        case .cheetahPamin: "치타파민"
+        }
+    }
+
+    var assetName: String {
+        switch self {
+        case .pamin: "pamin_sticker"
+        case .cheetahPamin: "cheetah_pamin_sticker"
+        }
+    }
+
+    var widthRatio: CGFloat {
+        switch self {
+        case .pamin: 0.24
+        case .cheetahPamin: 0.44
+        }
+    }
+
+    var defaultX: CGFloat {
+        switch self {
+        case .pamin: 0.84
+        case .cheetahPamin: 0.76
+        }
+    }
+
+    var defaultY: CGFloat {
+        switch self {
+        case .pamin: 0.77
+        case .cheetahPamin: 0.75
+        }
+    }
+
+    var rotationDegrees: Double {
+        switch self {
+        case .pamin: 8
+        case .cheetahPamin: 0
         }
     }
 }
