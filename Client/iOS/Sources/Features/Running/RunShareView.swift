@@ -504,7 +504,10 @@ private struct RunShareCanvas: View {
                             y: dataOffset.height + dataDragTranslation.height
                         )
                         .highPriorityGesture(
-                            DragGesture(minimumDistance: 4)
+                            DragGesture(
+                                minimumDistance: 4,
+                                coordinateSpace: .named(RunShareCoordinateSpace.canvas)
+                            )
                                 .updating($dataDragTranslation) { value, state, _ in
                                     state = value.translation
                                 }
@@ -531,7 +534,10 @@ private struct RunShareCanvas: View {
                                 y: routeOffset.height + routeDragTranslation.height
                             )
                             .highPriorityGesture(
-                                DragGesture(minimumDistance: 4)
+                                DragGesture(
+                                    minimumDistance: 4,
+                                    coordinateSpace: .named(RunShareCoordinateSpace.canvas)
+                                )
                                     .updating($routeDragTranslation) { value, state, _ in
                                         state = value.translation
                                     }
@@ -583,6 +589,7 @@ private struct RunShareCanvas: View {
         }
         .aspectRatio(9.0 / 16.0, contentMode: .fit)
         .background(Color.black)
+        .coordinateSpace(name: RunShareCoordinateSpace.canvas)
     }
 
     private func stickerTransformBinding(for sticker: RunShareSticker) -> Binding<RunShareStickerTransform> {
@@ -714,7 +721,6 @@ private struct RunShareStickerView: View {
             .scaledToFit()
             .frame(width: width * displayedScale)
             .contentShape(Rectangle())
-            .onTapGesture(perform: onSelect)
             .highPriorityGesture(moveGesture)
             .overlay {
                 if showsEditingControls && isSelected {
@@ -765,8 +771,8 @@ private struct RunShareStickerView: View {
             }
             .contentShape(Rectangle())
             .offset(
-                x: corner.horizontalDirection * 7,
-                y: corner.verticalDirection * 7
+                x: corner.horizontalDirection * 15,
+                y: corner.verticalDirection * 15
             )
             .highPriorityGesture(resizeGesture(for: corner))
             .accessibilityLabel("스티커 크기 조절")
@@ -774,7 +780,10 @@ private struct RunShareStickerView: View {
     }
 
     private var moveGesture: some Gesture {
-        DragGesture(minimumDistance: 4)
+        DragGesture(
+            minimumDistance: 0,
+            coordinateSpace: .named(RunShareCoordinateSpace.canvas)
+        )
             .updating($dragTranslation) { value, state, _ in
                 state = value.translation
             }
@@ -792,7 +801,10 @@ private struct RunShareStickerView: View {
     }
 
     private func resizeGesture(for corner: RunShareStickerResizeCorner) -> some Gesture {
-        DragGesture(minimumDistance: 0)
+        DragGesture(
+            minimumDistance: 0,
+            coordinateSpace: .named(RunShareCoordinateSpace.canvas)
+        )
             .updating($resizeState) { value, state, _ in
                 state = RunShareStickerResizeState(
                     corner: corner,
@@ -849,6 +861,10 @@ private enum RunShareStickerResizeCorner {
         case .bottomLeading, .bottomTrailing: 1
         }
     }
+}
+
+private enum RunShareCoordinateSpace {
+    static let canvas = "runShareCanvas"
 }
 
 private enum RunShareEditorTab: String, CaseIterable, Identifiable {
