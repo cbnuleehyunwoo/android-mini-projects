@@ -1,7 +1,6 @@
 import AVFoundation
 import ImageIO
 import MapKit
-import Photos
 import PhotosUI
 import SwiftUI
 import UIKit
@@ -60,11 +59,7 @@ struct RunShareCameraView: View {
             if let selectedImage {
                 RunShareEditorView(
                     record: record,
-                    photo: selectedImage,
-                    onRetake: {
-                        isPresentingEditor = false
-                        cameraController.start()
-                    }
+                    photo: selectedImage
                 )
             }
         }
@@ -233,7 +228,6 @@ struct RunShareCameraView: View {
 private struct RunShareEditorView: View {
     let record: RunningRecord
     let photo: UIImage
-    let onRetake: () -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var selectedLayout: RunShareLayout = .current
@@ -246,7 +240,6 @@ private struct RunShareEditorView: View {
     @State private var canvasSize = CGSize(width: 360, height: 640)
     @State private var renderedImage: UIImage?
     @State private var isShowingShareSheet = false
-    @State private var saveMessage: String?
 
     var body: some View {
         ZStack {
@@ -288,28 +281,22 @@ private struct RunShareEditorView: View {
     }
 
     private var editorToolbar: some View {
-        HStack(spacing: 16) {
+        HStack {
             Button(action: dismiss.callAsFunction) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.system(size: 20, weight: .semibold))
                     .foregroundStyle(.white)
-                    .frame(width: 36, height: 36)
+                    .frame(width: 56, height: 56)
+                    .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
             .accessibilityLabel("닫기")
 
             Spacer()
-
-            Button("다시 찍기", action: onRetake)
-                .font(AppTheme.Typography.font(size: 15, weight: .bold))
-                .foregroundStyle(.white)
-
-            Button("저장", action: saveToPhotos)
-                .font(AppTheme.Typography.font(size: 15, weight: .bold))
-                .foregroundStyle(.white)
         }
-        .padding(.horizontal, 18)
-        .padding(.top, 8)
-        .frame(height: 58)
+        .padding(.horizontal, 10)
+        .padding(.top, 14)
+        .padding(.bottom, 8)
         .safeAreaPadding(.top)
     }
 
@@ -329,13 +316,7 @@ private struct RunShareEditorView: View {
                 stickerOptions
             }
 
-            if let saveMessage {
-                Text(saveMessage)
-                    .font(AppTheme.Typography.font(size: 13, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.75))
-            }
-
-            Text("러닝 데이터·경로·스티커는 드래그해 이동하고, 선택한 스티커는 우하단 핸들로 크기를 조절할 수 있어요.")
+            Text("러닝 데이터·경로·스티커는 드래그해 이동하고, 선택한 스티커는 네 꼭지점 핸들로 크기를 조절할 수 있어요.")
                 .font(AppTheme.Typography.font(size: 12, weight: .medium))
                 .foregroundStyle(.white.opacity(0.58))
                 .padding(.horizontal, 18)
@@ -439,31 +420,6 @@ private struct RunShareEditorView: View {
         guard let image = renderImage() else { return }
         renderedImage = image
         isShowingShareSheet = true
-    }
-
-    @MainActor
-    private func saveToPhotos() {
-        guard let image = renderImage() else {
-            saveMessage = "이미지를 준비하지 못했어요. 다시 시도해주세요."
-            return
-        }
-
-        PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
-            guard status == .authorized || status == .limited else {
-                DispatchQueue.main.async {
-                    saveMessage = "사진 보관함 권한이 필요해요."
-                }
-                return
-            }
-
-            PHPhotoLibrary.shared().performChanges {
-                PHAssetChangeRequest.creationRequestForAsset(from: image)
-            } completionHandler: { saved, _ in
-                DispatchQueue.main.async {
-                    saveMessage = saved ? "사진을 저장했어요." : "사진을 저장하지 못했어요. 다시 시도해주세요."
-                }
-            }
-        }
     }
 
     @MainActor
@@ -750,38 +706,35 @@ private struct RunShareStickerView: View {
     let showsEditingControls: Bool
     let onSelect: () -> Void
     @GestureState private var dragTranslation: CGSize = .zero
-    @GestureState private var resizeTranslation: CGSize = .zero
+    @GestureState private var resizeState: RunShareStickerResizeState?
 
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            Image(sticker.assetName)
-                .resizable()
-                .scaledToFit()
-                .frame(width: width * displayedScale)
-                .contentShape(Rectangle())
-                .overlay {
-                    if showsEditingControls && isSelected {
-                        Rectangle()
-                            .stroke(.white, style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
-                            .allowsHitTesting(false)
-                    }
+        Image(sticker.assetName)
+            .resizable()
+            .scaledToFit()
+            .frame(width: width * displayedScale)
+            .contentShape(Rectangle())
+            .onTapGesture(perform: onSelect)
+            .highPriorityGesture(moveGesture)
+            .overlay {
+                if showsEditingControls && isSelected {
+                    Rectangle()
+                        .stroke(.white, style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
+                        .allowsHitTesting(false)
                 }
-                .onTapGesture(perform: onSelect)
-                .highPriorityGesture(moveGesture)
-
-            if showsEditingControls && isSelected {
-                Circle()
-                    .fill(.white)
-                    .frame(width: 24, height: 24)
-                    .overlay {
-                        Circle()
-                            .stroke(Color.black.opacity(0.5), lineWidth: 1)
-                    }
-                    .contentShape(Circle())
-                    .highPriorityGesture(resizeGesture)
-                    .accessibilityLabel("스티커 크기 조절")
             }
-        }
+            .overlay(alignment: .topLeading) {
+                resizeHandle(for: .topLeading)
+            }
+            .overlay(alignment: .topTrailing) {
+                resizeHandle(for: .topTrailing)
+            }
+            .overlay(alignment: .bottomLeading) {
+                resizeHandle(for: .bottomLeading)
+            }
+            .overlay(alignment: .bottomTrailing) {
+                resizeHandle(for: .bottomTrailing)
+            }
         .offset(
             x: transform.offset.width + dragTranslation.width,
             y: transform.offset.height + dragTranslation.height
@@ -789,17 +742,41 @@ private struct RunShareStickerView: View {
     }
 
     private var displayedScale: CGFloat {
-        let resizeDelta = (resizeTranslation.width + resizeTranslation.height) / max(width * 2, 1)
+        let resizeDelta = resizeState.map {
+            scaleDelta(for: $0.translation, corner: $0.corner)
+        } ?? 0
         return min(max(transform.scale + resizeDelta, 0.4), 2.5)
+    }
+
+    @ViewBuilder
+    private func resizeHandle(for corner: RunShareStickerResizeCorner) -> some View {
+        if showsEditingControls && isSelected {
+            ZStack {
+                Color.clear
+                    .frame(width: 30, height: 30)
+
+                Circle()
+                    .fill(.white)
+                    .frame(width: 14, height: 14)
+                    .overlay {
+                        Circle()
+                            .stroke(Color.black.opacity(0.55), lineWidth: 1)
+                    }
+            }
+            .contentShape(Rectangle())
+            .offset(
+                x: corner.horizontalDirection * 7,
+                y: corner.verticalDirection * 7
+            )
+            .highPriorityGesture(resizeGesture(for: corner))
+            .accessibilityLabel("스티커 크기 조절")
+        }
     }
 
     private var moveGesture: some Gesture {
         DragGesture(minimumDistance: 4)
             .updating($dragTranslation) { value, state, _ in
                 state = value.translation
-            }
-            .onChanged { _ in
-                onSelect()
             }
             .onEnded { value in
                 var updatedTransform = transform
@@ -808,26 +785,70 @@ private struct RunShareStickerView: View {
                     height: updatedTransform.offset.height + value.translation.height
                 )
                 transform = updatedTransform
+                if !isSelected {
+                    onSelect()
+                }
             }
     }
 
-    private var resizeGesture: some Gesture {
+    private func resizeGesture(for corner: RunShareStickerResizeCorner) -> some Gesture {
         DragGesture(minimumDistance: 0)
-            .updating($resizeTranslation) { value, state, _ in
-                state = value.translation
+            .updating($resizeState) { value, state, _ in
+                state = RunShareStickerResizeState(
+                    corner: corner,
+                    translation: value.translation
+                )
             }
             .onEnded { value in
-                let resizeDelta = (value.translation.width + value.translation.height) / max(width * 2, 1)
                 var updatedTransform = transform
-                updatedTransform.scale = min(max(updatedTransform.scale + resizeDelta, 0.4), 2.5)
+                updatedTransform.scale = min(
+                    max(updatedTransform.scale + scaleDelta(for: value.translation, corner: corner), 0.4),
+                    2.5
+                )
                 transform = updatedTransform
             }
+    }
+
+    private func scaleDelta(
+        for translation: CGSize,
+        corner: RunShareStickerResizeCorner
+    ) -> CGFloat {
+        let directionalTranslation =
+            translation.width * corner.horizontalDirection +
+            translation.height * corner.verticalDirection
+        return directionalTranslation / max(width * 2, 1)
     }
 }
 
 private struct RunShareStickerTransform: Equatable {
     var offset: CGSize = .zero
     var scale: CGFloat = 1
+}
+
+private struct RunShareStickerResizeState {
+    let corner: RunShareStickerResizeCorner
+    let translation: CGSize
+}
+
+private enum RunShareStickerResizeCorner {
+    case topLeading
+    case topTrailing
+    case bottomLeading
+    case bottomTrailing
+
+    var horizontalDirection: CGFloat {
+        switch self {
+        case .topLeading, .bottomLeading: -1
+        case .topTrailing, .bottomTrailing: 1
+        }
+    }
+
+    var verticalDirection: CGFloat {
+        switch self {
+        case .topLeading, .topTrailing: -1
+        case .bottomLeading, .bottomTrailing: 1
+        }
+    }
 }
 
 private enum RunShareEditorTab: String, CaseIterable, Identifiable {
