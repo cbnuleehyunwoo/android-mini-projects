@@ -476,7 +476,7 @@ private struct RunShareEditorView: View {
             dataOffset: .constant(dataOffset),
             routeOffset: .constant(routeOffset),
             stickerTransforms: .constant(stickerTransforms),
-            selectedSticker: .constant(nil),
+            selectedSticker: .constant(selectedSticker),
             showsEditingControls: false,
             onSizeChange: nil
         )
