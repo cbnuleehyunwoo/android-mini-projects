@@ -31,6 +31,8 @@ struct RunShareCameraView: View {
             .ignoresSafeArea()
 
             cameraControls
+                .safeAreaPadding(.top)
+                .safeAreaPadding(.bottom)
         }
         .onAppear {
             cameraController.start()
@@ -115,7 +117,7 @@ struct RunShareCameraView: View {
 
             if !cameraController.isPreviewAvailable {
                 VStack(spacing: 12) {
-                    Image(systemName: "camera.slash")
+                    Image(systemName: "camera.fill")
                         .font(.system(size: 42, weight: .medium))
                     Text(cameraController.statusMessage)
                         .font(AppTheme.Typography.font(size: 16, weight: .bold))
@@ -303,6 +305,7 @@ private struct RunShareEditorView: View {
         .padding(.horizontal, 18)
         .padding(.top, 8)
         .frame(height: 58)
+        .safeAreaPadding(.top)
     }
 
     private var editorPanel: some View {
@@ -429,17 +432,25 @@ private struct RunShareEditorView: View {
 
     @MainActor
     private func saveToPhotos() {
-        guard let image = renderImage() else { return }
+        guard let image = renderImage() else {
+            saveMessage = "이미지를 준비하지 못했어요. 다시 시도해주세요."
+            return
+        }
 
         PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
-            DispatchQueue.main.async {
-                guard status == .authorized || status == .limited else {
+            guard status == .authorized || status == .limited else {
+                DispatchQueue.main.async {
                     saveMessage = "사진 보관함 권한이 필요해요."
-                    return
                 }
+                return
+            }
 
-                UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
-                saveMessage = "사진을 저장했어요."
+            PHPhotoLibrary.shared().performChanges {
+                PHAssetChangeRequest.creationRequestForAsset(from: image)
+            } completionHandler: { saved, _ in
+                DispatchQueue.main.async {
+                    saveMessage = saved ? "사진을 저장했어요." : "사진을 저장하지 못했어요. 다시 시도해주세요."
+                }
             }
         }
     }
@@ -457,7 +468,18 @@ private struct RunShareEditorView: View {
         )
         let renderer = ImageRenderer(content: canvas.frame(width: 1080, height: 1920))
         renderer.scale = 1
-        return renderer.uiImage
+        guard let image = renderer.uiImage else { return nil }
+        return Self.makeOpaqueImage(image)
+    }
+
+    private static func makeOpaqueImage(_ image: UIImage) -> UIImage {
+        let format = UIGraphicsImageRendererFormat()
+        format.opaque = true
+        format.scale = image.scale
+
+        return UIGraphicsImageRenderer(size: image.size, format: format).image { _ in
+            image.draw(in: CGRect(origin: .zero, size: image.size))
+        }
     }
 }
 
