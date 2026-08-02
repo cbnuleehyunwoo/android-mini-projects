@@ -41,6 +41,7 @@
 		7A100001000000000000001D /* RunningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000011E /* RunningView.swift */; };
 		7A100001000000000000001E /* RunningMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000011F /* RunningMapView.swift */; };
 		7A100001000000000000001F /* RunningSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000120 /* RunningSummaryView.swift */; };
+		7A4920010000000000000001 /* RunShareView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4920010000000000000101 /* RunShareView.swift */; };
 		7A1000010000000000000020 /* MapPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000121 /* MapPlaceholderView.swift */; };
 		7A1000010000000000000021 /* RunningRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000122 /* RunningRecord.swift */; };
 		7A1000010000000000000022 /* RunningMetricFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000123 /* RunningMetricFormatter.swift */; };
@@ -123,6 +124,7 @@
 		7A100001000000000000011E /* RunningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningView.swift; sourceTree = "<group>"; };
 		7A100001000000000000011F /* RunningMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningMapView.swift; sourceTree = "<group>"; };
 		7A1000010000000000000120 /* RunningSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningSummaryView.swift; sourceTree = "<group>"; };
+		7A4920010000000000000101 /* RunShareView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunShareView.swift; sourceTree = "<group>"; };
 		7A1000010000000000000121 /* MapPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapPlaceholderView.swift; sourceTree = "<group>"; };
 		7A1000010000000000000122 /* RunningRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningRecord.swift; sourceTree = "<group>"; };
 		7A1000010000000000000123 /* RunningMetricFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningMetricFormatter.swift; sourceTree = "<group>"; };
@@ -389,6 +391,7 @@
 				7A100001000000000000011E /* RunningView.swift */,
 				7A100001000000000000011F /* RunningMapView.swift */,
 				7A1000010000000000000120 /* RunningSummaryView.swift */,
+				7A4920010000000000000101 /* RunShareView.swift */,
 			);
 			path = Running;
 			sourceTree = "<group>";
@@ -627,6 +630,7 @@
 				7A100001000000000000001D /* RunningView.swift in Sources */,
 				7A100001000000000000001E /* RunningMapView.swift in Sources */,
 				7A100001000000000000001F /* RunningSummaryView.swift in Sources */,
+				7A4920010000000000000001 /* RunShareView.swift in Sources */,
 				7A1000010000000000000020 /* MapPlaceholderView.swift in Sources */,
 				7A1000010000000000000021 /* RunningRecord.swift in Sources */,
 				7A1000010000000000000022 /* RunningMetricFormatter.swift in Sources */,

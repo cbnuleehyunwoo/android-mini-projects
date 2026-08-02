@@ -1,0 +1,13 @@
+{
+  "images" : [
+    {
+      "filename" : "cheetah_pamin_sticker.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

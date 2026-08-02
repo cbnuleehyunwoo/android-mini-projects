@@ -16,7 +16,6 @@ final class HistoryCache: ObservableObject {
 
 struct HistoryView: View {
     @ObservedObject var cache: HistoryCache
-    @State private var selectedRecord: RunningRecord?
 
     private let runService: RunServiceProtocol
     private let historyStore: RunningHistoryStore
@@ -24,6 +23,7 @@ struct HistoryView: View {
     private let currentUserID: String?
     private let refreshRevision: Int
     private let onRetryPendingRuns: () async -> Void
+    private let onOpenRecord: (RunningRecord) -> Void
     private var calendar: Calendar {
         var calendar = Calendar.current
         calendar.firstWeekday = 2
@@ -37,7 +37,8 @@ struct HistoryView: View {
         currentUserID: String? = nil,
         cache: HistoryCache = HistoryCache(),
         refreshRevision: Int = 0,
-        onRetryPendingRuns: @escaping () async -> Void = {}
+        onRetryPendingRuns: @escaping () async -> Void = {},
+        onOpenRecord: @escaping (RunningRecord) -> Void = { _ in }
     ) {
         self.runService = runService
         self.historyStore = historyStore
@@ -46,6 +47,7 @@ struct HistoryView: View {
         self.cache = cache
         self.refreshRevision = refreshRevision
         self.onRetryPendingRuns = onRetryPendingRuns
+        self.onOpenRecord = onOpenRecord
     }
 
     var body: some View {
@@ -129,12 +131,6 @@ struct HistoryView: View {
         }
         .task(id: thumbnailRefreshIdentifier) {
             await refreshThumbnailRecords()
-        }
-        .runpamineFullScreenCover(item: $selectedRecord) { record in
-            RunningSummaryView(record: record) {
-                selectedRecord = nil
-            }
-            .networkErrorOverlay()
         }
     }
 
@@ -481,14 +477,18 @@ struct HistoryView: View {
     @MainActor
     private func openRecord(_ record: RunningRecord) async {
         guard let accessToken else {
-            selectedRecord = record
+            onOpenRecord(record)
             return
         }
 
         do {
-            selectedRecord = try await runService.fetchRunDetail(runID: record.id.uuidString, accessToken: accessToken)
+            let detail = try await runService.fetchRunDetail(
+                runID: record.id.uuidString,
+                accessToken: accessToken
+            )
+            onOpenRecord(detail)
         } catch {
-            selectedRecord = record
+            onOpenRecord(record)
         }
     }
 }
@@ -946,18 +946,4 @@ private extension RunningRecordCard {
         formatter.dateFormat = "yyyy. MM. dd EEEE"
         return formatter
     }()
-}
-
-private extension View {
-    @ViewBuilder
-    func runpamineFullScreenCover<Item: Identifiable, Content: View>(
-        item: Binding<Item?>,
-        @ViewBuilder content: @escaping (Item) -> Content
-    ) -> some View {
-        #if os(iOS)
-        fullScreenCover(item: item, content: content)
-        #else
-        sheet(item: item, content: content)
-        #endif
-    }
 }
