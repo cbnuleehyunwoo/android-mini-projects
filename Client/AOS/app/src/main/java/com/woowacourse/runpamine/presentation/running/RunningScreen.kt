@@ -76,6 +76,7 @@ fun RunningScreen(
 
     completedSession?.let { session ->
         RunningCompleteScreen(
+            distanceMeters = session.distanceMeters,
             distance = session.distanceText(),
             time = session.durationSeconds.elapsedTimeText(),
             pace = session.paceText(),

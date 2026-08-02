@@ -12,11 +12,6 @@ final class RunningTracker: NSObject, ObservableObject {
         case denied
     }
 
-    private enum PauseReason {
-        case manual
-        case inactivity
-    }
-
     @Published private(set) var trackingState: TrackingState = .idle
     @Published private(set) var authorizationStatus: CLAuthorizationStatus
     @Published private(set) var lastError: String?
@@ -27,12 +22,6 @@ final class RunningTracker: NSObject, ObservableObject {
     private var timer: Timer?
     private var shouldStartAfterAuthorization = false
     private var shouldValidateJumpFromPreviousLocation = false
-    private var stationaryReferenceLocation: CLLocation?
-    private var lastLocationMovementDate: Date?
-    private var pauseReason: PauseReason?
-    private var automaticResumeMonitor: AutomaticResumeLocationMonitor?
-    private var automaticResumeTimer: Timer?
-    private var automaticResumeBackgroundSession: CLBackgroundActivitySession?
     private var isRequestingFullAccuracy = false
 
     override init() {
@@ -79,10 +68,6 @@ final class RunningTracker: NSObject, ObservableObject {
         session.reset()
         shouldStartAfterAuthorization = true
         shouldValidateJumpFromPreviousLocation = false
-        pauseReason = nil
-        automaticResumeMonitor = nil
-        stopAutomaticResumeMonitoring()
-        resetStationaryLocationTracking()
 
         switch authorizationStatus {
         case .notDetermined:
@@ -103,38 +88,19 @@ final class RunningTracker: NSObject, ObservableObject {
     }
 
     func pause() {
-        pause(reason: .manual)
-    }
-
-    private func pause(reason: PauseReason) {
         guard trackingState == .tracking else { return }
 
-        let automaticResumeReferenceLocation = stationaryReferenceLocation ?? latestLocation
         manager.stopUpdatingLocation()
-        if reason == .manual {
-            manager.allowsBackgroundLocationUpdates = false
-        } else {
-            automaticResumeMonitor = AutomaticResumeLocationMonitor(
-                referenceLocation: automaticResumeReferenceLocation
-            )
-            startAutomaticResumeMonitoring()
-        }
-
+        manager.allowsBackgroundLocationUpdates = false
         stopElapsedTimer()
         session.pauseDistanceMeasurement()
         shouldValidateJumpFromPreviousLocation = false
-        resetStationaryLocationTracking()
-        pauseReason = reason
         trackingState = .paused
     }
 
     func resume() {
         guard trackingState == .paused else { return }
         shouldStartAfterAuthorization = true
-        pauseReason = nil
-        automaticResumeMonitor = nil
-        stopAutomaticResumeMonitoring()
-        resetStationaryLocationTracking()
         #if os(iOS)
         if authorizationStatus == .authorizedWhenInUse {
             manager.requestAlwaysAuthorization()
@@ -147,10 +113,6 @@ final class RunningTracker: NSObject, ObservableObject {
     func end() -> RunningRecord? {
         let endedAt = Date()
         shouldStartAfterAuthorization = false
-        pauseReason = nil
-        automaticResumeMonitor = nil
-        stopAutomaticResumeMonitoring()
-        resetStationaryLocationTracking()
         manager.stopUpdatingLocation()
         manager.allowsBackgroundLocationUpdates = false
         stopElapsedTimer()
@@ -193,7 +155,6 @@ final class RunningTracker: NSObject, ObservableObject {
         manager.allowsBackgroundLocationUpdates = true
         manager.startUpdatingLocation()
         session.markStartedIfNeeded()
-        resetStationaryLocationTracking(at: Date())
         startElapsedTimer()
         trackingState = .tracking
         shouldStartAfterAuthorization = false
@@ -205,9 +166,7 @@ final class RunningTracker: NSObject, ObservableObject {
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 guard let self else { return }
-                let now = Date()
-                self.session.updateElapsedTime(at: now)
-                self.pauseIfLocationHasNotChanged(at: now)
+                self.session.updateElapsedTime(at: Date())
             }
         }
     }
@@ -227,9 +186,6 @@ extension RunningTracker: CLLocationManagerDelegate {
             if authorizationStatus == .denied || authorizationStatus == .restricted {
                 trackingState = .denied
                 shouldStartAfterAuthorization = false
-                pauseReason = nil
-                automaticResumeMonitor = nil
-                stopAutomaticResumeMonitoring()
                 manager.stopUpdatingLocation()
                 manager.allowsBackgroundLocationUpdates = false
                 stopElapsedTimer()
@@ -252,25 +208,34 @@ extension RunningTracker: CLLocationManagerDelegate {
 
     nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         Task { @MainActor in
-            switch trackingState {
-            case .tracking:
-                for location in locations where isAcceptable(location) {
-                    updateStationaryLocationTracking(with: location, at: Date())
-                    session.append(location)
-                    shouldValidateJumpFromPreviousLocation = true
-                }
-            case .paused where pauseReason == .inactivity:
-                guard let location = locations.last(where: isAccurate) else { return }
-                resumeAutomaticallyIfMovementDetected(with: location)
-            default:
-                return
+            guard trackingState == .tracking else { return }
+
+            lastError = nil
+            for location in locations where isAcceptable(location) {
+                session.append(location)
+                shouldValidateJumpFromPreviousLocation = true
             }
         }
     }
 
     nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         Task { @MainActor in
-            lastError = error.localizedDescription
+            guard let locationError = error as? CLError else {
+                lastError = "위치 정보를 가져오지 못했습니다. 잠시 후 다시 시도해 주세요."
+                return
+            }
+
+            switch locationError.code {
+            case .locationUnknown:
+                // Core Location keeps retrying after this temporary loss of signal.
+                break
+            case .denied:
+                lastError = "위치 권한이 거부되었습니다."
+            case .network:
+                lastError = "네트워크 문제로 위치 정보를 가져오지 못했습니다."
+            default:
+                lastError = "위치 정보를 가져오지 못했습니다. 잠시 후 다시 시도해 주세요."
+            }
         }
     }
 }
@@ -296,108 +261,11 @@ private extension RunningTracker {
         location.horizontalAccuracy >= 0 &&
             location.horizontalAccuracy <= maxHorizontalAccuracyMeters
     }
-
-    func updateStationaryLocationTracking(with location: CLLocation, at date: Date) {
-        guard let referenceLocation = stationaryReferenceLocation else {
-            stationaryReferenceLocation = location
-            lastLocationMovementDate = date
-            return
-        }
-
-        if location.distance(from: referenceLocation) > stationaryLocationMovementThresholdMeters {
-            stationaryReferenceLocation = location
-            lastLocationMovementDate = date
-        }
-    }
-
-    func pauseIfLocationHasNotChanged(at date: Date) {
-        guard trackingState == .tracking,
-              let lastLocationMovementDate,
-              date.timeIntervalSince(lastLocationMovementDate) >= stationaryLocationPauseInterval
-        else {
-            return
-        }
-
-        pause(reason: .inactivity)
-    }
-
-    func startAutomaticResumeMonitoring() {
-        automaticResumeBackgroundSession = CLBackgroundActivitySession()
-        automaticResumeTimer = Timer.scheduledTimer(
-            withTimeInterval: automaticResumeProbeInterval,
-            repeats: true
-        ) { [weak self] _ in
-            Task { @MainActor in
-                guard let self,
-                      self.trackingState == .paused,
-                      self.pauseReason == .inactivity
-                else {
-                    return
-                }
-                self.manager.requestLocation()
-            }
-        }
-    }
-
-    func stopAutomaticResumeMonitoring() {
-        automaticResumeTimer?.invalidate()
-        automaticResumeTimer = nil
-        automaticResumeBackgroundSession?.invalidate()
-        automaticResumeBackgroundSession = nil
-    }
-
-    func resumeAutomaticallyIfMovementDetected(with location: CLLocation) {
-        guard var automaticResumeMonitor else { return }
-
-        let shouldResume = automaticResumeMonitor.detectsMovement(with: location)
-        self.automaticResumeMonitor = automaticResumeMonitor
-
-        if shouldResume {
-            resume()
-        }
-    }
-
-    func resetStationaryLocationTracking(at date: Date? = nil) {
-        stationaryReferenceLocation = nil
-        lastLocationMovementDate = date
-    }
-}
-
-private struct AutomaticResumeLocationMonitor {
-    private var referenceLocation: CLLocation?
-    private var movementCandidateLocation: CLLocation?
-
-    init(referenceLocation: CLLocation?) {
-        self.referenceLocation = referenceLocation
-    }
-
-    mutating func detectsMovement(with location: CLLocation) -> Bool {
-        guard let referenceLocation else {
-            self.referenceLocation = location
-            return false
-        }
-
-        guard location.distance(from: referenceLocation) > stationaryLocationMovementThresholdMeters else {
-            movementCandidateLocation = nil
-            return false
-        }
-
-        defer {
-            self.movementCandidateLocation = location
-        }
-        guard let movementCandidateLocation else {
-            return false
-        }
-        return location.distance(from: movementCandidateLocation) > stationaryLocationMovementThresholdMeters
-    }
 }
 
 private let maxHorizontalAccuracyMeters: CLLocationAccuracy = 30
 private let maxRunningMetersPerSecond: CLLocationDistance = 7
 private let jumpToleranceMeters: CLLocationDistance = 6
-private let stationaryLocationMovementThresholdMeters: CLLocationDistance = 1
-private let stationaryLocationPauseInterval: TimeInterval = 10
-private let automaticResumeProbeInterval: TimeInterval = 3
 private let fullAccuracyPurposeKey = "RunningRoute"
 
 private func isRunnableAuthorizationStatus(_ status: CLAuthorizationStatus) -> Bool {
