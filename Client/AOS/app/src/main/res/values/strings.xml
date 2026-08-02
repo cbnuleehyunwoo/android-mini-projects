@@ -83,6 +83,7 @@
     <string name="running_pause">일시 정지</string>
     <string name="running_resume">계속</string>
     <string name="running_stop">종료</string>
+    <string name="running_short_run_recording_notice">100미터 미만의 러닝은 기록되지 않습니다.</string>
     <string name="running_notification_channel">러닝 측정</string>
     <string name="running_notification_title">러닝 측정 중</string>
     <string name="running_notification_text">현재 위치를 기록하고 있어요.</string>
