@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct RunningSummaryView: View {
     let record: RunningRecord
@@ -34,6 +35,23 @@ struct RunningSummaryView: View {
                     SummaryMetric(title: "칼로리", value: "\(record.estimatedCalories)", suffix: "kcal")
                 }
                 .padding(.horizontal, 22)
+
+                if record.distanceMeters < Self.minimumRecordedDistanceMeters {
+                    HStack(spacing: 0) {
+                        errorCharacterImage
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 48, height: 48)
+                            .accessibilityHidden(true)
+
+                        Text("100미터 미만의 러닝은 기록되지 않습니다.")
+                            .font(AppTheme.Typography.font(size: 13, weight: .semibold))
+                            .foregroundStyle(AppTheme.Colors.textSecondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(.horizontal, 24)
+                    .accessibilityIdentifier("short-run-recording-notice")
+                }
 
                 Spacer()
 
@@ -79,6 +97,17 @@ struct RunningSummaryView: View {
         formatter.dateFormat = "a h:mm"
         return formatter
     }()
+
+    private static let minimumRecordedDistanceMeters: Double = 100
+
+    private var errorCharacterImage: Image {
+        guard let imageURL = Bundle.main.url(forResource: "error", withExtension: "png"),
+              let image = UIImage(contentsOfFile: imageURL.path)
+        else {
+            return Image(systemName: "info.circle.fill")
+        }
+        return Image(uiImage: image)
+    }
 }
 
 private struct SummaryMetric: View {
@@ -119,6 +148,19 @@ private struct SummaryMetric: View {
             endedAt: Date(),
             elapsedTime: 1_725,
             distanceMeters: 5_000,
+            route: []
+        ),
+        onDone: {}
+    )
+}
+
+#Preview("100미터 미만 러닝 요약 화면") {
+    RunningSummaryView(
+        record: RunningRecord(
+            startedAt: Date().addingTimeInterval(-45),
+            endedAt: Date(),
+            elapsedTime: 45,
+            distanceMeters: 99,
             route: []
         ),
         onDone: {}
