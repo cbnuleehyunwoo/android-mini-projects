@@ -210,6 +210,7 @@ extension RunningTracker: CLLocationManagerDelegate {
         Task { @MainActor in
             guard trackingState == .tracking else { return }
 
+            lastError = nil
             for location in locations where isAcceptable(location) {
                 session.append(location)
                 shouldValidateJumpFromPreviousLocation = true
@@ -219,7 +220,22 @@ extension RunningTracker: CLLocationManagerDelegate {
 
     nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         Task { @MainActor in
-            lastError = error.localizedDescription
+            guard let locationError = error as? CLError else {
+                lastError = "위치 정보를 가져오지 못했습니다. 잠시 후 다시 시도해 주세요."
+                return
+            }
+
+            switch locationError.code {
+            case .locationUnknown:
+                // Core Location keeps retrying after this temporary loss of signal.
+                break
+            case .denied:
+                lastError = "위치 권한이 거부되었습니다."
+            case .network:
+                lastError = "네트워크 문제로 위치 정보를 가져오지 못했습니다."
+            default:
+                lastError = "위치 정보를 가져오지 못했습니다. 잠시 후 다시 시도해 주세요."
+            }
         }
     }
 }
