@@ -305,16 +305,17 @@ private struct RunShareEditorView: View {
     @State private var selectedTab: RunShareEditorTab = .layout
     @State private var selectedStickers: Set<RunShareSticker> = []
     @State private var selectedSticker: RunShareSticker?
-    @State private var dataOffset: CGSize = .zero
-    @State private var routeOffset: CGSize = .zero
-    @State private var isDataDark = false
-    @State private var isRouteDark = false
-    @State private var stickerTransforms: [RunShareSticker: RunShareStickerTransform] = [:]
+    @State private var selectedElement: RunShareElement?
+    @State private var elementTransforms: [RunShareElement: RunShareCanvasItemTransform] = [:]
+    @State private var stickerTransforms: [RunShareSticker: RunShareCanvasItemTransform] = [:]
+    @State private var darkElements: Set<RunShareElement> = []
+    @State private var darkTextStickers: Set<RunShareSticker> = []
     @State private var canvasSize = CGSize(width: 360, height: 640)
     @State private var renderedImage: UIImage?
     @State private var isShowingShareSheet = false
     @State private var isSaving = false
     @State private var saveErrorMessage: String?
+    @State private var regionName: String?
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -326,14 +327,16 @@ private struct RunShareEditorView: View {
                         record: record,
                         photo: photo,
                         layout: selectedLayout,
+                        regionName: regionName,
                         visibleStickers: selectedStickers,
-                        dataOffset: $dataOffset,
-                        routeOffset: $routeOffset,
-                        isDataDark: $isDataDark,
-                        isRouteDark: $isRouteDark,
+                        elementTransforms: $elementTransforms,
                         stickerTransforms: $stickerTransforms,
+                        darkElements: $darkElements,
+                        darkTextStickers: $darkTextStickers,
+                        selectedElement: $selectedElement,
                         selectedSticker: $selectedSticker,
                         showsEditingControls: true,
+                        onDeleteElement: removeElement,
                         onDeleteSticker: removeSticker,
                         onSizeChange: { canvasSize = $0 }
                     )
@@ -351,6 +354,9 @@ private struct RunShareEditorView: View {
                 .zIndex(30)
         }
         .ignoresSafeArea(.container, edges: .top)
+        .task(id: record.id) {
+            await loadRegionName()
+        }
         .sheet(isPresented: $isShowingShareSheet) {
             if let renderedImage {
                 RunShareActivityView(image: renderedImage)
@@ -431,20 +437,27 @@ private struct RunShareEditorView: View {
     }
 
     private var layoutOptions: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 12) {
+        ScrollView(.vertical, showsIndicators: false) {
+            LazyVGrid(
+                columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 4),
+                spacing: 12
+            ) {
                 ForEach(RunShareLayout.allCases) { layout in
                     Button {
                         selectedLayout = layout
+                        if !layout.includesRoute, selectedElement == .route {
+                            selectedElement = nil
+                        }
                     } label: {
                         VStack(spacing: 8) {
                             RoundedRectangle(cornerRadius: 12, style: .continuous)
                                 .fill(Color.black.opacity(0.82))
-                                .frame(width: 86, height: 86)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 76)
                                 .overlay {
                                     if let iconText = layout.iconText {
                                         Text(iconText)
-                                            .font(AppTheme.Typography.font(size: 22, weight: .black))
+                                            .font(AppTheme.Typography.font(size: 22, weight: .extraBold))
                                             .foregroundStyle(.white)
                                     } else {
                                         Image(systemName: layout.systemImage)
@@ -462,6 +475,8 @@ private struct RunShareEditorView: View {
                             Text(layout.title)
                                 .font(AppTheme.Typography.font(size: 12, weight: .medium))
                                 .foregroundStyle(.white.opacity(0.75))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
                         }
                     }
                     .buttonStyle(.plain)
@@ -469,12 +484,16 @@ private struct RunShareEditorView: View {
             }
             .padding(.horizontal, 18)
         }
+        .frame(maxHeight: 190)
     }
 
     private var stickerOptions: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 12) {
-                ForEach(RunShareSticker.allCases) { sticker in
+        ScrollView(.vertical, showsIndicators: false) {
+            LazyVGrid(
+                columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 4),
+                spacing: 12
+            ) {
+                ForEach(RunShareSticker.allCases, id: \.self) { sticker in
                     Button {
                         if selectedStickers.contains(sticker) {
                             if selectedSticker == sticker {
@@ -488,11 +507,10 @@ private struct RunShareEditorView: View {
                         }
                     } label: {
                         VStack(spacing: 8) {
-                            Image(sticker.assetName)
-                                .resizable()
-                                .scaledToFit()
+                            stickerOptionPreview(sticker)
                                 .padding(8)
-                                .frame(width: 86, height: 86)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 76)
                                 .background(Color.white.opacity(0.08))
                                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                                 .overlay {
@@ -505,12 +523,36 @@ private struct RunShareEditorView: View {
                             Text(sticker.title)
                                 .font(AppTheme.Typography.font(size: 12, weight: .medium))
                                 .foregroundStyle(.white.opacity(0.75))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
                         }
                     }
                     .buttonStyle(.plain)
+                    .disabled(sticker == .region && regionName == nil)
+                    .opacity(sticker == .region && regionName == nil ? 0.4 : 1)
                 }
             }
             .padding(.horizontal, 18)
+        }
+        .frame(maxHeight: 190)
+    }
+
+    @ViewBuilder
+    private func stickerOptionPreview(_ sticker: RunShareSticker) -> some View {
+        switch sticker {
+        case .date:
+            Image(systemName: "calendar")
+                .font(.system(size: 24, weight: .semibold))
+                .foregroundStyle(.white)
+        case .region:
+            RunShareLocationIcon(color: .white)
+                .frame(width: 24, height: 29)
+        default:
+            if let assetName = sticker.assetName {
+                Image(assetName)
+                    .resizable()
+                    .scaledToFit()
+            }
         }
     }
 
@@ -562,14 +604,16 @@ private struct RunShareEditorView: View {
             record: record,
             photo: photo,
             layout: selectedLayout,
+            regionName: regionName,
             visibleStickers: selectedStickers,
-            dataOffset: .constant(dataOffset),
-            routeOffset: .constant(routeOffset),
-            isDataDark: .constant(isDataDark),
-            isRouteDark: .constant(isRouteDark),
+            elementTransforms: .constant(elementTransforms),
             stickerTransforms: .constant(stickerTransforms),
+            darkElements: .constant(darkElements),
+            darkTextStickers: .constant(darkTextStickers),
+            selectedElement: .constant(selectedElement),
             selectedSticker: .constant(selectedSticker),
             showsEditingControls: false,
+            onDeleteElement: nil,
             onDeleteSticker: nil,
             onSizeChange: nil
         )
@@ -594,8 +638,82 @@ private struct RunShareEditorView: View {
 
     private func removeSticker(_ sticker: RunShareSticker) {
         selectedStickers.remove(sticker)
+        stickerTransforms[sticker] = nil
+        darkTextStickers.remove(sticker)
         if selectedSticker == sticker {
             selectedSticker = nil
+        }
+    }
+
+    private func removeElement(_ element: RunShareElement) {
+        elementTransforms[element] = nil
+        darkElements.remove(element)
+        if element == .route {
+            switch selectedLayout {
+            case .routeDistance:
+                selectedLayout = .distance
+            case .routeCurrent:
+                selectedLayout = .current
+            case .distance, .current:
+                break
+            }
+        }
+        if selectedElement == element {
+            selectedElement = nil
+        }
+    }
+
+    @MainActor
+    private func loadRegionName() async {
+        regionName = nil
+
+        guard let coordinate = record.route.first?.coordinate else {
+            removeSticker(.region)
+            return
+        }
+
+        do {
+            let placemarks = try await CLGeocoder().reverseGeocodeLocation(
+                CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+            )
+            guard let placemark = placemarks.first else {
+                removeSticker(.region)
+                return
+            }
+            guard let cityOrCounty = cityOrCountyName(from: [
+                placemark.subAdministrativeArea,
+                placemark.locality,
+                placemark.administrativeArea,
+                placemark.subLocality,
+                placemark.name
+            ]) else {
+                removeSticker(.region)
+                return
+            }
+
+            regionName = cityOrCounty
+        } catch {
+            removeSticker(.region)
+        }
+    }
+
+    private func cityOrCountyName(from names: [String?]) -> String? {
+        let normalizedNames = names.compactMap { name in
+            let normalizedName = name?.trimmingCharacters(in: .whitespacesAndNewlines)
+            return normalizedName?.isEmpty == false ? normalizedName : nil
+        }
+
+        for name in normalizedNames {
+            if let range = name.range(of: #"[가-힣]+(?:시|군)"#, options: .regularExpression) {
+                return String(name[range])
+            }
+        }
+
+        return normalizedNames.first { name in
+            !name.hasSuffix("읍") &&
+            !name.hasSuffix("면") &&
+            !name.hasSuffix("리") &&
+            !name.hasSuffix("동")
         }
     }
 }
@@ -629,18 +747,18 @@ private struct RunShareCanvas: View {
     let record: RunningRecord
     let photo: UIImage
     let layout: RunShareLayout
+    let regionName: String?
     let visibleStickers: Set<RunShareSticker>
-    @Binding var dataOffset: CGSize
-    @Binding var routeOffset: CGSize
-    @Binding var isDataDark: Bool
-    @Binding var isRouteDark: Bool
-    @Binding var stickerTransforms: [RunShareSticker: RunShareStickerTransform]
+    @Binding var elementTransforms: [RunShareElement: RunShareCanvasItemTransform]
+    @Binding var stickerTransforms: [RunShareSticker: RunShareCanvasItemTransform]
+    @Binding var darkElements: Set<RunShareElement>
+    @Binding var darkTextStickers: Set<RunShareSticker>
+    @Binding var selectedElement: RunShareElement?
     @Binding var selectedSticker: RunShareSticker?
     let showsEditingControls: Bool
+    let onDeleteElement: ((RunShareElement) -> Void)?
     let onDeleteSticker: ((RunShareSticker) -> Void)?
     let onSizeChange: ((CGSize) -> Void)?
-    @GestureState private var dataDragTranslation: CGSize = .zero
-    @GestureState private var routeDragTranslation: CGSize = .zero
 
     var body: some View {
         GeometryReader { geometry in
@@ -653,6 +771,7 @@ private struct RunShareCanvas: View {
                     .contentShape(Rectangle())
                     .onTapGesture {
                         guard showsEditingControls else { return }
+                        selectedElement = nil
                         selectedSticker = nil
                     }
                     .onAppear {
@@ -668,93 +787,60 @@ private struct RunShareCanvas: View {
                     endPoint: .bottom
                 )
 
-                ZStack(alignment: .bottomLeading) {
-                    shareDataContent
-                        .padding(.leading, 20)
-                        .padding(.bottom, 30)
-                        .offset(
-                            x: dataOffset.width + dataDragTranslation.width,
-                            y: dataOffset.height + dataDragTranslation.height
-                        )
-                        .onTapGesture {
-                            guard showsEditingControls else { return }
-                            isDataDark.toggle()
-                        }
-                        .highPriorityGesture(
-                            DragGesture(
-                                minimumDistance: 4,
-                                coordinateSpace: .named(RunShareCoordinateSpace.canvas)
-                            )
-                                .updating($dataDragTranslation) { value, state, _ in
-                                    state = value.translation
-                                }
-                                .onEnded { value in
-                                    dataOffset = CGSize(
-                                        width: dataOffset.width + value.translation.width,
-                                        height: dataOffset.height + value.translation.height
-                                    )
-                                }
-                        )
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                ForEach(activeElements) { element in
+                    let size = elementSize(for: element, in: geometry.size)
+                    let center = elementCenter(for: element, size: size, in: geometry.size)
 
-                if layout.includesRoute {
-                    ZStack(alignment: .top) {
-                        RunShareRouteMap(
-                            route: record.route,
-                            color: isRouteDark ? .black : .white
-                        )
-                            .frame(
-                                width: max(1, geometry.size.width - 60),
-                                height: geometry.size.height * layout.routeHeightRatio
-                            )
-                            .offset(
-                                x: routeOffset.width + routeDragTranslation.width,
-                                y: routeOffset.height + routeDragTranslation.height
-                            )
-                            .onTapGesture {
-                                guard showsEditingControls else { return }
-                                isRouteDark.toggle()
-                            }
-                            .highPriorityGesture(
-                                DragGesture(
-                                    minimumDistance: 4,
-                                    coordinateSpace: .named(RunShareCoordinateSpace.canvas)
-                                )
-                                    .updating($routeDragTranslation) { value, state, _ in
-                                        state = value.translation
-                                    }
-                                    .onEnded { value in
-                                        routeOffset = CGSize(
-                                            width: routeOffset.width + value.translation.width,
-                                            height: routeOffset.height + value.translation.height
-                                        )
-                                    }
-                            )
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                    .padding(.top, 30)
+                    RunShareElementView(
+                        element: element,
+                        layout: layout,
+                        record: record,
+                        regionName: regionName,
+                        size: size,
+                        center: center,
+                        dataColor: darkElements.contains(.dataGroup) ? .black : .white,
+                        routeColor: darkElements.contains(.route) ? .black : .white,
+                        transform: elementTransformBinding(for: element),
+                        isSelected: selectedElement == element,
+                        showsEditingControls: showsEditingControls,
+                        onSelect: {
+                            selectedElement = element
+                            selectedSticker = nil
+                        },
+                        onTapSelected: { toggleElementColor(element) },
+                        onDelete: { onDeleteElement?(element) }
+                    )
+                    .position(x: center.x, y: center.y)
+                    .zIndex(
+                        selectedElement == element
+                            ? 10
+                            : element == .route ? 1 : 2
+                    )
                 }
 
                 ForEach(RunShareSticker.allCases.filter(visibleStickers.contains)) { sticker in
+                    let size = stickerSize(for: sticker, in: geometry.size)
+                    let center = stickerCenter(for: sticker, size: size, in: geometry.size)
+
                     RunShareStickerView(
                         sticker: sticker,
-                        width: geometry.size.width * sticker.widthRatio,
-                        center: CGPoint(
-                            x: geometry.size.width * sticker.defaultX,
-                            y: geometry.size.height * sticker.defaultY
-                        ),
+                        record: record,
+                        regionName: regionName,
+                        textColor: darkTextStickers.contains(sticker) ? .black : .white,
+                        size: size,
+                        center: center,
                         transform: stickerTransformBinding(for: sticker),
                         isSelected: selectedSticker == sticker,
                         showsEditingControls: showsEditingControls,
-                        onSelect: { selectedSticker = sticker },
+                        onSelect: {
+                            selectedSticker = sticker
+                            selectedElement = nil
+                        },
+                        onTapSelected: { toggleStickerColor(sticker) },
                         onDelete: { onDeleteSticker?(sticker) }
                     )
-                    .position(
-                        x: geometry.size.width * sticker.defaultX,
-                        y: geometry.size.height * sticker.defaultY
-                    )
-                    .zIndex(selectedSticker == sticker ? 10 : 1)
+                    .position(x: center.x, y: center.y)
+                    .zIndex(selectedSticker == sticker ? 11 : 3)
                 }
 
                 VStack {
@@ -779,48 +865,322 @@ private struct RunShareCanvas: View {
         .coordinateSpace(name: RunShareCoordinateSpace.canvas)
     }
 
-    private func stickerTransformBinding(for sticker: RunShareSticker) -> Binding<RunShareStickerTransform> {
+    private func elementTransformBinding(for element: RunShareElement) -> Binding<RunShareCanvasItemTransform> {
         Binding(
-            get: { stickerTransforms[sticker] ?? RunShareStickerTransform() },
+            get: { elementTransforms[element] ?? RunShareCanvasItemTransform() },
+            set: { elementTransforms[element] = $0 }
+        )
+    }
+
+    private func stickerTransformBinding(for sticker: RunShareSticker) -> Binding<RunShareCanvasItemTransform> {
+        Binding(
+            get: { stickerTransforms[sticker] ?? RunShareCanvasItemTransform() },
             set: { stickerTransforms[sticker] = $0 }
         )
     }
 
-    private var shareDataContent: some View {
-        currentLayoutContent
+    private var activeElements: [RunShareElement] {
+        layout.includesRoute ? [.dataGroup, .route] : [.dataGroup]
     }
 
-    private var distanceContent: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 8) {
-            Text(record.distanceKilometers.formatted(.number.precision(.fractionLength(2))))
-                .font(AppTheme.Typography.font(size: 66, weight: .black))
+    private func toggleElementColor(_ element: RunShareElement) {
+        guard showsEditingControls else { return }
+        if darkElements.contains(element) {
+            darkElements.remove(element)
+        } else {
+            darkElements.insert(element)
+        }
+    }
+
+    private func toggleStickerColor(_ sticker: RunShareSticker) {
+        guard showsEditingControls, sticker.supportsColorToggle else { return }
+        if darkTextStickers.contains(sticker) {
+            darkTextStickers.remove(sticker)
+        } else {
+            darkTextStickers.insert(sticker)
+        }
+    }
+
+    private func elementSize(for element: RunShareElement, in canvasSize: CGSize) -> CGSize {
+        switch element {
+        case .dataGroup:
+            layout.showsDetails
+                ? detailedDataGroupSize(in: canvasSize)
+                : distanceElementSize(in: canvasSize)
+        case .route:
+            routeElementSize(in: canvasSize)
+        }
+    }
+
+    private func routeElementSize(in canvasSize: CGSize) -> CGSize {
+        let maxSize = CGSize(
+            width: max(1, canvasSize.width - 60),
+            height: canvasSize.height * RunShareElement.routeHeightRatio
+        )
+        guard record.route.count >= 2 else { return maxSize }
+
+        let projectedRoute = record.route.map { MKMapPoint($0.coordinate) }
+        let routeWidth = CGFloat(
+            max(
+                (projectedRoute.map(\.x).max() ?? 0) - (projectedRoute.map(\.x).min() ?? 0),
+                1
+            )
+        )
+        let routeHeight = CGFloat(
+            max(
+                (projectedRoute.map(\.y).max() ?? 0) - (projectedRoute.map(\.y).min() ?? 0),
+                1
+            )
+        )
+        let pathInset: CGFloat = 24
+        let maximumDrawableSize = CGSize(
+            width: max(1, maxSize.width - pathInset * 2),
+            height: max(1, maxSize.height - pathInset * 2)
+        )
+        let scale = min(
+            maximumDrawableSize.width / routeWidth,
+            maximumDrawableSize.height / routeHeight
+        )
+
+        return CGSize(
+            width: routeWidth * scale + pathInset * 2,
+            height: routeHeight * scale + pathInset * 2
+        )
+    }
+
+    private func detailedDataGroupSize(in canvasSize: CGSize) -> CGSize {
+        let distanceSize = distanceElementSize(in: canvasSize)
+        let dataSize = dataElementSize(in: canvasSize)
+        return CGSize(
+            width: max(distanceSize.width, dataSize.width),
+            height: distanceSize.height + 11 + dataSize.height
+        )
+    }
+
+    private func distanceElementSize(in canvasSize: CGSize) -> CGSize {
+        let distanceFont = UIFont(name: "Pretendard-ExtraBold", size: 66)
+            ?? UIFont.systemFont(ofSize: 66, weight: .heavy)
+        let unitFont = UIFont(name: "Pretendard-Bold", size: 22)
+            ?? UIFont.systemFont(ofSize: 22, weight: .bold)
+        let distance = record.distanceKilometers.formatted(
+            .number.precision(.fractionLength(2))
+        )
+        let distanceWidth = distance.size(withAttributes: [.font: distanceFont]).width
+        let unitWidth = "KM".size(withAttributes: [.font: unitFont]).width
+        let contentWidth = distanceWidth + 8 + unitWidth
+        let contentHeight = max(distanceFont.lineHeight, unitFont.lineHeight)
+
+        return fittedSelectionSize(
+            contentWidth: contentWidth,
+            contentHeight: contentHeight,
+            in: canvasSize
+        )
+    }
+
+    private func dataElementSize(in canvasSize: CGSize) -> CGSize {
+        let titleFont = UIFont(name: "Pretendard-Medium", size: 12)
+            ?? UIFont.systemFont(ofSize: 12, weight: .medium)
+        let valueFont = UIFont(name: "Pretendard-Bold", size: 21)
+            ?? UIFont.systemFont(ofSize: 21, weight: .bold)
+        let titles = ["TIME", "PACE", "KCAL"]
+        let values = [
+            RunningMetricFormatter.duration(record.elapsedTime),
+            RunningMetricFormatter.pace(record.averagePaceSecondsPerKilometer),
+            "\(record.estimatedCalories)"
+        ]
+        let metricWidths = zip(titles, values).map { title, value in
+            let titleWidth = title.size(withAttributes: [.font: titleFont]).width + CGFloat(max(title.count - 1, 0))
+            let valueWidth = value.size(withAttributes: [.font: valueFont]).width
+            return max(titleWidth, valueWidth)
+        }
+        let horizontalSpacing: CGFloat = 28
+        let contentWidth = metricWidths.reduce(0, +) + horizontalSpacing * 2
+        let contentHeight = titleFont.lineHeight + 4 + valueFont.lineHeight
+        let horizontalPadding: CGFloat = 4
+        let verticalPadding: CGFloat = 4
+
+        return CGSize(
+            width: min(contentWidth + horizontalPadding, max(canvasSize.width - 40, 1)),
+            height: contentHeight + verticalPadding
+        )
+    }
+
+    private func textElementSize(
+        text: String,
+        fontName: String,
+        fontSize: CGFloat,
+        fallbackWeight: UIFont.Weight,
+        in canvasSize: CGSize
+    ) -> CGSize {
+        let font = UIFont(name: fontName, size: fontSize)
+            ?? UIFont.systemFont(ofSize: fontSize, weight: fallbackWeight)
+        let measuredSize = text.size(withAttributes: [.font: font])
+
+        return fittedSelectionSize(
+            contentWidth: measuredSize.width,
+            contentHeight: font.lineHeight,
+            in: canvasSize
+        )
+    }
+
+    private func fittedSelectionSize(
+        contentWidth: CGFloat,
+        contentHeight: CGFloat,
+        in canvasSize: CGSize
+    ) -> CGSize {
+        let selectionPadding: CGFloat = 4
+        return CGSize(
+            width: min(
+                contentWidth.rounded(.up) + selectionPadding,
+                max(canvasSize.width - 40, 1)
+            ),
+            height: contentHeight.rounded(.up) + selectionPadding
+        )
+    }
+
+    private func elementCenter(
+        for element: RunShareElement,
+        size: CGSize,
+        in canvasSize: CGSize
+    ) -> CGPoint {
+        switch element {
+        case .route:
+            return CGPoint(x: canvasSize.width / 2, y: 30 + size.height / 2)
+        case .dataGroup:
+            let fullGroupHeight = detailedDataGroupSize(in: canvasSize).height
+            let bottomReserve: CGFloat = 82
+            let top = canvasSize.height - bottomReserve - fullGroupHeight
+            let savedScale = elementTransforms[.dataGroup]?.scale ?? 1
+            return CGPoint(
+                x: 20 + size.width * savedScale / 2,
+                y: top + size.height * savedScale / 2
+            )
+        }
+    }
+
+    private func stickerSize(for sticker: RunShareSticker, in canvasSize: CGSize) -> CGSize {
+        switch sticker {
+        case .date:
+            let measuredSize = textElementSize(
+                text: dateText,
+                fontName: "Pretendard-Bold",
+                fontSize: 19,
+                fallbackWeight: .bold,
+                in: canvasSize
+            )
+            return CGSize(
+                width: min(measuredSize.width, canvasSize.width * 0.55),
+                height: measuredSize.height
+            )
+        case .region:
+            let font = UIFont(name: "Pretendard-Bold", size: 21)
+                ?? UIFont.systemFont(ofSize: 21, weight: .bold)
+            let textWidth = (regionName ?? "").size(withAttributes: [.font: font]).width
+            let iconWidth: CGFloat = 18
+            let spacing: CGFloat = 6
+            return fittedSelectionSize(
+                contentWidth: iconWidth + spacing + textWidth,
+                contentHeight: max(font.lineHeight, iconWidth),
+                in: canvasSize
+            )
+        default:
+            let width = canvasSize.width * sticker.widthRatio
+            return CGSize(width: width, height: width)
+        }
+    }
+
+    private func stickerCenter(
+        for sticker: RunShareSticker,
+        size: CGSize,
+        in canvasSize: CGSize
+    ) -> CGPoint {
+        switch sticker {
+        case .date:
+            return CGPoint(x: 20 + size.width / 2, y: canvasSize.height - 30)
+        case .region:
+            return CGPoint(
+                x: canvasSize.width - 32 - size.width / 2,
+                y: canvasSize.height * 0.40
+            )
+        default:
+            return CGPoint(
+                x: canvasSize.width * sticker.defaultX,
+                y: canvasSize.height * sticker.defaultY
+            )
+        }
+    }
+
+    private var dateText: String {
+        RunShareElementFormatters.date.string(from: record.startedAt)
+    }
+}
+
+private struct RunShareElementView: View {
+    let element: RunShareElement
+    let layout: RunShareLayout
+    let record: RunningRecord
+    let regionName: String?
+    let size: CGSize
+    let center: CGPoint
+    let dataColor: Color
+    let routeColor: Color
+    @Binding var transform: RunShareCanvasItemTransform
+    let isSelected: Bool
+    let showsEditingControls: Bool
+    let onSelect: () -> Void
+    let onTapSelected: () -> Void
+    let onDelete: () -> Void
+
+    var body: some View {
+        RunShareTransformableView(
+            contentSize: size,
+            center: center,
+            accessibilityName: element.title,
+            transform: $transform,
+            isSelected: isSelected,
+            showsEditingControls: showsEditingControls,
+            showsDeleteControl: false,
+            onSelect: onSelect,
+            onTapSelected: onTapSelected,
+            onDelete: onDelete
+        ) {
+            elementContent
+        }
+    }
+
+    @ViewBuilder
+    private var elementContent: some View {
+        switch element {
+        case .dataGroup:
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(record.distanceKilometers.formatted(.number.precision(.fractionLength(2))))
+                        .font(AppTheme.Typography.font(size: 66, weight: .extraBold))
+                    Text("KM")
+                        .font(AppTheme.Typography.font(size: 22, weight: .bold))
+                        .foregroundStyle(dataColor.opacity(0.88))
+                }
                 .foregroundStyle(dataColor)
-            Text("KM")
-                .font(AppTheme.Typography.font(size: 22, weight: .bold))
-                .foregroundStyle(dataColor.opacity(0.88))
-        }
-    }
 
-    private var dataColor: Color {
-        isDataDark ? .black : .white
-    }
-
-    private var currentLayoutContent: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            distanceContent
-
-            HStack(spacing: 28) {
-                shareMetric(title: "TIME", value: RunningMetricFormatter.duration(record.elapsedTime))
-                shareMetric(title: "PACE", value: RunningMetricFormatter.pace(record.averagePaceSecondsPerKilometer))
-                shareMetric(title: "KCAL", value: "\(record.estimatedCalories)")
+                if layout.showsDetails {
+                    HStack(spacing: 28) {
+                        metric(title: "TIME", value: RunningMetricFormatter.duration(record.elapsedTime))
+                        metric(title: "PACE", value: RunningMetricFormatter.pace(record.averagePaceSecondsPerKilometer))
+                        metric(title: "KCAL", value: "\(record.estimatedCalories)")
+                    }
+                    .padding(.top, 11)
+                }
             }
-            .padding(.top, 11)
-            .opacity(layout.showsDetails ? 1 : 0)
-            .accessibilityHidden(!layout.showsDetails)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+
+        case .route:
+            RunShareRouteMap(route: record.route, color: routeColor)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
         }
     }
 
-    private func shareMetric(title: String, value: String) -> some View {
+    private func metric(title: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
                 .font(AppTheme.Typography.font(size: 12, weight: .medium))
@@ -831,6 +1191,22 @@ private struct RunShareCanvas: View {
                 .foregroundStyle(dataColor)
         }
     }
+}
+
+private enum RunShareElementFormatters {
+    static let date: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = "yyyy.MM.dd"
+        return formatter
+    }()
+
+    static let timeRange: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = "a h:mm"
+        return formatter
+    }()
 }
 
 private struct RunShareRouteMap: View {
@@ -901,52 +1277,50 @@ private struct RunShareRouteMap: View {
     }
 }
 
-private struct RunShareStickerView: View {
-    let sticker: RunShareSticker
-    let width: CGFloat
+private struct RunShareTransformableView<Content: View>: View {
+    let contentSize: CGSize
     let center: CGPoint
-    @Binding var transform: RunShareStickerTransform
+    let accessibilityName: String
+    @Binding var transform: RunShareCanvasItemTransform
     let isSelected: Bool
     let showsEditingControls: Bool
+    let showsDeleteControl: Bool
     let onSelect: () -> Void
+    let onTapSelected: () -> Void
     let onDelete: () -> Void
+    @ViewBuilder let content: () -> Content
     @GestureState private var dragTranslation: CGSize = .zero
-    @GestureState private var resizeState: RunShareStickerResizeState?
+    @GestureState private var resizeState: RunShareCanvasItemResizeState?
     @GestureState private var rotationDeltaDegrees: Double = 0
 
     var body: some View {
-        Image(sticker.assetName)
-            .resizable()
-            .scaledToFit()
-            .frame(width: width * displayedScale)
-            .contentShape(Rectangle())
-            .highPriorityGesture(moveGesture)
-            .overlay {
-                if showsEditingControls && isSelected {
-                    Rectangle()
-                        .stroke(.white, style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
-                        .allowsHitTesting(false)
+        ZStack {
+            content()
+                .frame(width: contentSize.width, height: contentSize.height)
+                .contentShape(Rectangle())
+                .highPriorityGesture(moveGesture)
+                .overlay {
+                    if showsEditingControls && isSelected {
+                        Rectangle()
+                            .stroke(.white, style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
+                            .allowsHitTesting(false)
+                    }
                 }
+                .scaleEffect(displayedScale)
+                .rotationEffect(.degrees(displayedRotationDegrees))
+
+            ForEach(RunShareCanvasItemResizeCorner.allCases, id: \.self) { corner in
+                resizeHandle(for: corner)
+                    .offset(transformedCornerOffset(for: corner))
             }
-            .overlay(alignment: .topLeading) {
-                resizeHandle(for: .topLeading)
-            }
-            .overlay(alignment: .topTrailing) {
-                resizeHandle(for: .topTrailing)
-            }
-            .overlay(alignment: .bottomLeading) {
-                resizeHandle(for: .bottomLeading)
-            }
-            .overlay(alignment: .bottomTrailing) {
-                resizeHandle(for: .bottomTrailing)
-            }
-            .overlay(alignment: .top) {
-                rotationHandle
-            }
-            .overlay(alignment: .topTrailing) {
-                deleteButton
-            }
-            .rotationEffect(.degrees(displayedRotationDegrees))
+
+            rotationHandle
+                .offset(rotationHandleOffset)
+
+            deleteButton
+                .offset(deleteButtonOffset)
+        }
+            .frame(width: contentSize.width, height: contentSize.height)
             .offset(
                 x: transform.offset.width + dragTranslation.width,
                 y: transform.offset.height + dragTranslation.height
@@ -966,7 +1340,7 @@ private struct RunShareStickerView: View {
 
     @ViewBuilder
     private var deleteButton: some View {
-        if showsEditingControls && isSelected {
+        if showsEditingControls && showsDeleteControl && isSelected {
             Button(action: onDelete) {
                 ZStack {
                     Color.clear
@@ -984,8 +1358,7 @@ private struct RunShareStickerView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .offset(x: 36, y: -36)
-            .accessibilityLabel("스티커 삭제")
+            .accessibilityLabel("\(accessibilityName) 삭제")
         }
     }
 
@@ -1013,14 +1386,13 @@ private struct RunShareStickerView: View {
                     .allowsHitTesting(false)
             }
             .contentShape(Rectangle())
-            .offset(y: -44)
             .highPriorityGesture(rotationGesture)
-            .accessibilityLabel("스티커 회전")
+            .accessibilityLabel("\(accessibilityName) 회전")
         }
     }
 
     @ViewBuilder
-    private func resizeHandle(for corner: RunShareStickerResizeCorner) -> some View {
+    private func resizeHandle(for corner: RunShareCanvasItemResizeCorner) -> some View {
         if showsEditingControls && isSelected {
             ZStack {
                 Color.clear
@@ -1035,12 +1407,8 @@ private struct RunShareStickerView: View {
                     }
             }
             .contentShape(Rectangle())
-            .offset(
-                x: corner.horizontalDirection * 15,
-                y: corner.verticalDirection * 15
-            )
             .highPriorityGesture(resizeGesture(for: corner))
-            .accessibilityLabel("스티커 크기 조절")
+            .accessibilityLabel("\(accessibilityName) 크기 조절")
         }
     }
 
@@ -1053,25 +1421,28 @@ private struct RunShareStickerView: View {
                 state = value.translation
             }
             .onEnded { value in
+                let isTap = hypot(value.translation.width, value.translation.height) < 3
                 var updatedTransform = transform
                 updatedTransform.offset = CGSize(
                     width: updatedTransform.offset.width + value.translation.width,
                     height: updatedTransform.offset.height + value.translation.height
                 )
                 transform = updatedTransform
-                if !isSelected {
+                if isTap && isSelected {
+                    onTapSelected()
+                } else if !isSelected {
                     onSelect()
                 }
             }
     }
 
-    private func resizeGesture(for corner: RunShareStickerResizeCorner) -> some Gesture {
+    private func resizeGesture(for corner: RunShareCanvasItemResizeCorner) -> some Gesture {
         DragGesture(
             minimumDistance: 0,
             coordinateSpace: .named(RunShareCoordinateSpace.canvas)
         )
             .updating($resizeState) { value, state, _ in
-                state = RunShareStickerResizeState(
+                state = RunShareCanvasItemResizeState(
                     corner: corner,
                     translation: value.translation
                 )
@@ -1105,12 +1476,54 @@ private struct RunShareStickerView: View {
 
     private func scaleDelta(
         for translation: CGSize,
-        corner: RunShareStickerResizeCorner
+        corner: RunShareCanvasItemResizeCorner
     ) -> CGFloat {
-        let directionalTranslation =
-            translation.width * corner.horizontalDirection +
-            translation.height * corner.verticalDirection
-        return directionalTranslation / max(width * 2, 1)
+        let radians = transform.rotationDegrees * .pi / 180
+        let localTranslation = CGSize(
+            width: translation.width * cos(radians) + translation.height * sin(radians),
+            height: -translation.width * sin(radians) + translation.height * cos(radians)
+        )
+        let cornerVector = CGVector(
+            dx: corner.horizontalDirection * contentSize.width / 2,
+            dy: corner.verticalDirection * contentSize.height / 2
+        )
+        let squaredLength = cornerVector.dx * cornerVector.dx
+            + cornerVector.dy * cornerVector.dy
+        guard squaredLength > 0 else { return 0 }
+
+        return (
+            localTranslation.width * cornerVector.dx
+                + localTranslation.height * cornerVector.dy
+        ) / squaredLength
+    }
+
+    private func transformedCornerOffset(
+        for corner: RunShareCanvasItemResizeCorner
+    ) -> CGSize {
+        transformedOffset(
+            x: corner.horizontalDirection * contentSize.width * displayedScale / 2,
+            y: corner.verticalDirection * contentSize.height * displayedScale / 2
+        )
+    }
+
+    private var rotationHandleOffset: CGSize {
+        transformedOffset(
+            x: 0,
+            y: -(contentSize.height * displayedScale / 2 + 34)
+        )
+    }
+
+    private var deleteButtonOffset: CGSize {
+        let corner = transformedCornerOffset(for: .topTrailing)
+        return CGSize(width: corner.width + 24, height: corner.height - 24)
+    }
+
+    private func transformedOffset(x: CGFloat, y: CGFloat) -> CGSize {
+        let radians = displayedRotationDegrees * .pi / 180
+        return CGSize(
+            width: x * cos(radians) - y * sin(radians),
+            height: x * sin(radians) + y * cos(radians)
+        )
     }
 
     private func rotationDelta(for value: DragGesture.Value) -> Double {
@@ -1140,18 +1553,123 @@ private struct RunShareStickerView: View {
     }
 }
 
-private struct RunShareStickerTransform: Equatable {
+private struct RunShareLocationIcon: View {
+    let color: Color
+
+    var body: some View {
+        GeometryReader { geometry in
+            let size = geometry.size
+            ZStack {
+                Path { path in
+                    path.move(to: CGPoint(x: size.width / 2, y: size.height))
+                    path.addCurve(
+                        to: CGPoint(x: size.width * 0.08, y: size.height * 0.40),
+                        control1: CGPoint(x: size.width * 0.36, y: size.height * 0.80),
+                        control2: CGPoint(x: size.width * 0.08, y: size.height * 0.60)
+                    )
+                    path.addCurve(
+                        to: CGPoint(x: size.width / 2, y: size.height * 0.04),
+                        control1: CGPoint(x: size.width * 0.08, y: size.height * 0.18),
+                        control2: CGPoint(x: size.width * 0.26, y: size.height * 0.04)
+                    )
+                    path.addCurve(
+                        to: CGPoint(x: size.width * 0.92, y: size.height * 0.40),
+                        control1: CGPoint(x: size.width * 0.74, y: size.height * 0.04),
+                        control2: CGPoint(x: size.width * 0.92, y: size.height * 0.18)
+                    )
+                    path.addCurve(
+                        to: CGPoint(x: size.width / 2, y: size.height),
+                        control1: CGPoint(x: size.width * 0.92, y: size.height * 0.60),
+                        control2: CGPoint(x: size.width * 0.64, y: size.height * 0.80)
+                    )
+                }
+                .stroke(color, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+
+                Circle()
+                    .stroke(color, lineWidth: 2)
+                    .frame(width: size.width * 0.34, height: size.width * 0.34)
+                    .offset(y: -size.height * 0.18)
+            }
+        }
+    }
+}
+
+private struct RunShareStickerView: View {
+    let sticker: RunShareSticker
+    let record: RunningRecord
+    let regionName: String?
+    let textColor: Color
+    let size: CGSize
+    let center: CGPoint
+    @Binding var transform: RunShareCanvasItemTransform
+    let isSelected: Bool
+    let showsEditingControls: Bool
+    let onSelect: () -> Void
+    let onTapSelected: () -> Void
+    let onDelete: () -> Void
+
+    var body: some View {
+        RunShareTransformableView(
+            contentSize: size,
+            center: center,
+            accessibilityName: "스티커",
+            transform: $transform,
+            isSelected: isSelected,
+            showsEditingControls: showsEditingControls,
+            showsDeleteControl: true,
+            onSelect: onSelect,
+            onTapSelected: onTapSelected,
+            onDelete: onDelete
+        ) {
+            stickerContent
+        }
+    }
+
+    @ViewBuilder
+    private var stickerContent: some View {
+        switch sticker {
+        case .date:
+            Text(RunShareElementFormatters.date.string(from: record.startedAt))
+            .font(AppTheme.Typography.font(size: 19, weight: .bold))
+            .foregroundStyle(textColor)
+            .lineLimit(1)
+            .minimumScaleFactor(0.65)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        case .region:
+            if let regionName {
+                HStack(spacing: 6) {
+                    RunShareLocationIcon(color: textColor)
+                        .frame(width: 18, height: 22)
+                    Text(regionName)
+                        .font(AppTheme.Typography.font(size: 21, weight: .bold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
+                .foregroundStyle(textColor)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
+            }
+        default:
+            if let assetName = sticker.assetName {
+                Image(assetName)
+                    .resizable()
+                    .scaledToFit()
+            }
+        }
+    }
+}
+
+private struct RunShareCanvasItemTransform: Equatable {
     var offset: CGSize = .zero
     var scale: CGFloat = 1
     var rotationDegrees: Double = 0
 }
 
-private struct RunShareStickerResizeState {
-    let corner: RunShareStickerResizeCorner
+private struct RunShareCanvasItemResizeState {
+    let corner: RunShareCanvasItemResizeCorner
     let translation: CGSize
 }
 
-private enum RunShareStickerResizeCorner {
+private enum RunShareCanvasItemResizeCorner: CaseIterable, Hashable {
     case topLeading
     case topTrailing
     case bottomLeading
@@ -1184,10 +1702,26 @@ private enum RunShareEditorTab: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .layout: "러닝 데이터 레이아웃"
+        case .layout: "러닝 요소 조합"
         case .sticker: "스티커"
         }
     }
+}
+
+private enum RunShareElement: String, CaseIterable, Hashable, Identifiable {
+    case dataGroup
+    case route
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .dataGroup: "러닝 데이터"
+        case .route: "러닝 루트"
+        }
+    }
+
+    static let routeHeightRatio: CGFloat = 0.38
 }
 
 private enum RunShareLayout: String, CaseIterable, Identifiable {
@@ -1202,8 +1736,8 @@ private enum RunShareLayout: String, CaseIterable, Identifiable {
         switch self {
         case .distance: "러닝 거리"
         case .current: "러닝 데이터"
-        case .routeDistance: "러닝 거리 + 러닝 루트"
-        case .routeCurrent: "러닝 데이터 + 러닝 루트"
+        case .routeDistance: "러닝 거리 + 루트"
+        case .routeCurrent: "러닝 데이터 + 루트"
         }
     }
 
@@ -1230,14 +1764,6 @@ private enum RunShareLayout: String, CaseIterable, Identifiable {
         }
     }
 
-    var routeHeightRatio: CGFloat {
-        switch self {
-        case .routeDistance: 0.42
-        case .routeCurrent: 0.38
-        case .distance, .current: 0
-        }
-    }
-
     var showsDetails: Bool {
         switch self {
         case .distance, .routeDistance: false
@@ -1247,6 +1773,8 @@ private enum RunShareLayout: String, CaseIterable, Identifiable {
 }
 
 private enum RunShareSticker: String, CaseIterable, Hashable, Identifiable {
+    case date
+    case region
     case pamin
     case cheetahPamin
     case surprisedPamin
@@ -1255,8 +1783,14 @@ private enum RunShareSticker: String, CaseIterable, Hashable, Identifiable {
 
     var id: String { rawValue }
 
+    var supportsColorToggle: Bool {
+        self == .date || self == .region
+    }
+
     var title: String {
         switch self {
+        case .date: "러닝 날짜"
+        case .region: "러닝 위치"
         case .pamin: "파민"
         case .cheetahPamin: "치타파민"
         case .surprisedPamin: "놀란 파민"
@@ -1265,8 +1799,9 @@ private enum RunShareSticker: String, CaseIterable, Hashable, Identifiable {
         }
     }
 
-    var assetName: String {
+    var assetName: String? {
         switch self {
+        case .date, .region: nil
         case .pamin: "pamin_sticker"
         case .cheetahPamin: "cheetah_pamin_sticker"
         case .surprisedPamin: "surprised_pamin_sticker"
@@ -1277,6 +1812,7 @@ private enum RunShareSticker: String, CaseIterable, Hashable, Identifiable {
 
     var widthRatio: CGFloat {
         switch self {
+        case .date, .region: 0
         case .pamin: 0.24
         case .cheetahPamin: 0.44
         case .surprisedPamin: 0.26
@@ -1287,6 +1823,8 @@ private enum RunShareSticker: String, CaseIterable, Hashable, Identifiable {
 
     var defaultX: CGFloat {
         switch self {
+        case .date: 0.30
+        case .region: 0.76
         case .pamin: 0.84
         case .cheetahPamin: 0.76
         case .surprisedPamin: 0.84
@@ -1297,6 +1835,8 @@ private enum RunShareSticker: String, CaseIterable, Hashable, Identifiable {
 
     var defaultY: CGFloat {
         switch self {
+        case .date: 0.88
+        case .region: 0.26
         case .pamin: 0.77
         case .cheetahPamin: 0.75
         case .surprisedPamin: 0.73
