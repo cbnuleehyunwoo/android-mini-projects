@@ -1164,6 +1164,7 @@ private struct RunShareElementView: View {
                     .scaledToFit()
                     .frame(width: logoSize.width, height: logoSize.height)
                     .shadow(color: .black.opacity(0.35), radius: 5, y: 2)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
                     .padding(.bottom, 2)
 
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
