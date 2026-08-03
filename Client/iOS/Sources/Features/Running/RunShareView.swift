@@ -843,21 +843,18 @@ private struct RunShareCanvas: View {
                     .zIndex(selectedSticker == sticker ? 11 : 3)
                 }
 
-                VStack {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        Image("runpamine_share_logo")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: geometry.size.width * 0.34)
-                            .shadow(color: .black.opacity(0.35), radius: 5, y: 2)
-                            .padding(.trailing, 12)
-                            .padding(.bottom, 12)
-                    }
-                }
-                .allowsHitTesting(false)
-                .zIndex(20)
+                let logoBottomInset = 82 + detailedDataGroupSize(in: geometry.size).height + 12
+
+                Image("runpamine_share_logo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: geometry.size.width * 0.30)
+                    .shadow(color: .black.opacity(0.35), radius: 5, y: 2)
+                    .padding(.leading, 20)
+                    .padding(.bottom, logoBottomInset)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                    .allowsHitTesting(false)
+                    .zIndex(20)
             }
         }
         .aspectRatio(RunShareCanvasMetrics.aspectRatio, contentMode: .fit)
