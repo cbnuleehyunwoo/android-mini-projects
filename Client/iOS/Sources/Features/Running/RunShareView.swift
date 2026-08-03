@@ -1173,12 +1173,19 @@ private struct RunShareElementView: View {
         switch element {
         case .dataGroup:
             VStack(alignment: .leading, spacing: 0) {
-                Image("runpamine_share_logo")
+                Image("runpamine_share_logo_text")
                     .renderingMode(.template)
                     .resizable()
                     .scaledToFit()
                     .frame(width: logoSize.width, height: logoSize.height)
                     .foregroundStyle(dataColor)
+                    .overlay {
+                        Image("runpamine_share_logo_runner")
+                            .renderingMode(.original)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: logoSize.width, height: logoSize.height)
+                    }
                     .shadow(color: .black.opacity(0.35), radius: 5, y: 2)
                     .padding(.bottom, 2)
 
