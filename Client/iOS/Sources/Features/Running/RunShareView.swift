@@ -910,11 +910,25 @@ private struct RunShareCanvas: View {
         )
     }
 
+    /// 로고 너비를 러닝 거리 라인("0.16 KM") 너비에 맞춰, 왼쪽 끝은 TIME·오른쪽 끝은 KM에 정렬되도록 한다.
     private func shareLogoSize(in canvasSize: CGSize) -> CGSize {
-        let width = canvasSize.width * 0.30
+        let width = distanceLineWidth(in: canvasSize)
         let aspectRatio = UIImage(named: "runpamine_share_logo")
             .map { $0.size.height / max($0.size.width, 1) } ?? 0.4
         return CGSize(width: width, height: width * aspectRatio)
+    }
+
+    private func distanceLineWidth(in canvasSize: CGSize) -> CGFloat {
+        let distanceFont = UIFont(name: "Pretendard-ExtraBold", size: 66)
+            ?? UIFont.systemFont(ofSize: 66, weight: .heavy)
+        let unitFont = UIFont(name: "Pretendard-Bold", size: 22)
+            ?? UIFont.systemFont(ofSize: 22, weight: .bold)
+        let distance = record.distanceKilometers.formatted(
+            .number.precision(.fractionLength(2))
+        )
+        let distanceWidth = distance.size(withAttributes: [.font: distanceFont]).width
+        let unitWidth = "KM".size(withAttributes: [.font: unitFont]).width
+        return distanceWidth + 8 + unitWidth
     }
 
     private func routeElementSize(in canvasSize: CGSize) -> CGSize {
@@ -1159,22 +1173,21 @@ private struct RunShareElementView: View {
         switch element {
         case .dataGroup:
             VStack(alignment: .leading, spacing: 0) {
-                VStack(alignment: .trailing, spacing: 2) {
-                    Image("runpamine_share_logo")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: logoSize.width, height: logoSize.height)
-                        .shadow(color: .black.opacity(0.35), radius: 5, y: 2)
+                Image("runpamine_share_logo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: logoSize.width, height: logoSize.height)
+                    .shadow(color: .black.opacity(0.35), radius: 5, y: 2)
+                    .padding(.bottom, 2)
 
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text(record.distanceKilometers.formatted(.number.precision(.fractionLength(2))))
-                            .font(AppTheme.Typography.font(size: 66, weight: .extraBold))
-                        Text("KM")
-                            .font(AppTheme.Typography.font(size: 22, weight: .bold))
-                            .foregroundStyle(dataColor.opacity(0.88))
-                    }
-                    .foregroundStyle(dataColor)
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(record.distanceKilometers.formatted(.number.precision(.fractionLength(2))))
+                        .font(AppTheme.Typography.font(size: 66, weight: .extraBold))
+                    Text("KM")
+                        .font(AppTheme.Typography.font(size: 22, weight: .bold))
+                        .foregroundStyle(dataColor.opacity(0.88))
                 }
+                .foregroundStyle(dataColor)
 
                 if layout.showsDetails {
                     HStack(spacing: 28) {
