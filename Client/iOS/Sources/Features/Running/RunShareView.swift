@@ -843,7 +843,8 @@ private struct RunShareCanvas: View {
                     .zIndex(selectedSticker == sticker ? 11 : 3)
                 }
 
-                let logoBottomInset = 82 + detailedDataGroupSize(in: geometry.size).height + 12
+                let dataTransform = elementTransforms[.dataGroup] ?? RunShareCanvasItemTransform()
+                let logoBottomInset = 82 + detailedDataGroupSize(in: geometry.size).height + 2
 
                 Image("runpamine_share_logo")
                     .resizable()
@@ -853,6 +854,7 @@ private struct RunShareCanvas: View {
                     .padding(.leading, 20)
                     .padding(.bottom, logoBottomInset)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                    .offset(x: dataTransform.offset.width, y: dataTransform.offset.height)
                     .allowsHitTesting(false)
                     .zIndex(20)
             }
