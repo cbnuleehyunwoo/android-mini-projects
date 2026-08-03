@@ -8,6 +8,8 @@ import android.graphics.Color
 import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Shader
@@ -198,7 +200,7 @@ internal object RunShareRenderer {
         val distanceRowWidth = suffixLeft + unitWidth
         val logoBlockHeight = distanceRowWidth * SHARE_LOGO_HEIGHT_RATIO + 12f
         val distanceBaseline = logoBlockHeight + 198f
-        drawDataBrand(context, canvas, 0f, 0f, distanceRowWidth)
+        drawDataBrand(context, canvas, 0f, 0f, distanceRowWidth, color)
         canvas.drawText(data.distance, 0f, distanceBaseline, distancePaint)
         canvas.drawText("KM", suffixLeft, distanceBaseline - 10f, unitPaint)
 
@@ -371,12 +373,14 @@ internal object RunShareRenderer {
         left: Float,
         top: Float,
         width: Float,
+        color: Int,
     ) {
-        val logo = context?.let { BitmapFactory.decodeResource(it.resources, R.drawable.runpamine_share_logo) }
-        if (logo == null) {
+        val textLogo =
+            context?.let { BitmapFactory.decodeResource(it.resources, R.drawable.runpamine_share_logo_text) }
+        if (textLogo == null) {
             val paint =
                 Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                    color = Color.WHITE
+                    this.color = color
                     textSize = 30f
                     typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
                     textAlign = Paint.Align.CENTER
@@ -385,9 +389,20 @@ internal object RunShareRenderer {
             return
         }
 
-        val height = width * logo.height / logo.width
+        val height = width * textLogo.height / textLogo.width
         val dst = RectF(left, top, left + width, top + height)
-        canvas.drawBitmap(logo, null, dst, Paint(Paint.ANTI_ALIAS_FLAG))
+        // 글자는 데이터 색상 토글에 맞춰 틴트하고, 러너 캐릭터는 원색을 유지한다.
+        val textPaint =
+            Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                colorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
+            }
+        canvas.drawBitmap(textLogo, null, dst, textPaint)
+
+        val runnerLogo =
+            context.let { BitmapFactory.decodeResource(it.resources, R.drawable.runpamine_share_logo_runner) }
+        if (runnerLogo != null) {
+            canvas.drawBitmap(runnerLogo, null, dst, Paint(Paint.ANTI_ALIAS_FLAG))
+        }
     }
 
     private fun drawTransformed(

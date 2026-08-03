@@ -62,6 +62,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asImageBitmap
@@ -907,12 +908,22 @@ private fun RunShareDataContent(
 
     Column {
         Column {
-            Image(
-                painter = painterResource(R.drawable.runpamine_share_logo),
-                contentDescription = "런파민",
-                contentScale = ContentScale.FillWidth,
-                modifier = Modifier.width(if (distanceRowWidthPx > 0) distanceRowWidth else 1.dp),
-            )
+            Box(modifier = Modifier.width(if (distanceRowWidthPx > 0) distanceRowWidth else 1.dp)) {
+                // 글자는 데이터 색상 토글에 맞춰 틴트하고, 러너 캐릭터는 원색을 유지한다.
+                Image(
+                    painter = painterResource(R.drawable.runpamine_share_logo_text),
+                    contentDescription = "런파민",
+                    contentScale = ContentScale.FillWidth,
+                    colorFilter = ColorFilter.tint(color),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Image(
+                    painter = painterResource(R.drawable.runpamine_share_logo_runner),
+                    contentDescription = null,
+                    contentScale = ContentScale.FillWidth,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
             Spacer(modifier = Modifier.height(4.dp))
             Row(
                 modifier = Modifier.onSizeChanged { distanceRowWidthPx = it.width },
