@@ -28,7 +28,12 @@ import com.woowacourse.runpamine.domain.run.RunSession
 import com.woowacourse.runpamine.presentation.component.RunpamineConfirmationDialog
 import com.woowacourse.runpamine.presentation.running.components.RunningScreenContent
 import com.woowacourse.runpamine.presentation.running.viewmodel.RunTrackingViewModel
+import com.woowacourse.runpamine.presentation.share.RunShareData
+import com.woowacourse.runpamine.presentation.share.RunShareFlow
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @Composable
 fun RunningScreen(
@@ -51,6 +56,7 @@ fun RunningScreen(
     var completedRoutePoints by remember { mutableStateOf(emptyList<RunPoint>()) }
     var showStopDialog by rememberSaveable { mutableStateOf(false) }
     var hasStoppedRun by rememberSaveable { mutableStateOf(false) }
+    var showShareFlow by rememberSaveable { mutableStateOf(false) }
     val locationPermissionLauncher =
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.RequestMultiplePermissions(),
@@ -83,6 +89,7 @@ fun RunningScreen(
             calories = session.calories.toString(),
             routePoints = completedRoutePoints,
             onCompleteClick = onStopCompleted,
+            onShareClick = { showShareFlow = true },
             modifier = modifier,
         )
     } ?: RunningScreenContent(
@@ -112,6 +119,25 @@ fun RunningScreen(
                 }
             },
         )
+    }
+
+    if (showShareFlow) {
+        val session = completedSession
+        if (session != null) {
+            RunShareFlow(
+                data =
+                    RunShareData(
+                        distance = session.distanceText(),
+                        time = session.durationSeconds.elapsedTimeText(),
+                        pace = session.paceText(),
+                        calories = session.calories.toString(),
+                        date = session.startedAt.atZone(ZoneId.systemDefault()).format(SHARE_DATE_FORMATTER),
+                        routePoints = completedRoutePoints,
+                    ),
+                onClose = { showShareFlow = false },
+                onSaved = { showShareFlow = false },
+            )
+        }
     }
 }
 
@@ -170,3 +196,6 @@ private fun RunningScreenPreview() {
 
 private const val METERS_PER_KILOMETER = 1_000.0
 private const val SECONDS_PER_MINUTE = 60
+
+private val SHARE_DATE_FORMATTER =
+    DateTimeFormatter.ofPattern("yyyy년 M월 d일 EEEE", Locale.KOREAN)

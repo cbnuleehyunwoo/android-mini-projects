@@ -12,13 +12,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.woowacourse.runpamine.di.runpamineContainer
 import com.woowacourse.runpamine.presentation.createteam.CreateTeamScreen
+import com.woowacourse.runpamine.presentation.feedback.FeedbackScreen
 import com.woowacourse.runpamine.presentation.history.HistoryScreen
 import com.woowacourse.runpamine.presentation.home.HomeScreen
 import com.woowacourse.runpamine.presentation.invite.InviteTeamScreen
 import com.woowacourse.runpamine.presentation.join.JoinScreen
 import com.woowacourse.runpamine.presentation.login.LoginScreen
 import com.woowacourse.runpamine.presentation.login.viewmodel.LoginDestination
-import com.woowacourse.runpamine.presentation.feedback.FeedbackScreen
 import com.woowacourse.runpamine.presentation.nickname.ChangeNicknameScreen
 import com.woowacourse.runpamine.presentation.nickname.SetNicknameScreen
 import com.woowacourse.runpamine.presentation.onboarding.OnboardingScreen
