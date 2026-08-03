@@ -1159,22 +1159,22 @@ private struct RunShareElementView: View {
         switch element {
         case .dataGroup:
             VStack(alignment: .leading, spacing: 0) {
-                Image("runpamine_share_logo")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: logoSize.width, height: logoSize.height)
-                    .shadow(color: .black.opacity(0.35), radius: 5, y: 2)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                    .padding(.bottom, 2)
+                VStack(alignment: .trailing, spacing: 2) {
+                    Image("runpamine_share_logo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: logoSize.width, height: logoSize.height)
+                        .shadow(color: .black.opacity(0.35), radius: 5, y: 2)
 
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text(record.distanceKilometers.formatted(.number.precision(.fractionLength(2))))
-                        .font(AppTheme.Typography.font(size: 66, weight: .extraBold))
-                    Text("KM")
-                        .font(AppTheme.Typography.font(size: 22, weight: .bold))
-                        .foregroundStyle(dataColor.opacity(0.88))
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(record.distanceKilometers.formatted(.number.precision(.fractionLength(2))))
+                            .font(AppTheme.Typography.font(size: 66, weight: .extraBold))
+                        Text("KM")
+                            .font(AppTheme.Typography.font(size: 22, weight: .bold))
+                            .foregroundStyle(dataColor.opacity(0.88))
+                    }
+                    .foregroundStyle(dataColor)
                 }
-                .foregroundStyle(dataColor)
 
                 if layout.showsDetails {
                     HStack(spacing: 28) {
