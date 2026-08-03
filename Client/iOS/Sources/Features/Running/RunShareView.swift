@@ -760,6 +760,9 @@ private struct RunShareCanvas: View {
     let onDeleteSticker: ((RunShareSticker) -> Void)?
     let onSizeChange: ((CGSize) -> Void)?
 
+    /// 로고와 러닝 거리 사이 간격.
+    private let shareLogoSpacing: CGFloat = 2
+
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -798,6 +801,7 @@ private struct RunShareCanvas: View {
                         regionName: regionName,
                         size: size,
                         center: center,
+                        logoSize: shareLogoSize(in: geometry.size),
                         dataColor: darkElements.contains(.dataGroup) ? .black : .white,
                         routeColor: darkElements.contains(.route) ? .black : .white,
                         transform: elementTransformBinding(for: element),
@@ -842,21 +846,6 @@ private struct RunShareCanvas: View {
                     .position(x: center.x, y: center.y)
                     .zIndex(selectedSticker == sticker ? 11 : 3)
                 }
-
-                let dataTransform = elementTransforms[.dataGroup] ?? RunShareCanvasItemTransform()
-                let logoBottomInset = 82 + detailedDataGroupSize(in: geometry.size).height + 2
-
-                Image("runpamine_share_logo")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: geometry.size.width * 0.30)
-                    .shadow(color: .black.opacity(0.35), radius: 5, y: 2)
-                    .padding(.leading, 20)
-                    .padding(.bottom, logoBottomInset)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
-                    .offset(x: dataTransform.offset.width, y: dataTransform.offset.height)
-                    .allowsHitTesting(false)
-                    .zIndex(20)
             }
         }
         .aspectRatio(RunShareCanvasMetrics.aspectRatio, contentMode: .fit)
@@ -903,12 +892,29 @@ private struct RunShareCanvas: View {
     private func elementSize(for element: RunShareElement, in canvasSize: CGSize) -> CGSize {
         switch element {
         case .dataGroup:
-            layout.showsDetails
-                ? detailedDataGroupSize(in: canvasSize)
-                : distanceElementSize(in: canvasSize)
+            dataGroupSize(showsDetails: layout.showsDetails, in: canvasSize)
         case .route:
             routeElementSize(in: canvasSize)
         }
+    }
+
+    /// 러닝 데이터(거리·상세)와 그 위에 올라가는 런파민 로고를 하나의 이동/확대 단위로 묶은 크기.
+    private func dataGroupSize(showsDetails: Bool, in canvasSize: CGSize) -> CGSize {
+        let base = showsDetails
+            ? detailedDataGroupSize(in: canvasSize)
+            : distanceElementSize(in: canvasSize)
+        let logo = shareLogoSize(in: canvasSize)
+        return CGSize(
+            width: max(base.width, logo.width),
+            height: logo.height + shareLogoSpacing + base.height
+        )
+    }
+
+    private func shareLogoSize(in canvasSize: CGSize) -> CGSize {
+        let width = canvasSize.width * 0.30
+        let aspectRatio = UIImage(named: "runpamine_share_logo")
+            .map { $0.size.height / max($0.size.width, 1) } ?? 0.4
+        return CGSize(width: width, height: width * aspectRatio)
     }
 
     private func routeElementSize(in canvasSize: CGSize) -> CGSize {
@@ -1046,7 +1052,7 @@ private struct RunShareCanvas: View {
         case .route:
             return CGPoint(x: canvasSize.width / 2, y: 30 + size.height / 2)
         case .dataGroup:
-            let fullGroupHeight = detailedDataGroupSize(in: canvasSize).height
+            let fullGroupHeight = dataGroupSize(showsDetails: true, in: canvasSize).height
             let bottomReserve: CGFloat = 82
             let top = canvasSize.height - bottomReserve - fullGroupHeight
             let savedScale = elementTransforms[.dataGroup]?.scale ?? 1
@@ -1121,6 +1127,7 @@ private struct RunShareElementView: View {
     let regionName: String?
     let size: CGSize
     let center: CGPoint
+    let logoSize: CGSize
     let dataColor: Color
     let routeColor: Color
     @Binding var transform: RunShareCanvasItemTransform
@@ -1152,6 +1159,13 @@ private struct RunShareElementView: View {
         switch element {
         case .dataGroup:
             VStack(alignment: .leading, spacing: 0) {
+                Image("runpamine_share_logo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: logoSize.width, height: logoSize.height)
+                    .shadow(color: .black.opacity(0.35), radius: 5, y: 2)
+                    .padding(.bottom, 2)
+
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text(record.distanceKilometers.formatted(.number.precision(.fractionLength(2))))
                         .font(AppTheme.Typography.font(size: 66, weight: .extraBold))
