@@ -14,6 +14,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.IosShare
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,6 +46,7 @@ fun RunningCompleteScreen(
     calories: String,
     routePoints: List<RunPoint>,
     onCompleteClick: () -> Unit,
+    onShareClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -55,6 +60,20 @@ fun RunningCompleteScreen(
                     .padding(top = 28.dp)
                     .padding(bottom = 96.dp),
         ) {
+            Row(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                IconButton(onClick = onShareClick) {
+                    Icon(
+                        imageVector = Icons.Outlined.IosShare,
+                        contentDescription = "러닝 기록 공유",
+                    )
+                }
+            }
             RunningRouteMap(
                 points = routePoints,
                 modifier =
@@ -158,6 +177,7 @@ private fun RunningCompleteScreenPreview() {
             calories = "344",
             routePoints = emptyList(),
             onCompleteClick = {},
+            onShareClick = {},
             modifier = Modifier.fillMaxSize(),
         )
     }
@@ -175,6 +195,7 @@ private fun ShortRunningCompleteScreenPreview() {
             calories = "0",
             routePoints = emptyList(),
             onCompleteClick = {},
+            onShareClick = {},
             modifier = Modifier.fillMaxSize(),
         )
     }
