@@ -57,7 +57,6 @@ fun RunningCompleteScreen(
                 Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(top = 28.dp)
                     .padding(bottom = 96.dp),
         ) {
             Row(
@@ -153,8 +152,7 @@ fun RunningCompleteScreen(
                 Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .padding(horizontal = 32.dp, vertical = 34.dp)
-                    .navigationBarsPadding(),
+                    .padding(horizontal = 32.dp, vertical = 8.dp)
         ) {
             BottomButton(
                 text = "완료",
