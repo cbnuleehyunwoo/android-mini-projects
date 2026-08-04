@@ -56,6 +56,7 @@ fun ChangeNicknameScreen(
 ) {
     NicknameRoute(
         topBarTitle = stringResource(R.string.change_nickname_bar),
+        placeholderText = stringResource(R.string.change_nickname_placeholder),
         submitButtonText = stringResource(R.string.change_nickname_button),
         loadingButtonText = stringResource(R.string.change_nickname_loading),
         onBackClick = onBackClick,
@@ -72,6 +73,7 @@ fun SetNicknameScreen(
 ) {
     NicknameRoute(
         topBarTitle = stringResource(R.string.set_nickname_bar),
+        placeholderText = stringResource(R.string.set_nickname_placeholder),
         submitButtonText = stringResource(R.string.set_nickname_button),
         loadingButtonText = stringResource(R.string.change_nickname_loading),
         onBackClick = onBackClick,
@@ -83,6 +85,7 @@ fun SetNicknameScreen(
 @Composable
 private fun NicknameRoute(
     topBarTitle: String,
+    placeholderText: String,
     submitButtonText: String,
     loadingButtonText: String,
     onBackClick: () -> Unit,
@@ -106,6 +109,7 @@ private fun NicknameRoute(
     ChangeNicknameContent(
         uiState = uiState,
         topBarTitle = topBarTitle,
+        placeholderText = placeholderText,
         submitButtonText = submitButtonText,
         loadingButtonText = loadingButtonText,
         onNicknameChange = viewModel::updateNickname,
@@ -119,6 +123,7 @@ private fun NicknameRoute(
 private fun ChangeNicknameContent(
     uiState: NicknameUiState,
     topBarTitle: String,
+    placeholderText: String,
     submitButtonText: String,
     loadingButtonText: String,
     onNicknameChange: (String) -> Unit,
@@ -163,6 +168,7 @@ private fun ChangeNicknameContent(
             Spacer(modifier = Modifier.height(18.dp))
             NicknameTextField(
                 value = uiState.nickname,
+                placeholderText = placeholderText,
                 onValueChange = onNicknameChange,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -206,6 +212,7 @@ private fun ChangeNicknameContent(
 @Composable
 private fun NicknameTextField(
     value: String,
+    placeholderText: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -215,7 +222,7 @@ private fun NicknameTextField(
         modifier = modifier.height(RunpamineLayout.FieldHeight),
         placeholder = {
             Text(
-                text = stringResource(R.string.change_nickname_placeholder),
+                text = placeholderText,
                 style = MaterialTheme.typography.headlineMedium,
                 color = Color(0xFF6B7280),
             )
@@ -277,6 +284,7 @@ private fun ChangeNicknameScreenPreview() {
         ChangeNicknameContent(
             uiState = NicknameUiState(),
             topBarTitle = "닉네임 변경",
+            placeholderText = "변경할 닉네임을 입력해주세요.",
             submitButtonText = "변경하기",
             loadingButtonText = "설정 중...",
             onNicknameChange = {},
