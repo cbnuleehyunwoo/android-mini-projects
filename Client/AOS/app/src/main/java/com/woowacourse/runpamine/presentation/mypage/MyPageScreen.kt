@@ -61,6 +61,7 @@ fun MyPageBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
+        dragHandle = null,
         containerColor = Color.White,
         modifier = modifier,
     ) {
@@ -153,6 +154,7 @@ private fun MyPageContent(
             title = stringResource(R.string.my_page_title),
             onBackClick = onBackClick,
             showBackButton = showBackButton,
+            showCloseButton = !showBackButton,
             modifier =
                 Modifier
                     .fillMaxWidth()
@@ -166,7 +168,6 @@ private fun MyPageContent(
                 modifier =
                     Modifier
                         .align(Alignment.CenterHorizontally)
-                        .padding(top = 34.dp),
             )
             uiState.errorMessage?.let { message ->
                 Text(
@@ -179,7 +180,7 @@ private fun MyPageContent(
                     modifier = Modifier.padding(top = 12.dp),
                 )
             }
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(24.dp))
             MyPageSection(
                 title = stringResource(R.string.my_page_account_settings),
             ) {
