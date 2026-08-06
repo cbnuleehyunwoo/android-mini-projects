@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,6 +27,7 @@ fun ScreenTopBar(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
     showBackButton: Boolean = true,
+    showCloseButton: Boolean = false,
 ) {
     Box(
         modifier =
@@ -49,6 +51,19 @@ fun ScreenTopBar(
                 modifier =
                     Modifier
                         .align(Alignment.CenterStart)
+                        .size(44.dp)
+                        .padding(10.dp)
+                        .clickable(onClick = onBackClick),
+            )
+        }
+        if (showCloseButton) {
+            Icon(
+                imageVector = Icons.Rounded.Close,
+                contentDescription = "닫기",
+                tint = Color.Black,
+                modifier =
+                    Modifier
+                        .align(Alignment.CenterEnd)
                         .size(44.dp)
                         .padding(10.dp)
                         .clickable(onClick = onBackClick),
