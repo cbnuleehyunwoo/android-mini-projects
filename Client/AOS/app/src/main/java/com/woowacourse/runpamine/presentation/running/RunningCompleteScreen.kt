@@ -31,9 +31,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.woowacourse.runpamine.R
 import com.woowacourse.runpamine.domain.run.RunPoint
+import com.woowacourse.runpamine.domain.run.RunSplit
 import com.woowacourse.runpamine.presentation.component.BottomButton
 import com.woowacourse.runpamine.presentation.running.components.RunningMetricCard
 import com.woowacourse.runpamine.presentation.running.components.RunningRouteMap
+import com.woowacourse.runpamine.presentation.running.components.SplitPaceSection
 import com.woowacourse.runpamine.ui.theme.Gray40
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
@@ -45,6 +47,7 @@ fun RunningCompleteScreen(
     pace: String,
     calories: String,
     routePoints: List<RunPoint>,
+    splits: List<RunSplit>,
     onCompleteClick: () -> Unit,
     onShareClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -123,6 +126,10 @@ fun RunningCompleteScreen(
                         summaryStyle = true,
                     )
                 }
+                SplitPaceSection(
+                    splits = splits,
+                    modifier = Modifier.padding(top = 10.dp),
+                )
                 if (distanceMeters < MINIMUM_RECORDED_DISTANCE_METERS) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -174,6 +181,7 @@ private fun RunningCompleteScreenPreview() {
             pace = "5'30\"",
             calories = "344",
             routePoints = emptyList(),
+            splits = emptyList(),
             onCompleteClick = {},
             onShareClick = {},
             modifier = Modifier.fillMaxSize(),
@@ -192,6 +200,7 @@ private fun ShortRunningCompleteScreenPreview() {
             pace = "7'35\"",
             calories = "0",
             routePoints = emptyList(),
+            splits = emptyList(),
             onCompleteClick = {},
             onShareClick = {},
             modifier = Modifier.fillMaxSize(),

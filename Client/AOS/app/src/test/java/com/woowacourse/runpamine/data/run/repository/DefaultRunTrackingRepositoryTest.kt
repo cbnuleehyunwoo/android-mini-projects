@@ -4,6 +4,7 @@ import com.woowacourse.runpamine.data.run.local.RunLocalDataSource
 import com.woowacourse.runpamine.domain.run.LocationTracker
 import com.woowacourse.runpamine.domain.run.RunPoint
 import com.woowacourse.runpamine.domain.run.RunSession
+import com.woowacourse.runpamine.domain.run.RunSplit
 import com.woowacourse.runpamine.domain.run.RunSyncStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -179,6 +180,7 @@ class DefaultRunTrackingRepositoryTest {
             durationSeconds: Long,
             averagePaceSecondsPerKm: Int,
             calories: Int,
+            splits: List<RunSplit>,
         ) {
             points += point
             session.value =
@@ -187,6 +189,7 @@ class DefaultRunTrackingRepositoryTest {
                     durationSeconds = durationSeconds,
                     averagePaceSecondsPerKm = averagePaceSecondsPerKm,
                     calories = calories,
+                    splits = splits,
                 )
         }
 
@@ -196,6 +199,7 @@ class DefaultRunTrackingRepositoryTest {
             durationSeconds: Long,
             averagePaceSecondsPerKm: Int,
             calories: Int,
+            splits: List<RunSplit>,
         ) {
             session.value =
                 session.value?.copy(
@@ -203,6 +207,7 @@ class DefaultRunTrackingRepositoryTest {
                     durationSeconds = durationSeconds,
                     averagePaceSecondsPerKm = averagePaceSecondsPerKm,
                     calories = calories,
+                    splits = splits,
                 )
         }
 

@@ -88,6 +88,7 @@ fun RunningScreen(
             pace = session.paceText(),
             calories = session.calories.toString(),
             routePoints = completedRoutePoints,
+            splits = session.splits,
             onCompleteClick = onStopCompleted,
             onShareClick = { showShareFlow = true },
             modifier = modifier,

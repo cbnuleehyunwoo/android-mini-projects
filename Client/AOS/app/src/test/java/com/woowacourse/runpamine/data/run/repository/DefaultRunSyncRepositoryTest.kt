@@ -10,6 +10,7 @@ import com.woowacourse.runpamine.domain.run.RunPeriodSummary
 import com.woowacourse.runpamine.domain.run.RunPoint
 import com.woowacourse.runpamine.domain.run.RunResult
 import com.woowacourse.runpamine.domain.run.RunSession
+import com.woowacourse.runpamine.domain.run.RunSplit
 import com.woowacourse.runpamine.domain.run.RunSyncStatus
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
@@ -196,6 +197,7 @@ class DefaultRunSyncRepositoryTest {
             durationSeconds: Long,
             averagePaceSecondsPerKm: Int,
             calories: Int,
+            splits: List<RunSplit>,
         ) = Unit
 
         override suspend fun updateRunningMetrics(
@@ -204,6 +206,7 @@ class DefaultRunSyncRepositoryTest {
             durationSeconds: Long,
             averagePaceSecondsPerKm: Int,
             calories: Int,
+            splits: List<RunSplit>,
         ) = Unit
 
         override suspend fun findActiveSession(): RunSession? = null
@@ -267,6 +270,11 @@ class DefaultRunSyncRepositoryTest {
             accessToken: String,
             runId: String,
         ): RunSession = error("Not used")
+
+        override suspend fun getRunSplits(
+            accessToken: String,
+            runId: String,
+        ): List<RunSplit> = emptyList()
     }
 
     private companion object {
