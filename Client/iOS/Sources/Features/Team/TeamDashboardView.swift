@@ -44,8 +44,12 @@ struct TeamDashboardView: View {
             if displayTeam == nil {
                 TeamEmptyStateView(onCreateTeam: onCreateTeam, onJoinTeam: onJoinTeam)
             } else if isWaitingForInitialDashboard {
-                TeamDashboardSkeletonView()
-                    .opacity(cache.isSkeletonVisible ? 1 : 0)
+                ZStack {
+                    Color.white
+
+                    TeamDashboardSkeletonView()
+                        .opacity(cache.isSkeletonVisible ? 1 : 0)
+                }
             } else {
                 teamContent
             }
@@ -427,15 +431,11 @@ struct TeamDashboardView: View {
 
         let clock = ContinuousClock()
         let loadingStartedAt = clock.now
-        let skeletonRevealDeadline = loadingStartedAt.advanced(by: .milliseconds(500))
-        let contentRevealDeadline = loadingStartedAt.advanced(by: .milliseconds(750))
+        let minimumSkeletonDeadline = loadingStartedAt.advanced(by: .milliseconds(500))
         let shouldGateSkeleton = isWaitingForInitialDashboard
-        let skeletonRevealTask = Task { @MainActor in
-            try await clock.sleep(until: skeletonRevealDeadline)
-            guard shouldGateSkeleton, isWaitingForInitialDashboard else { return }
+        if shouldGateSkeleton {
             cache.isSkeletonVisible = true
         }
-        defer { skeletonRevealTask.cancel() }
 
         async let nextTeamMembers = optionalResult {
             try await teamService.fetchMyTeamMembers(accessToken: accessToken)
@@ -453,11 +453,8 @@ struct TeamDashboardView: View {
             nextTeamStats
         )
 
-        if shouldGateSkeleton, clock.now >= skeletonRevealDeadline {
-            cache.isSkeletonVisible = true
-        }
-        if shouldGateSkeleton, cache.isSkeletonVisible {
-            try? await clock.sleep(until: contentRevealDeadline)
+        if shouldGateSkeleton {
+            try? await clock.sleep(until: minimumSkeletonDeadline)
         }
 
         cache.teamMembers = teamMembers
