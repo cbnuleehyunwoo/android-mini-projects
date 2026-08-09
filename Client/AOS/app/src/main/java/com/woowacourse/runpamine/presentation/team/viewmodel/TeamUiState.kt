@@ -12,7 +12,7 @@ data class TeamUiState(
     val totalMemberCount: Int = 0,
     val members: List<TeamMember> = emptyList(),
     val isLoading: Boolean = true,
-    val isSkeletonVisible: Boolean = false,
+    val isSkeletonVisible: Boolean = true,
     val isDateLoading: Boolean = false,
     val isLeavingTeam: Boolean = false,
     val isTeamLeft: Boolean = false,

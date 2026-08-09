@@ -62,53 +62,41 @@ class TeamViewModel(
                 _uiState.update { state ->
                     state.copy(
                         isLoading = shouldGateSkeleton,
-                        isSkeletonVisible = false,
+                        isSkeletonVisible = shouldGateSkeleton,
                         errorMessage = null,
                         memberErrorMessage = null,
                     )
                 }
-                val skeletonRevealJob =
-                    launch {
-                        delay(LoadingUiTiming.REVEAL_DELAY_MILLIS)
-                        if (shouldGateSkeleton && _uiState.value.isLoading) {
-                            _uiState.update { it.copy(isSkeletonVisible = true) }
-                        }
-                    }
-
-                try {
-                    runCatching {
-                        currentUserId =
-                            profileRepository.getCachedProfile()?.id
-                                ?: profileRepository.getMyProfile()?.id
-                        teamRepository.getMyTeam()
-                    }.onSuccess { team ->
-                        currentTeam = team
-                        teamMembers = optionalLoadingResult { teamRepository.getMyTeamMembers() }
-                        memberStats = optionalLoadingResult { teamRepository.getMyTeamStats() }
-                        loadTeamDailySummary(
-                            team = team,
-                            date = selectedDate,
-                            isInitialLoad = true,
-                            initialLoadingStartedAt = loadingStartedAt.takeIf { shouldGateSkeleton },
+                runCatching {
+                    currentUserId =
+                        profileRepository.getCachedProfile()?.id
+                            ?: profileRepository.getMyProfile()?.id
+                    teamRepository.getMyTeam()
+                }.onSuccess { team ->
+                    currentTeam = team
+                    teamMembers = optionalLoadingResult { teamRepository.getMyTeamMembers() }
+                    memberStats = optionalLoadingResult { teamRepository.getMyTeamStats() }
+                    loadTeamDailySummary(
+                        team = team,
+                        date = selectedDate,
+                        isInitialLoad = true,
+                        initialLoadingStartedAt = loadingStartedAt.takeIf { shouldGateSkeleton },
+                    )
+                    hasResolvedInitialLoad = true
+                }.onFailure { throwable ->
+                    if (throwable is CancellationException) throw throwable
+                    waitForInitialSkeletonDisplayWindowIfNeeded(
+                        loadingStartedAt.takeIf { shouldGateSkeleton },
+                    )
+                    _uiState.update {
+                        it.copy(
+                            hasTeam = false,
+                            isLoading = false,
+                            isSkeletonVisible = false,
+                            errorMessage = throwable.message ?: "팀 정보를 불러오지 못했어요.",
                         )
-                        hasResolvedInitialLoad = true
-                    }.onFailure { throwable ->
-                        if (throwable is CancellationException) throw throwable
-                        waitForInitialSkeletonDisplayWindowIfNeeded(
-                            loadingStartedAt.takeIf { shouldGateSkeleton },
-                        )
-                        _uiState.update {
-                            it.copy(
-                                hasTeam = false,
-                                isLoading = false,
-                                isSkeletonVisible = false,
-                                errorMessage = throwable.message ?: "팀 정보를 불러오지 못했어요.",
-                            )
-                        }
-                        hasResolvedInitialLoad = true
                     }
-                } finally {
-                    skeletonRevealJob.cancel()
+                    hasResolvedInitialLoad = true
                 }
             }
     }
@@ -248,9 +236,9 @@ class TeamViewModel(
 
     private suspend fun waitForInitialSkeletonDisplayWindowIfNeeded(loadingStartedAt: TimeMark?) {
         loadingStartedAt ?: return
-        if (!LoadingUiTiming.hasReachedRevealDelay(loadingStartedAt)) return
-        _uiState.update { it.copy(isSkeletonVisible = true) }
-        LoadingUiTiming.awaitContentReveal(loadingStartedAt)
+        val remainingMillis =
+            LoadingUiTiming.REVEAL_DELAY_MILLIS - loadingStartedAt.elapsedNow().inWholeMilliseconds
+        if (remainingMillis > 0) delay(remainingMillis)
     }
 
     private suspend fun <T> optionalLoadingResult(block: suspend () -> T): T? =
