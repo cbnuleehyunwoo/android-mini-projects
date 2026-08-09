@@ -11,5 +11,6 @@ data class RecordUiState(
     val recordedDates: Set<LocalDate> = emptySet(),
     val totalDistanceKm: Double = 0.0,
     val isLoading: Boolean = false,
+    val isLoadingIndicatorVisible: Boolean = false,
     val errorMessage: String? = null,
 )

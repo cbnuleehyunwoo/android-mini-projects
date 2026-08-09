@@ -10,8 +10,12 @@ import com.woowacourse.runpamine.domain.team.TeamMemberSummary
 import com.woowacourse.runpamine.domain.team.TeamRepository
 import com.woowacourse.runpamine.domain.team.TeamRunSummary
 import com.woowacourse.runpamine.presentation.cache.TeamDashboardCache
+import com.woowacourse.runpamine.presentation.component.LoadingUiTiming
 import com.woowacourse.runpamine.presentation.team.model.RunningStatus
 import com.woowacourse.runpamine.presentation.team.model.TeamMember
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -20,6 +24,8 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 
 class TeamViewModel(
     private val teamRepository: TeamRepository,
@@ -27,6 +33,7 @@ class TeamViewModel(
     private val cache: TeamDashboardCache,
 ) : ViewModel() {
     private val hadCachedState = cache.state != null
+    private var hasResolvedInitialLoad = hadCachedState
     private val _uiState = MutableStateFlow(cache.state ?: TeamUiState())
     val uiState = _uiState.asStateFlow()
     private var selectedDate: LocalDate = cache.selectedDate
@@ -34,6 +41,7 @@ class TeamViewModel(
     private var teamMembers: List<TeamMemberSummary>? = null
     private var memberStats: List<TeamMemberStats>? = null
     private var currentUserId: String? = null
+    private var loadTeamJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -46,34 +54,63 @@ class TeamViewModel(
     }
 
     fun loadTeam() {
-        viewModelScope.launch {
-            _uiState.update { state ->
-                state.copy(
-                    isLoading = !hadCachedState,
-                    errorMessage = null,
-                    memberErrorMessage = null,
-                )
-            }
-            runCatching {
-                currentUserId =
-                    profileRepository.getCachedProfile()?.id
-                        ?: profileRepository.getMyProfile()?.id
-                teamRepository.getMyTeam()
-            }.onSuccess { team ->
-                currentTeam = team
-                teamMembers = runCatching { teamRepository.getMyTeamMembers() }.getOrNull()
-                memberStats = runCatching { teamRepository.getMyTeamStats() }.getOrNull()
-                loadTeamDailySummary(team, selectedDate, isInitialLoad = true)
-            }.onFailure { throwable ->
-                _uiState.update {
-                    it.copy(
-                        hasTeam = false,
-                        isLoading = false,
-                        errorMessage = throwable.message ?: "팀 정보를 불러오지 못했어요.",
+        loadTeamJob?.cancel()
+        loadTeamJob =
+            viewModelScope.launch {
+                val shouldGateSkeleton = !hasResolvedInitialLoad
+                val loadingStartedAt = TimeSource.Monotonic.markNow()
+                _uiState.update { state ->
+                    state.copy(
+                        isLoading = shouldGateSkeleton,
+                        isSkeletonVisible = false,
+                        errorMessage = null,
+                        memberErrorMessage = null,
                     )
                 }
+                val skeletonRevealJob =
+                    launch {
+                        delay(LoadingUiTiming.REVEAL_DELAY_MILLIS)
+                        if (shouldGateSkeleton && _uiState.value.isLoading) {
+                            _uiState.update { it.copy(isSkeletonVisible = true) }
+                        }
+                    }
+
+                try {
+                    runCatching {
+                        currentUserId =
+                            profileRepository.getCachedProfile()?.id
+                                ?: profileRepository.getMyProfile()?.id
+                        teamRepository.getMyTeam()
+                    }.onSuccess { team ->
+                        currentTeam = team
+                        teamMembers = optionalLoadingResult { teamRepository.getMyTeamMembers() }
+                        memberStats = optionalLoadingResult { teamRepository.getMyTeamStats() }
+                        loadTeamDailySummary(
+                            team = team,
+                            date = selectedDate,
+                            isInitialLoad = true,
+                            initialLoadingStartedAt = loadingStartedAt.takeIf { shouldGateSkeleton },
+                        )
+                        hasResolvedInitialLoad = true
+                    }.onFailure { throwable ->
+                        if (throwable is CancellationException) throw throwable
+                        waitForInitialSkeletonDisplayWindowIfNeeded(
+                            loadingStartedAt.takeIf { shouldGateSkeleton },
+                        )
+                        _uiState.update {
+                            it.copy(
+                                hasTeam = false,
+                                isLoading = false,
+                                isSkeletonVisible = false,
+                                errorMessage = throwable.message ?: "팀 정보를 불러오지 못했어요.",
+                            )
+                        }
+                        hasResolvedInitialLoad = true
+                    }
+                } finally {
+                    skeletonRevealJob.cancel()
+                }
             }
-        }
     }
 
     fun moveToPreviousDate() {
@@ -143,6 +180,7 @@ class TeamViewModel(
         team: Team,
         date: LocalDate,
         isInitialLoad: Boolean,
+        initialLoadingStartedAt: TimeMark? = null,
     ) {
         _uiState.update {
             it.copy(
@@ -153,6 +191,10 @@ class TeamViewModel(
             )
         }
         val summaryResult = runCatching { teamRepository.getMyTeamDailySummary(date) }
+        summaryResult.exceptionOrNull()?.let { throwable ->
+            if (throwable is CancellationException) throw throwable
+        }
+        waitForInitialSkeletonDisplayWindowIfNeeded(initialLoadingStartedAt)
 
         summaryResult
             .onSuccess { summary ->
@@ -173,6 +215,7 @@ class TeamViewModel(
                         totalMemberCount = summary.totalMemberCount,
                         members = members.markCurrentUser(currentUserId),
                         isLoading = false,
+                        isSkeletonVisible = false,
                         isDateLoading = false,
                         canMoveToNextDate = date < LocalDate.now(),
                     )
@@ -194,6 +237,7 @@ class TeamViewModel(
                         totalMemberCount = team.memberCount,
                         members = members.markCurrentUser(currentUserId),
                         isLoading = false,
+                        isSkeletonVisible = false,
                         isDateLoading = false,
                         canMoveToNextDate = date < LocalDate.now(),
                         errorMessage = throwable.message ?: "팀 기록 정보를 불러오지 못했어요.",
@@ -201,6 +245,21 @@ class TeamViewModel(
                 }
             }
     }
+
+    private suspend fun waitForInitialSkeletonDisplayWindowIfNeeded(loadingStartedAt: TimeMark?) {
+        loadingStartedAt ?: return
+        if (!LoadingUiTiming.hasReachedRevealDelay(loadingStartedAt)) return
+        _uiState.update { it.copy(isSkeletonVisible = true) }
+        LoadingUiTiming.awaitContentReveal(loadingStartedAt)
+    }
+
+    private suspend fun <T> optionalLoadingResult(block: suspend () -> T): T? =
+        try {
+            block()
+        } catch (throwable: Throwable) {
+            if (throwable is CancellationException) throw throwable
+            null
+        }
 
     class Factory(
         private val teamRepository: TeamRepository,

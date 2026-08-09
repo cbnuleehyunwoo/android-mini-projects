@@ -10,6 +10,7 @@ final class HistoryCache: ObservableObject {
     @Published var totalDistanceMeters: Int?
     @Published var summariesByIdentifier: [String: RunPeriodSummary] = [:]
     @Published var loadedRefreshIdentifier: String?
+    @Published var isLoadingIndicatorVisible = false
     @Published var thumbnailRecordsByID: [UUID: RunningRecord] = [:]
     @Published var thumbnailFetchIDs: Set<UUID> = []
 }
@@ -94,6 +95,7 @@ struct HistoryView: View {
                 VStack(spacing: 22) {
                     if isWaitingForRemoteRecords {
                         loadingState
+                            .opacity(cache.isLoadingIndicatorVisible ? 1 : 0)
                     } else if visibleSelectedRecords.isEmpty {
                         emptyState
                     } else {
@@ -346,6 +348,20 @@ struct HistoryView: View {
         }
 
         let requestIdentifier = refreshIdentifier
+        cache.isLoadingIndicatorVisible = false
+
+        let clock = ContinuousClock()
+        let loadingStartedAt = clock.now
+        let loadingIndicatorRevealDeadline = loadingStartedAt.advanced(by: .milliseconds(500))
+        let contentRevealDeadline = loadingStartedAt.advanced(by: .milliseconds(750))
+        let shouldGateLoadingIndicator = isWaitingForRemoteRecords
+        let loadingIndicatorRevealTask = Task { @MainActor in
+            try await clock.sleep(until: loadingIndicatorRevealDeadline)
+            guard requestIdentifier == refreshIdentifier else { return }
+            guard shouldGateLoadingIndicator, isWaitingForRemoteRecords else { return }
+            cache.isLoadingIndicatorVisible = true
+        }
+        defer { loadingIndicatorRevealTask.cancel() }
 
         do {
             let summary: RunPeriodSummary
@@ -362,6 +378,13 @@ struct HistoryView: View {
             }
 
             guard requestIdentifier == refreshIdentifier else { return }
+            await waitForLoadingIndicatorDisplayWindowIfNeeded(
+                shouldGate: shouldGateLoadingIndicator,
+                revealDeadline: loadingIndicatorRevealDeadline,
+                contentDeadline: contentRevealDeadline,
+                clock: clock
+            )
+            guard requestIdentifier == refreshIdentifier else { return }
 
             if cache.records != summary.runs {
                 cache.records = summary.runs
@@ -374,6 +397,7 @@ struct HistoryView: View {
             }
             cache.summariesByIdentifier[requestIdentifier] = summary
             cache.loadedRefreshIdentifier = requestIdentifier
+            cache.isLoadingIndicatorVisible = false
             pruneThumbnailCache(for: summary.runs)
 
             if cache.selectedPeriod == .week {
@@ -381,13 +405,36 @@ struct HistoryView: View {
             }
         } catch {
             guard requestIdentifier == refreshIdentifier else { return }
+            await waitForLoadingIndicatorDisplayWindowIfNeeded(
+                shouldGate: shouldGateLoadingIndicator,
+                revealDeadline: loadingIndicatorRevealDeadline,
+                contentDeadline: contentRevealDeadline,
+                clock: clock
+            )
+            guard requestIdentifier == refreshIdentifier else { return }
             if cache.records.isEmpty {
                 cache.daySummaries = []
                 cache.totalDistanceMeters = 0
                 cache.loadedRefreshIdentifier = requestIdentifier
                 pruneThumbnailCache(for: [])
             }
+            cache.isLoadingIndicatorVisible = false
         }
+    }
+
+    @MainActor
+    private func waitForLoadingIndicatorDisplayWindowIfNeeded(
+        shouldGate: Bool,
+        revealDeadline: ContinuousClock.Instant,
+        contentDeadline: ContinuousClock.Instant,
+        clock: ContinuousClock
+    ) async {
+        guard shouldGate else { return }
+        if clock.now >= revealDeadline {
+            cache.isLoadingIndicatorVisible = true
+        }
+        guard cache.isLoadingIndicatorVisible else { return }
+        try? await clock.sleep(until: contentDeadline)
     }
 
     private func useLocalRecords() {

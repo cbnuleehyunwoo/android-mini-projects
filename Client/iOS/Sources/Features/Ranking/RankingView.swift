@@ -7,6 +7,7 @@ final class RankingCache: ObservableObject {
     @Published var userBoardsByMetric: [UserRankingMetric: UserRankingBoard] = [:]
     @Published var mySummary: MyRankingSummary?
     @Published var isLoading = false
+    @Published var isSkeletonVisible = false
     @Published var errorMessage: String?
     @Published var activeRankingRequestID: UUID?
 
@@ -15,6 +16,7 @@ final class RankingCache: ObservableObject {
         userBoardsByMetric = [:]
         mySummary = nil
         isLoading = false
+        isSkeletonVisible = false
         errorMessage = nil
         activeRankingRequestID = nil
     }
@@ -105,6 +107,7 @@ struct RankingView: View {
         Group {
             if cache.isLoading, currentSummary == nil {
                 RankingSummarySkeletonCard()
+                    .opacity(cache.isSkeletonVisible ? 1 : 0)
             } else if let summary = currentSummary {
                 HStack(spacing: 18) {
                     RankBadge(rank: summary.rank, isHighlighted: true)
@@ -156,6 +159,7 @@ struct RankingView: View {
 
             if cache.isLoading, rows.isEmpty {
                 RankingRowsSkeleton()
+                    .opacity(cache.isSkeletonVisible ? 1 : 0)
             } else if rows.isEmpty {
                 Text(cache.errorMessage ?? "아직 표시할 랭킹이 없습니다.")
                     .font(AppTheme.Typography.font(size: 16, weight: .semibold))
@@ -345,7 +349,25 @@ struct RankingView: View {
         let requestMetric = cache.selectedMetric
         cache.activeRankingRequestID = requestID
         cache.isLoading = true
+        cache.isSkeletonVisible = false
         cache.errorMessage = nil
+
+        let clock = ContinuousClock()
+        let loadingStartedAt = clock.now
+        let skeletonRevealDeadline = loadingStartedAt.advanced(by: .milliseconds(500))
+        let contentRevealDeadline = loadingStartedAt.advanced(by: .milliseconds(750))
+        let shouldGateSkeleton = currentSummary == nil || rows.isEmpty
+        let skeletonRevealTask = Task { @MainActor in
+            try await clock.sleep(until: skeletonRevealDeadline)
+            guard shouldApplyRankingResponse(
+                requestID: requestID,
+                scope: requestScope,
+                metric: requestMetric
+            ) else { return }
+            guard shouldGateSkeleton else { return }
+            cache.isSkeletonVisible = true
+        }
+        defer { skeletonRevealTask.cancel() }
 
         let token = accessToken ?? ""
         async let summaryResult = capturedResult {
@@ -359,6 +381,14 @@ struct RankingView: View {
             }
             let (board, summary) = await (boardResult, summaryResult)
             guard shouldApplyRankingResponse(requestID: requestID, scope: requestScope, metric: requestMetric) else { return }
+            if shouldGateSkeleton, clock.now >= skeletonRevealDeadline {
+                cache.isSkeletonVisible = true
+            }
+            await waitForSkeletonDisplayWindowIfNeeded(
+                until: contentRevealDeadline,
+                clock: clock
+            )
+            guard shouldApplyRankingResponse(requestID: requestID, scope: requestScope, metric: requestMetric) else { return }
             applyTeamRankingResult(board, metric: requestMetric)
             applySummaryResult(summary)
         case .personal:
@@ -367,12 +397,30 @@ struct RankingView: View {
             }
             let (board, summary) = await (boardResult, summaryResult)
             guard shouldApplyRankingResponse(requestID: requestID, scope: requestScope, metric: requestMetric) else { return }
+            if shouldGateSkeleton, clock.now >= skeletonRevealDeadline {
+                cache.isSkeletonVisible = true
+            }
+            await waitForSkeletonDisplayWindowIfNeeded(
+                until: contentRevealDeadline,
+                clock: clock
+            )
+            guard shouldApplyRankingResponse(requestID: requestID, scope: requestScope, metric: requestMetric) else { return }
             applyUserRankingResult(board, metric: requestMetric)
             applySummaryResult(summary)
         }
 
         guard shouldApplyRankingResponse(requestID: requestID, scope: requestScope, metric: requestMetric) else { return }
         cache.isLoading = false
+        cache.isSkeletonVisible = false
+    }
+
+    @MainActor
+    private func waitForSkeletonDisplayWindowIfNeeded(
+        until deadline: ContinuousClock.Instant,
+        clock: ContinuousClock
+    ) async {
+        guard cache.isSkeletonVisible else { return }
+        try? await clock.sleep(until: deadline)
     }
 
     @MainActor

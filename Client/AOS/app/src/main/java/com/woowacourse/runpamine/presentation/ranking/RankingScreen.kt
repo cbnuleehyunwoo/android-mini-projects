@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -53,6 +54,7 @@ import com.woowacourse.runpamine.presentation.ranking.components.RankingStateMes
 import com.woowacourse.runpamine.presentation.ranking.model.RankingItem
 import com.woowacourse.runpamine.presentation.ranking.model.RankingScope
 import com.woowacourse.runpamine.presentation.ranking.model.RankingUiState
+import com.woowacourse.runpamine.presentation.ranking.model.shouldReserveLoadingSkeleton
 import com.woowacourse.runpamine.presentation.ranking.model.shouldShowLoadingSkeleton
 import com.woowacourse.runpamine.presentation.ranking.viewmodel.RankingViewModel
 import com.woowacourse.runpamine.ui.theme.Blue10
@@ -114,11 +116,14 @@ private fun RankingContent(
                     .padding(horizontal = 22.dp),
         )
         Spacer(modifier = Modifier.height(28.dp))
-        if (uiState.shouldShowLoadingSkeleton) {
+        if (uiState.shouldReserveLoadingSkeleton) {
             RankingSkeletonBody(
                 selectedScope = uiState.selectedScope,
                 selectedMetric = uiState.selectedMetric,
-                modifier = Modifier.weight(1f),
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .alpha(if (uiState.shouldShowLoadingSkeleton) 1f else 0f),
             )
         } else {
             MyRankingCard(
