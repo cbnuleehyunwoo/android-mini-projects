@@ -1,3 +1,4 @@
+import AudioToolbox
 import CoreLocation
 import Foundation
 
@@ -216,7 +217,11 @@ extension RunningTracker: CLLocationManagerDelegate {
 
             lastError = nil
             for location in locations where isAcceptable(location) {
+                let completedKilometers = session.completedSplits.count
                 session.append(location)
+                if session.completedSplits.count > completedKilometers {
+                    AudioServicesPlayAlertSound(kSystemSoundID_Vibrate)
+                }
                 shouldValidateJumpFromPreviousLocation = true
             }
         }
