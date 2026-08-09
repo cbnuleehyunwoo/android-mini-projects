@@ -36,12 +36,10 @@
 		7A1000010000000000000019 /* NicknameValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000011A /* NicknameValidator.swift */; };
 		7A100001000000000000001A /* MyPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000011B /* MyPageView.swift */; };
 		7A100001000000000000001B /* MyNicknameChangeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000011C /* MyNicknameChangeView.swift */; };
-		7A9100010000000000000001 /* FeedbackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9100010000000000000101 /* FeedbackView.swift */; };
 		7A100001000000000000001C /* LocalAppStateStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000011D /* LocalAppStateStore.swift */; };
 		7A100001000000000000001D /* RunningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000011E /* RunningView.swift */; };
 		7A100001000000000000001E /* RunningMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A100001000000000000011F /* RunningMapView.swift */; };
 		7A100001000000000000001F /* RunningSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000120 /* RunningSummaryView.swift */; };
-		7A4920010000000000000001 /* RunShareView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4920010000000000000101 /* RunShareView.swift */; };
 		7A1000010000000000000020 /* MapPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000121 /* MapPlaceholderView.swift */; };
 		7A1000010000000000000021 /* RunningRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000122 /* RunningRecord.swift */; };
 		7A1000010000000000000022 /* RunningMetricFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000123 /* RunningMetricFormatter.swift */; };
@@ -86,6 +84,8 @@
 		7A3100010000000000000040 /* kyobo_handwriting_2025_lyb.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7A3100010000000000000140 /* kyobo_handwriting_2025_lyb.otf */; };
 		7A3190010000000000000001 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3190010000000000000101 /* OnboardingView.swift */; };
 		7A4860010000000000000001 /* AppStoreUpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4860010000000000000101 /* AppStoreUpdateChecker.swift */; };
+		7A4920010000000000000001 /* RunShareView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4920010000000000000101 /* RunShareView.swift */; };
+		7A9100010000000000000001 /* FeedbackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9100010000000000000101 /* FeedbackView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -119,12 +119,10 @@
 		7A100001000000000000011A /* NicknameValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NicknameValidator.swift; sourceTree = "<group>"; };
 		7A100001000000000000011B /* MyPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyPageView.swift; sourceTree = "<group>"; };
 		7A100001000000000000011C /* MyNicknameChangeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyNicknameChangeView.swift; sourceTree = "<group>"; };
-		7A9100010000000000000101 /* FeedbackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackView.swift; sourceTree = "<group>"; };
 		7A100001000000000000011D /* LocalAppStateStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalAppStateStore.swift; sourceTree = "<group>"; };
 		7A100001000000000000011E /* RunningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningView.swift; sourceTree = "<group>"; };
 		7A100001000000000000011F /* RunningMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningMapView.swift; sourceTree = "<group>"; };
 		7A1000010000000000000120 /* RunningSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningSummaryView.swift; sourceTree = "<group>"; };
-		7A4920010000000000000101 /* RunShareView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunShareView.swift; sourceTree = "<group>"; };
 		7A1000010000000000000121 /* MapPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapPlaceholderView.swift; sourceTree = "<group>"; };
 		7A1000010000000000000122 /* RunningRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningRecord.swift; sourceTree = "<group>"; };
 		7A1000010000000000000123 /* RunningMetricFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningMetricFormatter.swift; sourceTree = "<group>"; };
@@ -170,6 +168,8 @@
 		7A3100010000000000000140 /* kyobo_handwriting_2025_lyb.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = kyobo_handwriting_2025_lyb.otf; sourceTree = "<group>"; };
 		7A3190010000000000000101 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		7A4860010000000000000101 /* AppStoreUpdateChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreUpdateChecker.swift; sourceTree = "<group>"; };
+		7A4920010000000000000101 /* RunShareView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunShareView.swift; sourceTree = "<group>"; };
+		7A9100010000000000000101 /* FeedbackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -377,14 +377,6 @@
 			path = Persistence;
 			sourceTree = "<group>";
 		};
-		7A4860010000000000000301 /* Update */ = {
-			isa = PBXGroup;
-			children = (
-				7A4860010000000000000101 /* AppStoreUpdateChecker.swift */,
-			);
-			path = Update;
-			sourceTree = "<group>";
-		};
 		7A1000010000000000000319 /* Running */ = {
 			isa = PBXGroup;
 			children = (
@@ -502,6 +494,14 @@
 				7A3190010000000000000101 /* OnboardingView.swift */,
 			);
 			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		7A4860010000000000000301 /* Update */ = {
+			isa = PBXGroup;
+			children = (
+				7A4860010000000000000101 /* AppStoreUpdateChecker.swift */,
+			);
+			path = Update;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -798,7 +798,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.runpamine.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -831,7 +831,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.runpamine.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
