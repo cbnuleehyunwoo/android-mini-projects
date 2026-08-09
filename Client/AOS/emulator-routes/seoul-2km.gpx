@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1"
+  creator="Runpamine"
+  xmlns="http://www.topografix.com/GPX/1/1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Runpamine Seoul 2 km</name>
+    <desc>Android Emulator용 2 km 직사각형 러닝 경로, 약 5분/km</desc>
+  </metadata>
+  <trk>
+    <name>Seoul 2 km Running Route</name>
+    <type>running</type>
+    <trkseg>
+      <trkpt lat="37.5150000" lon="127.0720000">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:00:00Z</time>
+      </trkpt>
+      <trkpt lat="37.5150000" lon="127.0725669">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:00:15Z</time>
+      </trkpt>
+      <trkpt lat="37.5150000" lon="127.0731338">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:00:30Z</time>
+      </trkpt>
+      <trkpt lat="37.5150000" lon="127.0737007">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:00:45Z</time>
+      </trkpt>
+      <trkpt lat="37.5150000" lon="127.0742676">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:01:00Z</time>
+      </trkpt>
+      <trkpt lat="37.5150000" lon="127.0748345">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:01:15Z</time>
+      </trkpt>
+      <trkpt lat="37.5150000" lon="127.0754014">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:01:30Z</time>
+      </trkpt>
+      <trkpt lat="37.5150000" lon="127.0759683">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:01:45Z</time>
+      </trkpt>
+      <trkpt lat="37.5150000" lon="127.0765352">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:02:00Z</time>
+      </trkpt>
+      <trkpt lat="37.5150000" lon="127.0771021">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:02:15Z</time>
+      </trkpt>
+      <trkpt lat="37.5150000" lon="127.0776690">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:02:30Z</time>
+      </trkpt>
+      <trkpt lat="37.5150000" lon="127.0782359">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:02:45Z</time>
+      </trkpt>
+      <trkpt lat="37.5150000" lon="127.0788028">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:03:00Z</time>
+      </trkpt>
+      <trkpt lat="37.5154497" lon="127.0788028">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:03:15Z</time>
+      </trkpt>
+      <trkpt lat="37.5158993" lon="127.0788028">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:03:30Z</time>
+      </trkpt>
+      <trkpt lat="37.5163490" lon="127.0788028">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:03:45Z</time>
+      </trkpt>
+      <trkpt lat="37.5167986" lon="127.0788028">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:04:00Z</time>
+      </trkpt>
+      <trkpt lat="37.5172483" lon="127.0788028">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:04:15Z</time>
+      </trkpt>
+      <trkpt lat="37.5176980" lon="127.0788028">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:04:30Z</time>
+      </trkpt>
+      <trkpt lat="37.5181476" lon="127.0788028">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:04:45Z</time>
+      </trkpt>
+      <trkpt lat="37.5185973" lon="127.0788028">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:05:00Z</time>
+      </trkpt>
+      <trkpt lat="37.5185973" lon="127.0782359">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:05:15Z</time>
+      </trkpt>
+      <trkpt lat="37.5185973" lon="127.0776690">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:05:30Z</time>
+      </trkpt>
+      <trkpt lat="37.5185973" lon="127.0771021">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:05:45Z</time>
+      </trkpt>
+      <trkpt lat="37.5185973" lon="127.0765352">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:06:00Z</time>
+      </trkpt>
+      <trkpt lat="37.5185973" lon="127.0759683">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:06:15Z</time>
+      </trkpt>
+      <trkpt lat="37.5185973" lon="127.0754014">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:06:30Z</time>
+      </trkpt>
+      <trkpt lat="37.5185973" lon="127.0748345">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:06:45Z</time>
+      </trkpt>
+      <trkpt lat="37.5185973" lon="127.0742676">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:07:00Z</time>
+      </trkpt>
+      <trkpt lat="37.5185973" lon="127.0737007">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:07:15Z</time>
+      </trkpt>
+      <trkpt lat="37.5185973" lon="127.0731338">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:07:30Z</time>
+      </trkpt>
+      <trkpt lat="37.5185973" lon="127.0725669">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:07:45Z</time>
+      </trkpt>
+      <trkpt lat="37.5185973" lon="127.0720000">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:08:00Z</time>
+      </trkpt>
+      <trkpt lat="37.5181476" lon="127.0720000">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:08:15Z</time>
+      </trkpt>
+      <trkpt lat="37.5176980" lon="127.0720000">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:08:30Z</time>
+      </trkpt>
+      <trkpt lat="37.5172483" lon="127.0720000">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:08:45Z</time>
+      </trkpt>
+      <trkpt lat="37.5167986" lon="127.0720000">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:09:00Z</time>
+      </trkpt>
+      <trkpt lat="37.5163490" lon="127.0720000">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:09:15Z</time>
+      </trkpt>
+      <trkpt lat="37.5158993" lon="127.0720000">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:09:30Z</time>
+      </trkpt>
+      <trkpt lat="37.5154497" lon="127.0720000">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:09:45Z</time>
+      </trkpt>
+      <trkpt lat="37.5150000" lon="127.0720000">
+        <ele>20.0</ele>
+        <time>2026-08-09T00:10:00Z</time>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
+

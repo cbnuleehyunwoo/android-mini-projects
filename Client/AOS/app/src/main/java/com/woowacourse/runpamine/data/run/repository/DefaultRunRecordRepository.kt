@@ -24,11 +24,12 @@ class DefaultRunRecordRepository(
             yearMonth = yearMonth,
         )
 
-    override suspend fun getRunDetail(runId: String): RunSession =
-        remoteDataSource.getRunDetail(
-            accessToken = requireAccessToken(),
-            runId = runId,
-        )
+    override suspend fun getRunDetail(runId: String): RunSession {
+        val accessToken = requireAccessToken()
+        val detail = remoteDataSource.getRunDetail(accessToken = accessToken, runId = runId)
+        val splits = runCatching { remoteDataSource.getRunSplits(accessToken, runId) }.getOrDefault(emptyList())
+        return detail.copy(splits = splits)
+    }
 
     private suspend fun requireAccessToken(): String =
         requireNotNull(authRepository.getCurrentSession()?.accessToken) {

@@ -13,4 +13,5 @@ data class RunSession(
     val syncStatus: RunSyncStatus = RunSyncStatus.LOCAL_ONLY,
     val accountUserId: String? = null,
     val routePoints: List<RunPoint> = emptyList(),
+    val splits: List<RunSplit> = emptyList(),
 )

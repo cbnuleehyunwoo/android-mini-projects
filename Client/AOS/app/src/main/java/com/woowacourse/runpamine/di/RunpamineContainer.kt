@@ -140,6 +140,7 @@ class RunpamineContainer(
                 RunDatabase.MIGRATION_1_2,
                 RunDatabase.MIGRATION_2_3,
                 RunDatabase.MIGRATION_3_4,
+                RunDatabase.MIGRATION_4_5,
             ).build()
     }
 

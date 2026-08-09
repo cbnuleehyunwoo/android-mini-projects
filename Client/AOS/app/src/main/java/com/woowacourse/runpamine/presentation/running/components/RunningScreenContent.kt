@@ -21,6 +21,7 @@ import com.woowacourse.runpamine.R
 import com.woowacourse.runpamine.domain.run.RunSession
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 import java.time.Instant
+import kotlin.math.roundToLong
 
 @Composable
 fun RunningScreenContent(
@@ -61,8 +62,8 @@ fun RunningScreenContent(
                     horizontalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
                     RunningMetricCard(
-                        title = stringResource(R.string.running_pace),
-                        value = session.paceText(),
+                        title = if (session?.splits.isNullOrEmpty()) stringResource(R.string.running_pace) else "최근 1km",
+                        value = session.latestPaceText(),
                         unit = "/km",
                         modifier = Modifier.weight(1f),
                     )
@@ -106,6 +107,12 @@ private fun RunSession?.paceText(): String {
     val minutes = paceSeconds / SECONDS_PER_MINUTE
     val seconds = paceSeconds % SECONDS_PER_MINUTE
     return "%d'%02d\"".format(minutes, seconds)
+}
+
+private fun RunSession?.latestPaceText(): String {
+    val latestSplitPace = this?.splits?.lastOrNull()?.paceSecondsPerKm ?: return paceText()
+    val paceSeconds = latestSplitPace.coerceAtLeast(0.0).roundToLong()
+    return "%d'%02d\"".format(paceSeconds / SECONDS_PER_MINUTE, paceSeconds % SECONDS_PER_MINUTE)
 }
 
 @Preview(showBackground = true, widthDp = 393, heightDp = 852)

@@ -486,7 +486,11 @@ struct HistoryView: View {
                 runID: record.id.uuidString,
                 accessToken: accessToken
             )
-            onOpenRecord(detail)
+            let splits = try? await runService.fetchRunSplits(
+                runID: record.id.uuidString,
+                accessToken: accessToken
+            )
+            onOpenRecord(splits.map { detail.replacingSplits(with: $0) } ?? detail)
         } catch {
             onOpenRecord(record)
         }

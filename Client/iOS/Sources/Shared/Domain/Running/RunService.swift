@@ -5,6 +5,7 @@ protocol RunServiceProtocol {
     func fetchWeeklyRuns(anchorDate: Date, accessToken: String) async throws -> RunPeriodSummary
     func fetchMonthlyRuns(year: Int, month: Int, accessToken: String) async throws -> RunPeriodSummary
     func fetchRunDetail(runID: String, accessToken: String) async throws -> RunningRecord
+    func fetchRunSplits(runID: String, accessToken: String) async throws -> [RunningSplit]
 }
 
 final class RunAPIService: RunServiceProtocol {
@@ -79,6 +80,15 @@ final class RunAPIService: RunServiceProtocol {
         }
 
         return record
+    }
+
+    func fetchRunSplits(runID: String, accessToken: String) async throws -> [RunningSplit] {
+        let response: RunSplitsEnvelope = try await request(
+            path: "/runs/\(runID)/splits",
+            method: "GET",
+            accessToken: accessToken
+        )
+        return response.data.map(\.domain)
     }
 
     private func request<Response: Decodable>(
@@ -176,6 +186,10 @@ final class MockRunService: RunServiceProtocol {
         return record
     }
 
+    func fetchRunSplits(runID: String, accessToken: String) async throws -> [RunningSplit] {
+        try await fetchRunDetail(runID: runID, accessToken: accessToken).splits
+    }
+
     private func makePeriodSummary(records: [RunningRecord]) -> RunPeriodSummary {
         RunPeriodSummary(
             totalDistanceMeters: Int(records.reduce(0) { $0 + $1.distanceMeters }.rounded()),
@@ -222,6 +236,10 @@ private struct MonthlyRunsEnvelope: Decodable {
 
 private struct RunDetailEnvelope: Decodable {
     let data: RunPayload
+}
+
+private struct RunSplitsEnvelope: Decodable {
+    let data: [RunSplitPayload]
 }
 
 private struct CreatedRunPayload: Decodable {
@@ -401,6 +419,7 @@ private struct CreateRunPayload: Encodable {
     let durationSeconds: Int
     let calories: Int
     let points: [CreateRunPointPayload]
+    let splits: [CreateRunSplitPayload]
 
     init(_ record: RunningRecord) {
         startedAt = RunDateCoder.dateTimeString(from: record.startedAt)
@@ -409,6 +428,71 @@ private struct CreateRunPayload: Encodable {
         durationSeconds = Int(record.elapsedTime.rounded())
         calories = record.estimatedCalories
         points = record.createRunPoints.map(CreateRunPointPayload.init)
+        splits = CreateRunSplitPayload.normalized(
+            record.splits,
+            totalDistanceMeters: distanceMeters,
+            totalDurationMillis: durationSeconds * 1_000
+        )
+    }
+}
+
+private struct RunSplitPayload: Decodable {
+    let sequence: Int
+    let fromDistanceMeters: Double
+    let toDistanceMeters: Double
+    let distanceMeters: Double
+    let durationMillis: Int
+    let paceSecondsPerKm: Double
+
+    var domain: RunningSplit {
+        RunningSplit(
+            sequence: sequence,
+            fromDistanceMeters: fromDistanceMeters,
+            toDistanceMeters: toDistanceMeters,
+            distanceMeters: distanceMeters,
+            durationMillis: durationMillis,
+            paceSecondsPerKilometer: paceSecondsPerKm
+        )
+    }
+}
+
+private struct CreateRunSplitPayload: Encodable {
+    let sequence: Int
+    let distanceMeters: Int
+    let durationMillis: Int
+
+    private init(sequence: Int, distanceMeters: Int, durationMillis: Int) {
+        self.sequence = sequence
+        self.distanceMeters = distanceMeters
+        self.durationMillis = durationMillis
+    }
+
+    static func normalized(
+        _ splits: [RunningSplit],
+        totalDistanceMeters: Int,
+        totalDurationMillis: Int
+    ) -> [CreateRunSplitPayload] {
+        guard !splits.isEmpty, totalDistanceMeters > 0, totalDurationMillis > 0 else { return [] }
+
+        let splitCount = Int(ceil(Double(totalDistanceMeters) / 1_000))
+        guard splits.count >= splitCount else { return [] }
+
+        var durations = Array(splits.prefix(splitCount).map(\.durationMillis))
+        if splits.count > splitCount {
+            durations[splitCount - 1] += splits.dropFirst(splitCount).reduce(0) { $0 + $1.durationMillis }
+        }
+        durations[splitCount - 1] += totalDurationMillis - durations.reduce(0, +)
+
+        return (0..<splitCount).map { index in
+            let distance = index == splitCount - 1
+                ? totalDistanceMeters - (index * 1_000)
+                : 1_000
+            return CreateRunSplitPayload(
+                sequence: index + 1,
+                distanceMeters: distance,
+                durationMillis: max(1, durations[index])
+            )
+        }
     }
 }
 

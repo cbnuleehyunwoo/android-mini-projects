@@ -42,6 +42,11 @@ struct RunningSummaryView: View {
                     }
                     .padding(.horizontal, 22)
 
+                    if !record.splits.isEmpty {
+                        SplitPaceSection(splits: record.splits)
+                            .padding(.horizontal, 22)
+                    }
+
                     if record.distanceMeters < Self.minimumRecordedDistanceMeters {
                         HStack(spacing: 0) {
                             errorCharacterImage
@@ -154,6 +159,46 @@ struct RunningSummaryView: View {
             return Image(systemName: "info.circle.fill")
         }
         return Image(uiImage: image)
+    }
+}
+
+private struct SplitPaceSection: View {
+    let splits: [RunningSplit]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("구간 페이스")
+                .font(AppTheme.Typography.font(size: 20, weight: .bold))
+                .foregroundStyle(AppTheme.Colors.textPrimary)
+
+            VStack(spacing: 10) {
+                ForEach(splits) { split in
+                    HStack(spacing: 16) {
+                        Text(splitLabel(split))
+                            .font(AppTheme.Typography.font(size: 14, weight: .bold))
+                            .foregroundStyle(Color(red: 0.22, green: 0.27, blue: 0.36))
+
+                        Spacer(minLength: 12)
+
+                        Text("\(RunningMetricFormatter.pace(split.paceSecondsPerKilometer))/km")
+                            .font(AppTheme.Typography.font(size: 14, weight: .semibold))
+                            .foregroundStyle(AppTheme.Colors.primary)
+                    }
+                    .padding(.horizontal, 18)
+                    .frame(height: 52)
+                    .background(Color(red: 0.98, green: 0.98, blue: 0.99))
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                }
+            }
+        }
+    }
+
+    private func splitLabel(_ split: RunningSplit) -> String {
+        if split.distanceMeters >= 999.5 {
+            return "\(split.sequence) km"
+        }
+
+        return "마지막 \(Int(split.distanceMeters.rounded())) m"
     }
 }
 

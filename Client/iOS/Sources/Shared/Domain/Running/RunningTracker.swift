@@ -58,6 +58,10 @@ final class RunningTracker: NSObject, ObservableObject {
         session.averagePaceSecondsPerKilometer
     }
 
+    var completedSplits: [RunningSplit] {
+        session.completedSplits
+    }
+
     var estimatedCalories: Int {
         max(0, Int((session.distanceKilometers * 58).rounded()))
     }

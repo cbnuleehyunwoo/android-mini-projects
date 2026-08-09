@@ -29,6 +29,7 @@ class DefaultRunTrackingRepository(
     private val localDataSource: RunLocalDataSource,
     private val locationTracker: LocationTracker,
     private val metricCalculator: RunMetricCalculator = RunMetricCalculator(),
+    private val splitCalculator: RunSplitCalculator = RunSplitCalculator(),
     private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
     private val now: () -> Instant = Instant::now,
     private val currentUserId: suspend () -> String? = { null },
@@ -39,7 +40,7 @@ class DefaultRunTrackingRepository(
     private val isPaused = MutableStateFlow(false)
 
     @Volatile
-    private var accumulatedDurationSeconds: Long = 0
+    private var accumulatedDurationMillis: Long = 0
 
     @Volatile
     private var currentSegmentStartedAt: Instant? = null
@@ -60,7 +61,7 @@ class DefaultRunTrackingRepository(
 
             if (activeSessionId != session.id) {
                 activeSessionId = session.id
-                accumulatedDurationSeconds = session.durationSeconds
+                accumulatedDurationMillis = session.durationSeconds * MILLIS_PER_SECOND
                 currentSegmentStartedAt = now()
                 isPaused.value = false
             }
@@ -73,11 +74,11 @@ class DefaultRunTrackingRepository(
             val activeSession = localDataSource.findActiveSession() ?: return@withLock
             if (isPaused.value) return@withLock
 
-            accumulatedDurationSeconds = currentElapsedSeconds()
+            accumulatedDurationMillis = currentElapsedMillis()
             currentSegmentStartedAt = null
             isPaused.value = true
             cancelTrackingJob()
-            saveCurrentMetrics(activeSession, accumulatedDurationSeconds)
+            saveCurrentMetrics(activeSession, currentElapsedSeconds())
         }
     }
 
@@ -98,7 +99,14 @@ class DefaultRunTrackingRepository(
             cancelTrackingJob()
 
             val endedAt = now()
-            val durationSeconds = currentElapsedSeconds()
+            val elapsedMillis = currentElapsedMillis()
+            val durationSeconds = elapsedMillis / MILLIS_PER_SECOND
+            val splits =
+                splitCalculator.finalizeSplits(
+                    completedSplits = activeSession.splits,
+                    totalDistanceMeters = activeSession.distanceMeters,
+                    totalDurationMillis = elapsedMillis,
+                )
             val finishedSession =
                 activeSession.copy(
                     endedAt = endedAt,
@@ -109,10 +117,11 @@ class DefaultRunTrackingRepository(
                             durationSeconds = durationSeconds,
                         ),
                     calories = metricCalculator.calories(activeSession.distanceMeters),
+                    splits = splits,
                 )
             localDataSource.finishSession(finishedSession)
             activeSessionId = null
-            accumulatedDurationSeconds = 0
+            accumulatedDurationMillis = 0
             currentSegmentStartedAt = null
             isPaused.value = false
             localDataSource.findSession(finishedSession.id)
@@ -123,7 +132,7 @@ class DefaultRunTrackingRepository(
             cancelTrackingJob()
             localDataSource.deleteActiveSession()
             activeSessionId = null
-            accumulatedDurationSeconds = 0
+            accumulatedDurationMillis = 0
             currentSegmentStartedAt = null
             isPaused.value = false
         }
@@ -145,9 +154,13 @@ class DefaultRunTrackingRepository(
     override fun observePaused(): Flow<Boolean> = isPaused
 
     override fun currentElapsedSeconds(): Long {
-        val segmentStartedAt = currentSegmentStartedAt ?: return accumulatedDurationSeconds
-        val segmentDuration = Duration.between(segmentStartedAt, now()).seconds.coerceAtLeast(0)
-        return accumulatedDurationSeconds + segmentDuration
+        return currentElapsedMillis() / MILLIS_PER_SECOND
+    }
+
+    private fun currentElapsedMillis(): Long {
+        val segmentStartedAt = currentSegmentStartedAt ?: return accumulatedDurationMillis
+        val segmentDurationMillis = Duration.between(segmentStartedAt, now()).toMillis().coerceAtLeast(0)
+        return accumulatedDurationMillis + segmentDurationMillis
     }
 
     private fun startCollectingIfNeeded(
@@ -176,6 +189,8 @@ class DefaultRunTrackingRepository(
         var lastPoint = localDataSource.findLastPoint(session.id).takeUnless { resetLastPoint }
         var nextSequence = localDataSource.countPoints(session.id) + 1
         var distanceMeters = currentSession.distanceMeters
+        var completedSplits = currentSession.splits
+        var previousPointElapsedMillis = currentSession.durationSeconds * MILLIS_PER_SECOND
 
         locationTracker
             .observeLocation()
@@ -193,9 +208,19 @@ class DefaultRunTrackingRepository(
                     return@collect
                 }
                 val movementMeters = lastPoint?.let { metricCalculator.distanceBetweenMeters(it, point) } ?: 0
+                val previousDistanceMeters = distanceMeters
                 distanceMeters += movementMeters
 
-                val durationSeconds = currentElapsedSeconds()
+                val elapsedMillis = currentElapsedMillis()
+                completedSplits =
+                    splitCalculator.appendCompletedSplits(
+                        completedSplits = completedSplits,
+                        previousDistanceMeters = previousDistanceMeters,
+                        currentDistanceMeters = distanceMeters,
+                        previousElapsedMillis = previousPointElapsedMillis,
+                        currentElapsedMillis = elapsedMillis,
+                    )
+                val durationSeconds = elapsedMillis / MILLIS_PER_SECOND
                 val averagePaceSecondsPerKm =
                     metricCalculator.averagePaceSecondsPerKm(
                         distanceMeters = distanceMeters,
@@ -210,6 +235,7 @@ class DefaultRunTrackingRepository(
                         durationSeconds = durationSeconds,
                         averagePaceSecondsPerKm = averagePaceSecondsPerKm,
                         calories = calories,
+                        splits = completedSplits,
                     )
                 }
 
@@ -219,8 +245,10 @@ class DefaultRunTrackingRepository(
                         durationSeconds = durationSeconds,
                         averagePaceSecondsPerKm = averagePaceSecondsPerKm,
                         calories = calories,
+                        splits = completedSplits,
                     )
                 lastPoint = point
+                previousPointElapsedMillis = elapsedMillis
                 nextSequence += 1
             }
     }
@@ -244,6 +272,11 @@ class DefaultRunTrackingRepository(
                     durationSeconds = durationSeconds,
                 ),
             calories = metricCalculator.calories(session.distanceMeters),
+            splits = session.splits,
         )
+    }
+
+    private companion object {
+        const val MILLIS_PER_SECOND = 1_000L
     }
 }

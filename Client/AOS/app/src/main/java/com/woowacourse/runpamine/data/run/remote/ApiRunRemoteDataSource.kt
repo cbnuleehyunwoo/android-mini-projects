@@ -6,6 +6,7 @@ import com.woowacourse.runpamine.domain.run.RunPeriodSummary
 import com.woowacourse.runpamine.domain.run.RunPoint
 import com.woowacourse.runpamine.domain.run.RunResult
 import com.woowacourse.runpamine.domain.run.RunSession
+import com.woowacourse.runpamine.domain.run.RunSplit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -88,6 +89,20 @@ class ApiRunRemoteDataSource(
             response.getJSONObject("data").toRunSession()
         }
 
+    override suspend fun getRunSplits(
+        accessToken: String,
+        runId: String,
+    ): List<RunSplit> =
+        withContext(Dispatchers.IO) {
+            val response =
+                request(
+                    path = "/runs/$runId/splits",
+                    method = "GET",
+                    accessToken = accessToken,
+                )
+            response.getJSONArray("data").toRunSplits()
+        }
+
     private fun request(
         path: String,
         method: String,
@@ -158,6 +173,17 @@ private fun RunSession.toCreateRunRequest(points: List<RunPoint>): JSONObject =
                 },
             ),
         )
+        .put(
+            "splits",
+            JSONArray(
+                splits.map { split ->
+                    JSONObject()
+                        .put("sequence", split.sequence)
+                        .put("distanceMeters", split.distanceMeters)
+                        .put("durationMillis", split.durationMillis)
+                },
+            ),
+        )
 
 private fun JSONObject.toRunResult(): RunResult =
     RunResult(
@@ -218,6 +244,20 @@ private fun JSONArray?.toRunPoints(id: String): List<RunPoint> {
         )
     }.sortedBy { it.sequence }
 }
+
+private fun JSONArray.toRunSplits(): List<RunSplit> =
+    List(length()) { index ->
+        getJSONObject(index).let { split ->
+            RunSplit(
+                sequence = split.getInt("sequence"),
+                fromDistanceMeters = split.getInt("fromDistanceMeters"),
+                toDistanceMeters = split.getInt("toDistanceMeters"),
+                distanceMeters = split.getInt("distanceMeters"),
+                durationMillis = split.getLong("durationMillis"),
+                paceSecondsPerKm = split.getDouble("paceSecondsPerKm"),
+            )
+        }
+    }.sortedBy { it.sequence }
 
 private fun Instant.toApiDateTimeString(): String = DateTimeFormatter.ISO_INSTANT.format(this)
 
