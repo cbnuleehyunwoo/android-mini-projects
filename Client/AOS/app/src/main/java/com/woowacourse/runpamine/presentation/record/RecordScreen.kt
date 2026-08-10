@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -116,7 +117,8 @@ private fun RecordContent(
                         modifier =
                             Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 32.dp),
+                                .padding(vertical = 32.dp)
+                                .alpha(if (uiState.isLoadingIndicatorVisible) 1f else 0f),
                         contentAlignment = Alignment.Center,
                     ) {
                         CircularProgressIndicator()

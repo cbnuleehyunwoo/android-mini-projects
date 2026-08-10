@@ -6,6 +6,7 @@ final class TeamDashboardCache: ObservableObject {
     @Published var dailySummary: TeamDailySummary?
     @Published var teamStats: TeamStats?
     @Published var hasResolvedDashboard = false
+    @Published var isSkeletonVisible = false
     @Published var selectedDate = Calendar.current.startOfDay(for: Date())
     @Published var isDateLoading = false
 
@@ -14,6 +15,7 @@ final class TeamDashboardCache: ObservableObject {
         dailySummary = nil
         teamStats = nil
         hasResolvedDashboard = false
+        isSkeletonVisible = false
         isDateLoading = false
         selectedDate = Calendar.current.startOfDay(for: Date())
     }
@@ -41,8 +43,13 @@ struct TeamDashboardView: View {
         Group {
             if displayTeam == nil {
                 TeamEmptyStateView(onCreateTeam: onCreateTeam, onJoinTeam: onJoinTeam)
-            } else if shouldShowSkeleton {
-                TeamDashboardSkeletonView()
+            } else if isWaitingForInitialDashboard {
+                ZStack {
+                    Color.white
+
+                    TeamDashboardSkeletonView()
+                        .opacity(cache.isSkeletonVisible ? 1 : 0)
+                }
             } else {
                 teamContent
             }
@@ -347,7 +354,7 @@ struct TeamDashboardView: View {
         cache.dailySummary?.team ?? cache.teamStats?.runningTeam ?? team
     }
 
-    private var shouldShowSkeleton: Bool {
+    private var isWaitingForInitialDashboard: Bool {
         team != nil && accessToken != nil && cache.dailySummary == nil && !cache.hasResolvedDashboard
     }
 
@@ -420,6 +427,15 @@ struct TeamDashboardView: View {
         guard team != nil, let accessToken else { return }
         cache.selectedDate = Calendar.current.startOfDay(for: Date())
         cache.hasResolvedDashboard = false
+        cache.isSkeletonVisible = false
+
+        let clock = ContinuousClock()
+        let loadingStartedAt = clock.now
+        let minimumSkeletonDeadline = loadingStartedAt.advanced(by: .milliseconds(500))
+        let shouldGateSkeleton = isWaitingForInitialDashboard
+        if shouldGateSkeleton {
+            cache.isSkeletonVisible = true
+        }
 
         async let nextTeamMembers = optionalResult {
             try await teamService.fetchMyTeamMembers(accessToken: accessToken)
@@ -437,11 +453,16 @@ struct TeamDashboardView: View {
             nextTeamStats
         )
 
+        if shouldGateSkeleton {
+            try? await clock.sleep(until: minimumSkeletonDeadline)
+        }
+
         cache.teamMembers = teamMembers
         cache.dailySummary = dailySummary
         cache.teamStats = teamStats
 
         cache.hasResolvedDashboard = true
+        cache.isSkeletonVisible = false
     }
 
     @MainActor

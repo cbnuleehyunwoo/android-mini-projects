@@ -1,7 +1,7 @@
 ---
 name: 버그 리포트
 about: 버그 발생 시 이 템플릿을 사용해주세요.
-title: "[영역] fix: "
+title: "fix: "
 labels: fix
 ---
 

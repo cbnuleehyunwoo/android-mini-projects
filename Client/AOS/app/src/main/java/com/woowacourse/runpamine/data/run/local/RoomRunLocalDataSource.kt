@@ -2,6 +2,7 @@ package com.woowacourse.runpamine.data.run.local
 
 import com.woowacourse.runpamine.domain.run.RunPoint
 import com.woowacourse.runpamine.domain.run.RunSession
+import com.woowacourse.runpamine.domain.run.RunSplit
 import com.woowacourse.runpamine.domain.run.RunSyncStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -19,6 +20,7 @@ class RoomRunLocalDataSource(
         durationSeconds: Long,
         averagePaceSecondsPerKm: Int,
         calories: Int,
+        splits: List<RunSplit>,
     ) {
         runDao.insertPointAndMetrics(
             point = point.toEntity(),
@@ -26,6 +28,7 @@ class RoomRunLocalDataSource(
             durationSeconds = durationSeconds,
             averagePaceSecondsPerKm = averagePaceSecondsPerKm,
             calories = calories,
+            splitsJson = splits.toJsonString(),
         )
     }
 
@@ -35,6 +38,7 @@ class RoomRunLocalDataSource(
         durationSeconds: Long,
         averagePaceSecondsPerKm: Int,
         calories: Int,
+        splits: List<RunSplit>,
     ) {
         runDao.updateRunningMetrics(
             sessionId = sessionId,
@@ -42,6 +46,7 @@ class RoomRunLocalDataSource(
             durationSeconds = durationSeconds,
             averagePaceSecondsPerKm = averagePaceSecondsPerKm,
             calories = calories,
+            splitsJson = splits.toJsonString(),
         )
     }
 
@@ -71,6 +76,7 @@ class RoomRunLocalDataSource(
             durationSeconds = session.durationSeconds,
             averagePaceSecondsPerKm = session.averagePaceSecondsPerKm,
             calories = session.calories,
+            splitsJson = session.splits.toJsonString(),
             syncStatus = status,
         )
     }

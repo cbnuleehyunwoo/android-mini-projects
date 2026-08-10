@@ -51,6 +51,7 @@ import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 @Composable
 fun MyPageBottomSheet(
     onChangeNicknameClick: () -> Unit,
+    onFeedbackClick: () -> Unit,
     onDismissRequest: () -> Unit,
     onLogoutCompleted: () -> Unit,
     modifier: Modifier = Modifier,
@@ -60,6 +61,7 @@ fun MyPageBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
+        dragHandle = null,
         containerColor = Color.White,
         modifier = modifier,
     ) {
@@ -71,6 +73,7 @@ fun MyPageBottomSheet(
         ) {
             MyPageScreen(
                 onChangeNicknameClick = onChangeNicknameClick,
+                onFeedbackClick = onFeedbackClick,
                 onBackClick = onDismissRequest,
                 onLogoutCompleted = onLogoutCompleted,
                 showBackButton = false,
@@ -82,6 +85,7 @@ fun MyPageBottomSheet(
 @Composable
 fun MyPageScreen(
     onChangeNicknameClick: () -> Unit,
+    onFeedbackClick: () -> Unit,
     onBackClick: () -> Unit,
     onLogoutCompleted: () -> Unit,
     modifier: Modifier = Modifier,
@@ -113,6 +117,7 @@ fun MyPageScreen(
     MyPageContent(
         uiState = uiState,
         onChangeNicknameClick = onChangeNicknameClick,
+        onFeedbackClick = onFeedbackClick,
         onLogoutClick = viewModel::logout,
         onDeleteAccountClick = viewModel::deleteAccount,
         onBackClick = onBackClick,
@@ -125,6 +130,7 @@ fun MyPageScreen(
 private fun MyPageContent(
     uiState: MyPageUiState,
     onChangeNicknameClick: () -> Unit,
+    onFeedbackClick: () -> Unit,
     onLogoutClick: () -> Unit,
     onDeleteAccountClick: () -> Unit,
     onBackClick: () -> Unit,
@@ -148,6 +154,7 @@ private fun MyPageContent(
             title = stringResource(R.string.my_page_title),
             onBackClick = onBackClick,
             showBackButton = showBackButton,
+            showCloseButton = !showBackButton,
             modifier =
                 Modifier
                     .fillMaxWidth()
@@ -161,7 +168,6 @@ private fun MyPageContent(
                 modifier =
                     Modifier
                         .align(Alignment.CenterHorizontally)
-                        .padding(top = 34.dp),
             )
             uiState.errorMessage?.let { message ->
                 Text(
@@ -174,7 +180,7 @@ private fun MyPageContent(
                     modifier = Modifier.padding(top = 12.dp),
                 )
             }
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(24.dp))
             MyPageSection(
                 title = stringResource(R.string.my_page_account_settings),
             ) {
@@ -234,6 +240,12 @@ private fun MyPageContent(
                 title = stringResource(R.string.my_page_etc),
             ) {
                 MyPageMenuRow(
+                    iconResId = R.drawable.ic_edit,
+                    title = stringResource(R.string.my_page_feedback),
+                    description = stringResource(R.string.my_page_feedback_description),
+                    onClick = onFeedbackClick,
+                )
+                MyPageMenuRow(
                     iconResId = R.drawable.ic_infomation,
                     title = stringResource(R.string.my_page_app_info),
                     description = stringResource(R.string.my_page_app_version, BuildConfig.VERSION_NAME),
@@ -282,6 +294,7 @@ private fun MyPageScreenPreview() {
         MyPageContent(
             uiState = MyPageUiState(nickname = "러너", isLoading = false),
             onChangeNicknameClick = {},
+            onFeedbackClick = {},
             onLogoutClick = {},
             onDeleteAccountClick = {},
             onBackClick = {},

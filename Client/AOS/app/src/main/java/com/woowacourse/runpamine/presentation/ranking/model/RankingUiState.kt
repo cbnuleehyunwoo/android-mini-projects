@@ -14,16 +14,20 @@ data class RankingUiState(
     val myRankingSummary: MyRankingSummary? = null,
     val homeState: HomeState? = null,
     val isLoading: Boolean = false,
+    val isSkeletonVisible: Boolean = false,
     val errorMessage: String? = null,
 )
 
-val RankingUiState.shouldShowLoadingSkeleton: Boolean
+val RankingUiState.shouldReserveLoadingSkeleton: Boolean
     get() =
         isLoading &&
             when (selectedScope) {
                 RankingScope.TEAM -> teamRankings.isEmpty()
                 RankingScope.PERSONAL -> userRankings.isEmpty()
             }
+
+val RankingUiState.shouldShowLoadingSkeleton: Boolean
+    get() = shouldReserveLoadingSkeleton && isSkeletonVisible
 
 enum class RankingScope(
     val label: String,

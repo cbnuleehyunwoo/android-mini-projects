@@ -10,13 +10,13 @@ final class HistoryCache: ObservableObject {
     @Published var totalDistanceMeters: Int?
     @Published var summariesByIdentifier: [String: RunPeriodSummary] = [:]
     @Published var loadedRefreshIdentifier: String?
+    @Published var isLoadingIndicatorVisible = false
     @Published var thumbnailRecordsByID: [UUID: RunningRecord] = [:]
     @Published var thumbnailFetchIDs: Set<UUID> = []
 }
 
 struct HistoryView: View {
     @ObservedObject var cache: HistoryCache
-    @State private var selectedRecord: RunningRecord?
 
     private let runService: RunServiceProtocol
     private let historyStore: RunningHistoryStore
@@ -24,6 +24,7 @@ struct HistoryView: View {
     private let currentUserID: String?
     private let refreshRevision: Int
     private let onRetryPendingRuns: () async -> Void
+    private let onOpenRecord: (RunningRecord) -> Void
     private var calendar: Calendar {
         var calendar = Calendar.current
         calendar.firstWeekday = 2
@@ -37,7 +38,8 @@ struct HistoryView: View {
         currentUserID: String? = nil,
         cache: HistoryCache = HistoryCache(),
         refreshRevision: Int = 0,
-        onRetryPendingRuns: @escaping () async -> Void = {}
+        onRetryPendingRuns: @escaping () async -> Void = {},
+        onOpenRecord: @escaping (RunningRecord) -> Void = { _ in }
     ) {
         self.runService = runService
         self.historyStore = historyStore
@@ -46,6 +48,7 @@ struct HistoryView: View {
         self.cache = cache
         self.refreshRevision = refreshRevision
         self.onRetryPendingRuns = onRetryPendingRuns
+        self.onOpenRecord = onOpenRecord
     }
 
     var body: some View {
@@ -92,6 +95,7 @@ struct HistoryView: View {
                 VStack(spacing: 22) {
                     if isWaitingForRemoteRecords {
                         loadingState
+                            .opacity(cache.isLoadingIndicatorVisible ? 1 : 0)
                     } else if visibleSelectedRecords.isEmpty {
                         emptyState
                     } else {
@@ -129,12 +133,6 @@ struct HistoryView: View {
         }
         .task(id: thumbnailRefreshIdentifier) {
             await refreshThumbnailRecords()
-        }
-        .runpamineFullScreenCover(item: $selectedRecord) { record in
-            RunningSummaryView(record: record) {
-                selectedRecord = nil
-            }
-            .networkErrorOverlay()
         }
     }
 
@@ -350,6 +348,20 @@ struct HistoryView: View {
         }
 
         let requestIdentifier = refreshIdentifier
+        cache.isLoadingIndicatorVisible = false
+
+        let clock = ContinuousClock()
+        let loadingStartedAt = clock.now
+        let loadingIndicatorRevealDeadline = loadingStartedAt.advanced(by: .milliseconds(500))
+        let contentRevealDeadline = loadingStartedAt.advanced(by: .milliseconds(750))
+        let shouldGateLoadingIndicator = isWaitingForRemoteRecords
+        let loadingIndicatorRevealTask = Task { @MainActor in
+            try await clock.sleep(until: loadingIndicatorRevealDeadline)
+            guard requestIdentifier == refreshIdentifier else { return }
+            guard shouldGateLoadingIndicator, isWaitingForRemoteRecords else { return }
+            cache.isLoadingIndicatorVisible = true
+        }
+        defer { loadingIndicatorRevealTask.cancel() }
 
         do {
             let summary: RunPeriodSummary
@@ -366,6 +378,13 @@ struct HistoryView: View {
             }
 
             guard requestIdentifier == refreshIdentifier else { return }
+            await waitForLoadingIndicatorDisplayWindowIfNeeded(
+                shouldGate: shouldGateLoadingIndicator,
+                revealDeadline: loadingIndicatorRevealDeadline,
+                contentDeadline: contentRevealDeadline,
+                clock: clock
+            )
+            guard requestIdentifier == refreshIdentifier else { return }
 
             if cache.records != summary.runs {
                 cache.records = summary.runs
@@ -378,6 +397,7 @@ struct HistoryView: View {
             }
             cache.summariesByIdentifier[requestIdentifier] = summary
             cache.loadedRefreshIdentifier = requestIdentifier
+            cache.isLoadingIndicatorVisible = false
             pruneThumbnailCache(for: summary.runs)
 
             if cache.selectedPeriod == .week {
@@ -385,13 +405,36 @@ struct HistoryView: View {
             }
         } catch {
             guard requestIdentifier == refreshIdentifier else { return }
+            await waitForLoadingIndicatorDisplayWindowIfNeeded(
+                shouldGate: shouldGateLoadingIndicator,
+                revealDeadline: loadingIndicatorRevealDeadline,
+                contentDeadline: contentRevealDeadline,
+                clock: clock
+            )
+            guard requestIdentifier == refreshIdentifier else { return }
             if cache.records.isEmpty {
                 cache.daySummaries = []
                 cache.totalDistanceMeters = 0
                 cache.loadedRefreshIdentifier = requestIdentifier
                 pruneThumbnailCache(for: [])
             }
+            cache.isLoadingIndicatorVisible = false
         }
+    }
+
+    @MainActor
+    private func waitForLoadingIndicatorDisplayWindowIfNeeded(
+        shouldGate: Bool,
+        revealDeadline: ContinuousClock.Instant,
+        contentDeadline: ContinuousClock.Instant,
+        clock: ContinuousClock
+    ) async {
+        guard shouldGate else { return }
+        if clock.now >= revealDeadline {
+            cache.isLoadingIndicatorVisible = true
+        }
+        guard cache.isLoadingIndicatorVisible else { return }
+        try? await clock.sleep(until: contentDeadline)
     }
 
     private func useLocalRecords() {
@@ -481,14 +524,22 @@ struct HistoryView: View {
     @MainActor
     private func openRecord(_ record: RunningRecord) async {
         guard let accessToken else {
-            selectedRecord = record
+            onOpenRecord(record)
             return
         }
 
         do {
-            selectedRecord = try await runService.fetchRunDetail(runID: record.id.uuidString, accessToken: accessToken)
+            let detail = try await runService.fetchRunDetail(
+                runID: record.id.uuidString,
+                accessToken: accessToken
+            )
+            let splits = try? await runService.fetchRunSplits(
+                runID: record.id.uuidString,
+                accessToken: accessToken
+            )
+            onOpenRecord(splits.map { detail.replacingSplits(with: $0) } ?? detail)
         } catch {
-            selectedRecord = record
+            onOpenRecord(record)
         }
     }
 }
@@ -946,18 +997,4 @@ private extension RunningRecordCard {
         formatter.dateFormat = "yyyy. MM. dd EEEE"
         return formatter
     }()
-}
-
-private extension View {
-    @ViewBuilder
-    func runpamineFullScreenCover<Item: Identifiable, Content: View>(
-        item: Binding<Item?>,
-        @ViewBuilder content: @escaping (Item) -> Content
-    ) -> some View {
-        #if os(iOS)
-        fullScreenCover(item: item, content: content)
-        #else
-        sheet(item: item, content: content)
-        #endif
-    }
 }

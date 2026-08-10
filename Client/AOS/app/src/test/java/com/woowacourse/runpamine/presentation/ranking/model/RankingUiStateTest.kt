@@ -32,7 +32,7 @@ class RankingUiStateTest {
     }
 
     @Test
-    fun `선택한 랭킹에 캐시가 없으면 갱신 중 스켈레톤을 표시한다`() {
+    fun `선택한 랭킹에 캐시가 없어도 0점5초 전에는 스켈레톤을 표시하지 않는다`() {
         val state =
             RankingUiState(
                 selectedScope = RankingScope.TEAM,
@@ -40,6 +40,20 @@ class RankingUiStateTest {
                 isLoading = true,
             )
 
+        assertTrue(state.shouldReserveLoadingSkeleton)
+        assertFalse(state.shouldShowLoadingSkeleton)
+    }
+
+    @Test
+    fun `선택한 랭킹에 캐시가 없고 노출 지연이 지나면 스켈레톤을 표시한다`() {
+        val state =
+            RankingUiState(
+                selectedScope = RankingScope.TEAM,
+                isLoading = true,
+                isSkeletonVisible = true,
+            )
+
+        assertTrue(state.shouldReserveLoadingSkeleton)
         assertTrue(state.shouldShowLoadingSkeleton)
     }
 

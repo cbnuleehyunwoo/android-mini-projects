@@ -21,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
@@ -105,7 +106,12 @@ private fun TeamScreenContent(
 ) {
     when {
         uiState.isLoading -> {
-            TeamSkeletonContent(modifier = modifier.fillMaxSize())
+            TeamSkeletonContent(
+                modifier =
+                    modifier
+                        .fillMaxSize()
+                        .alpha(if (uiState.isSkeletonVisible) 1f else 0f),
+            )
         }
 
         uiState.hasTeam -> {

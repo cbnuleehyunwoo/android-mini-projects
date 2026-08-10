@@ -2,6 +2,7 @@ package com.woowacourse.runpamine.data.run.local
 
 import com.woowacourse.runpamine.domain.run.RunPoint
 import com.woowacourse.runpamine.domain.run.RunSession
+import com.woowacourse.runpamine.domain.run.RunSplit
 import com.woowacourse.runpamine.domain.run.RunSyncStatus
 import kotlinx.coroutines.flow.Flow
 
@@ -14,6 +15,7 @@ interface RunLocalDataSource {
         durationSeconds: Long,
         averagePaceSecondsPerKm: Int,
         calories: Int,
+        splits: List<RunSplit>,
     )
 
     suspend fun updateRunningMetrics(
@@ -22,6 +24,7 @@ interface RunLocalDataSource {
         durationSeconds: Long,
         averagePaceSecondsPerKm: Int,
         calories: Int,
+        splits: List<RunSplit>,
     )
 
     suspend fun findSession(sessionId: String): RunSession?

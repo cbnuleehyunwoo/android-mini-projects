@@ -16,6 +16,10 @@ import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.IosShare
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,9 +39,14 @@ import androidx.compose.ui.unit.sp
 import com.woowacourse.runpamine.R
 import com.woowacourse.runpamine.di.runpamineContainer
 import com.woowacourse.runpamine.domain.run.RunPoint
+import com.woowacourse.runpamine.domain.run.RunSession
+import com.woowacourse.runpamine.domain.run.RunSplit
 import com.woowacourse.runpamine.presentation.component.ScreenTopBar
 import com.woowacourse.runpamine.presentation.running.components.RunningMetricCard
 import com.woowacourse.runpamine.presentation.running.components.RunningRouteMap
+import com.woowacourse.runpamine.presentation.running.components.SplitPaceSection
+import com.woowacourse.runpamine.presentation.share.RunShareData
+import com.woowacourse.runpamine.presentation.share.RunShareFlow
 import com.woowacourse.runpamine.ui.theme.RunpamineTheme
 
 @Composable
@@ -54,14 +63,15 @@ fun HistoryScreen(
     modifier: Modifier = Modifier,
 ) {
     val runRecordRepository = LocalContext.current.runpamineContainer.runRecordRepository
-    var routePoints by remember(runId) { mutableStateOf(emptyList<RunPoint>()) }
+    var runDetail by remember(runId) { mutableStateOf<RunSession?>(null) }
+    var showShareFlow by remember { mutableStateOf(false) }
 
     LaunchedEffect(runId) {
         if (runId.isBlank()) return@LaunchedEffect
-        routePoints =
+        runDetail =
             runCatching {
-                runRecordRepository.getRunDetail(runId).routePoints
-            }.getOrDefault(emptyList())
+                runRecordRepository.getRunDetail(runId)
+            }.getOrNull()
     }
 
     HistoryContent(
@@ -72,10 +82,28 @@ fun HistoryScreen(
         date = date,
         startTime = startTime,
         endTime = endTime,
-        routePoints = routePoints,
+        routePoints = runDetail?.routePoints.orEmpty(),
+        splits = runDetail?.splits.orEmpty(),
         onBack = onBack,
+        onShare = { showShareFlow = true },
         modifier = modifier,
     )
+
+    if (showShareFlow) {
+        RunShareFlow(
+            data =
+                RunShareData(
+                    distance = distance,
+                    time = time,
+                    pace = pace,
+                    calories = calories,
+                    date = date,
+                    routePoints = runDetail?.routePoints.orEmpty(),
+                ),
+            onClose = { showShareFlow = false },
+            onSaved = { showShareFlow = false },
+        )
+    }
 }
 
 @Composable
@@ -88,7 +116,9 @@ private fun HistoryContent(
     startTime: String,
     endTime: String,
     routePoints: List<RunPoint>,
+    splits: List<RunSplit>,
     onBack: () -> Unit,
+    onShare: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     BoxWithConstraints(
@@ -187,6 +217,7 @@ private fun HistoryContent(
                         shadowElevation = 2.dp,
                     )
                 }
+                SplitPaceSection(splits = splits)
                 Spacer(
                     modifier = Modifier.height(16.dp),
                 )
@@ -204,6 +235,20 @@ private fun HistoryContent(
                     .statusBarsPadding()
                     .padding(horizontal = 12.dp),
         )
+        IconButton(
+            onClick = onShare,
+            modifier =
+                Modifier
+                    .align(androidx.compose.ui.Alignment.TopEnd)
+                    .statusBarsPadding()
+                    .padding(horizontal = 12.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.IosShare,
+                contentDescription = "러닝 기록 공유",
+                tint = Color.Black,
+            )
+        }
     }
 }
 
@@ -226,7 +271,9 @@ private fun HistoryScreenPreview() {
             startTime = "20:10",
             endTime = "20:33",
             routePoints = emptyList(),
+            splits = emptyList(),
             onBack = {},
+            onShare = {},
         )
     }
 }

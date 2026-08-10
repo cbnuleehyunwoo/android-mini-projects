@@ -95,7 +95,14 @@ struct RunningView: View {
             durationSection
 
             HStack(spacing: 14) {
-                RunningMetricCard(title: "페이스", value: RunningMetricFormatter.pace(tracker.averagePaceSecondsPerKilometer), suffix: "/km")
+                RunningMetricCard(
+                    title: tracker.completedSplits.isEmpty ? "페이스" : "최근 1km",
+                    value: RunningMetricFormatter.pace(
+                        tracker.completedSplits.last?.paceSecondsPerKilometer
+                            ?? tracker.averagePaceSecondsPerKilometer
+                    ),
+                    suffix: "/km"
+                )
                 RunningMetricCard(title: "칼로리", value: "\(tracker.estimatedCalories)", suffix: "kcal")
             }
             .padding(.horizontal, 24)

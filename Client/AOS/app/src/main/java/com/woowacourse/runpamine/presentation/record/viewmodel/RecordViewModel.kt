@@ -8,10 +8,12 @@ import com.woowacourse.runpamine.domain.run.RunRecordRepository
 import com.woowacourse.runpamine.domain.run.RunSession
 import com.woowacourse.runpamine.presentation.cache.RecordCache
 import com.woowacourse.runpamine.presentation.cache.RecordCacheKey
+import com.woowacourse.runpamine.presentation.component.LoadingUiTiming
 import com.woowacourse.runpamine.presentation.record.model.RecordPeriod
 import com.woowacourse.runpamine.presentation.record.model.RunningRecord
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,6 +26,7 @@ import java.time.YearMonth
 import java.time.ZoneId
 import java.time.format.TextStyle
 import java.util.Locale
+import kotlin.time.TimeSource
 
 class RecordViewModel(
     private val runRecordRepository: RunRecordRepository,
@@ -76,30 +79,61 @@ class RecordViewModel(
         loadJob =
             viewModelScope.launch {
                 cachedSummary?.let { applySummary(it, period, anchorDate) }
-                _uiState.update { it.copy(isLoading = cachedSummary == null, errorMessage = null) }
-                runCatching {
-                    when (period) {
-                        RecordPeriod.WEEK -> runRecordRepository.getWeeklyRuns(anchorDate)
-                        RecordPeriod.MONTH -> runRecordRepository.getMonthlyRuns(YearMonth.from(anchorDate))
+                val shouldGateLoadingIndicator = cachedSummary == null
+                val loadingStartedAt = TimeSource.Monotonic.markNow()
+                _uiState.update {
+                    it.copy(
+                        isLoading = shouldGateLoadingIndicator,
+                        isLoadingIndicatorVisible = false,
+                        errorMessage = null,
+                    )
+                }
+                val loadingIndicatorRevealJob =
+                    launch {
+                        delay(LoadingUiTiming.REVEAL_DELAY_MILLIS)
+                        if (shouldGateLoadingIndicator) {
+                            _uiState.update { it.copy(isLoadingIndicatorVisible = true) }
+                        }
                     }
-                }.onSuccess { summary ->
-                    cache.summaries[cacheKey] = summary
-                    applySummary(summary, period, anchorDate)
 
-                    summary.runs
-                        .filter { run -> run.localDate in period.dateRange(anchorDate) }
-                        .filter { run -> run.routePoints.size < MIN_ROUTE_POINT_COUNT }
-                        .forEach { run -> loadRoutePoints(run.id) }
-                    if (period == RecordPeriod.WEEK) preloadPreviousWeek(anchorDate)
-                }.onFailure { throwable ->
-                    if (throwable is CancellationException) throw throwable
-
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = throwable.message ?: "러닝 기록을 불러오지 못했어요.",
-                        )
+                try {
+                    val loadResult =
+                        runCatching {
+                            when (period) {
+                                RecordPeriod.WEEK -> runRecordRepository.getWeeklyRuns(anchorDate)
+                                RecordPeriod.MONTH -> runRecordRepository.getMonthlyRuns(YearMonth.from(anchorDate))
+                            }
+                        }
+                    loadResult.exceptionOrNull()?.let { throwable ->
+                        if (throwable is CancellationException) throw throwable
                     }
+
+                    if (shouldGateLoadingIndicator && LoadingUiTiming.hasReachedRevealDelay(loadingStartedAt)) {
+                        _uiState.update { it.copy(isLoadingIndicatorVisible = true) }
+                        LoadingUiTiming.awaitContentReveal(loadingStartedAt)
+                    }
+
+                    loadResult
+                        .onSuccess { summary ->
+                            cache.summaries[cacheKey] = summary
+                            applySummary(summary, period, anchorDate)
+
+                            summary.runs
+                                .filter { run -> run.localDate in period.dateRange(anchorDate) }
+                                .filter { run -> run.routePoints.size < MIN_ROUTE_POINT_COUNT }
+                                .forEach { run -> loadRoutePoints(run.id) }
+                            if (period == RecordPeriod.WEEK) preloadPreviousWeek(anchorDate)
+                        }.onFailure { throwable ->
+                            _uiState.update {
+                                it.copy(
+                                    isLoading = false,
+                                    isLoadingIndicatorVisible = false,
+                                    errorMessage = throwable.message ?: "러닝 기록을 불러오지 못했어요.",
+                                )
+                            }
+                        }
+                } finally {
+                    loadingIndicatorRevealJob.cancel()
                 }
             }
     }
@@ -127,6 +161,7 @@ class RecordViewModel(
                         visibleRuns.map { run -> run.localDate },
                 totalDistanceKm = totalDistanceMeters / METERS_PER_KILOMETER,
                 isLoading = false,
+                isLoadingIndicatorVisible = false,
             )
         }
     }

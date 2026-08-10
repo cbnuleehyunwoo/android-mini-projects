@@ -2,9 +2,9 @@ package com.woowacourse.runpamine.data.run.repository
 
 import com.woowacourse.runpamine.data.run.local.RunLocalDataSource
 import com.woowacourse.runpamine.domain.run.LocationTracker
-import com.woowacourse.runpamine.domain.run.LocationTrackingMode
 import com.woowacourse.runpamine.domain.run.RunPoint
 import com.woowacourse.runpamine.domain.run.RunSession
+import com.woowacourse.runpamine.domain.run.RunSplit
 import com.woowacourse.runpamine.domain.run.RunSyncStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -23,11 +23,12 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.Instant
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
 class DefaultRunTrackingRepositoryTest {
     @Test
-    fun `자동 정지 후 3초 위치 감시가 이동을 감지하면 새 세그먼트로 재개한다`() =
+    fun `10초 동안 움직이지 않아도 사용자가 일시정지하지 않으면 러닝을 계속한다`() =
         runBlocking {
             val clock = AtomicReference(STARTED_AT)
             val localDataSource = FakeRunLocalDataSource()
@@ -40,69 +41,50 @@ class DefaultRunTrackingRepositoryTest {
                 )
 
             repository.startRun()
-            awaitCondition { locationTracker.requestedModes == listOf(LocationTrackingMode.RUNNING) }
-            locationTracker.emit(LocationTrackingMode.RUNNING, point(longitude = 127.0, secondsAfterStart = 0))
+            awaitCondition { locationTracker.requestCount == 1 }
+            locationTracker.emit(point(longitude = 127.0, secondsAfterStart = 0))
             awaitCondition { localDataSource.points.size == 1 }
 
             clock.set(STARTED_AT.plusSeconds(10))
-            awaitCondition { repository.observePaused().latestValue() }
-            awaitCondition {
-                locationTracker.requestedModes ==
-                    listOf(LocationTrackingMode.RUNNING, LocationTrackingMode.AUTO_RESUME)
-            }
-            assertEquals(3_000L, LocationTrackingMode.AUTO_RESUME.updateIntervalMillis)
-            assertEquals(0f, LocationTrackingMode.AUTO_RESUME.minimumUpdateDistanceMeters)
-
-            locationTracker.emit(LocationTrackingMode.AUTO_RESUME, point(longitude = 127.0, secondsAfterStart = 13))
             delay(10)
-            assertTrue(repository.observePaused().latestValue())
-            assertEquals(1, localDataSource.points.size)
-
-            locationTracker.emit(LocationTrackingMode.AUTO_RESUME, point(longitude = 127.0001, secondsAfterStart = 16))
-            delay(10)
-            assertTrue(repository.observePaused().latestValue())
-            assertEquals(1, localDataSource.points.size)
-
-            locationTracker.emit(LocationTrackingMode.AUTO_RESUME, point(longitude = 127.0002, secondsAfterStart = 19))
-            awaitCondition { !repository.observePaused().latestValue() }
-            awaitCondition {
-                locationTracker.requestedModes ==
-                    listOf(
-                        LocationTrackingMode.RUNNING,
-                        LocationTrackingMode.AUTO_RESUME,
-                        LocationTrackingMode.RUNNING,
-                    )
-            }
-            assertEquals(1, localDataSource.points.size)
-
-            locationTracker.emit(LocationTrackingMode.RUNNING, point(longitude = 127.0002, secondsAfterStart = 20))
-            awaitCondition { localDataSource.points.size == 2 }
-            assertEquals(2, localDataSource.points.last().sequence)
-            assertEquals(0, localDataSource.session.value?.distanceMeters)
+            assertFalse(repository.observePaused().latestValue())
+            assertEquals(1, locationTracker.requestCount)
+            assertEquals(1, locationTracker.activeSubscriptions)
+            assertEquals(10L, repository.currentElapsedSeconds())
 
             repository.discardActiveRun()
         }
 
     @Test
-    fun `사용자 수동 일시정지는 자동 재개 위치 감시를 시작하지 않는다`() =
+    fun `일시정지와 재개는 사용자가 명시적으로 요청할 때만 상태를 전환한다`() =
         runBlocking {
+            val clock = AtomicReference(STARTED_AT)
             val localDataSource = FakeRunLocalDataSource()
             val locationTracker = FakeLocationTracker()
             val repository =
                 repository(
                     localDataSource = localDataSource,
                     locationTracker = locationTracker,
-                    clock = AtomicReference(STARTED_AT),
+                    clock = clock,
                 )
 
             repository.startRun()
-            awaitCondition { locationTracker.requestedModes == listOf(LocationTrackingMode.RUNNING) }
+            awaitCondition { locationTracker.activeSubscriptions == 1 }
 
             repository.pauseRun()
-            delay(10)
-
+            awaitCondition { locationTracker.activeSubscriptions == 0 }
             assertTrue(repository.observePaused().latestValue())
-            assertFalse(locationTracker.requestedModes.contains(LocationTrackingMode.AUTO_RESUME))
+            assertEquals(1, locationTracker.requestCount)
+
+            clock.set(STARTED_AT.plusSeconds(30))
+            delay(10)
+            assertTrue(repository.observePaused().latestValue())
+            assertEquals(1, locationTracker.requestCount)
+
+            repository.resumeRun()
+            awaitCondition { locationTracker.activeSubscriptions == 1 }
+            assertFalse(repository.observePaused().latestValue())
+            assertEquals(2, locationTracker.requestCount)
 
             repository.discardActiveRun()
         }
@@ -138,12 +120,6 @@ class DefaultRunTrackingRepositoryTest {
         locationTracker = locationTracker,
         dispatcher = Dispatchers.Default,
         now = clock::get,
-        autoPauseInactivitySeconds = 10,
-        inactivityCheckIntervalMillis = 1,
-        movementDistanceMeters = { from, to ->
-            if (from.latitude == to.latitude && from.longitude == to.longitude) 0 else 5
-        },
-        isAutoResumePointPlausible = { _, _ -> true },
     )
 
     private suspend fun awaitCondition(condition: suspend () -> Boolean) {
@@ -167,23 +143,20 @@ class DefaultRunTrackingRepositoryTest {
     )
 
     private class FakeLocationTracker : LocationTracker {
-        private val streams =
-            LocationTrackingMode.entries.associateWith {
-                MutableSharedFlow<RunPoint>(extraBufferCapacity = 8)
-            }
-        val requestedModes = CopyOnWriteArrayList<LocationTrackingMode>()
+        private val stream = MutableSharedFlow<RunPoint>(extraBufferCapacity = 8)
+        private val requests = AtomicInteger(0)
+        val requestCount: Int
+            get() = requests.get()
+        val activeSubscriptions: Int
+            get() = stream.subscriptionCount.value
 
-        override fun observeLocation(mode: LocationTrackingMode): Flow<RunPoint> =
+        override fun observeLocation(): Flow<RunPoint> =
             flow {
-                requestedModes += mode
-                streams.getValue(mode).collect { emit(it) }
+                requests.incrementAndGet()
+                stream.collect { emit(it) }
             }
 
-        suspend fun emit(
-            mode: LocationTrackingMode,
-            point: RunPoint,
-        ) {
-            val stream = streams.getValue(mode)
+        suspend fun emit(point: RunPoint) {
             withTimeout(1_000) {
                 while (stream.subscriptionCount.value == 0) {
                     delay(1)
@@ -207,6 +180,7 @@ class DefaultRunTrackingRepositoryTest {
             durationSeconds: Long,
             averagePaceSecondsPerKm: Int,
             calories: Int,
+            splits: List<RunSplit>,
         ) {
             points += point
             session.value =
@@ -215,6 +189,7 @@ class DefaultRunTrackingRepositoryTest {
                     durationSeconds = durationSeconds,
                     averagePaceSecondsPerKm = averagePaceSecondsPerKm,
                     calories = calories,
+                    splits = splits,
                 )
         }
 
@@ -224,6 +199,7 @@ class DefaultRunTrackingRepositoryTest {
             durationSeconds: Long,
             averagePaceSecondsPerKm: Int,
             calories: Int,
+            splits: List<RunSplit>,
         ) {
             session.value =
                 session.value?.copy(
@@ -231,6 +207,7 @@ class DefaultRunTrackingRepositoryTest {
                     durationSeconds = durationSeconds,
                     averagePaceSecondsPerKm = averagePaceSecondsPerKm,
                     calories = calories,
+                    splits = splits,
                 )
         }
 
